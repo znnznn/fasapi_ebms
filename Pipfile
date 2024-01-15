@@ -1,0 +1,33 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+pyodbc = "*"
+alembic = "*"
+starlette = "*"
+pydantic-settings = "*"
+pydantic-extra-types = "*"
+pydantic-core = "*"
+sqlalchemy = "*"
+typing-extensions = "*"
+python-decouple = "*"
+fastapi-users = {extras = ["sqlalchemy"], version = "*"}
+pydantic = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+passlib = {extras = ["bcrypt"], version = "*"}
+sqlalchemy-utils = "*"
+aioodbc = "*"
+pymssql = "*"
+fastapi-debug-toolbar = "*"
+jinja2 = "*"
+fastapi-restful = {extras = ["all"], version = "*"}
+asyncpg = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
