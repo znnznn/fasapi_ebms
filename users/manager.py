@@ -7,9 +7,12 @@ from fastapi_users import BaseUserManager, IntegerIDMixin, models, InvalidPasswo
 from passlib.handlers.django import django_pbkdf2_sha256
 from starlette.responses import Response
 
-from database import User, get_user_db
+from database import get_user_db
 from settings import SECRET_KEY
+from .models import User
 from .schemas import UserCreate
+
+
 SECRET = SECRET_KEY
 
 

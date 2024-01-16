@@ -1,46 +1,14 @@
 from datetime import datetime
-from typing import List
 
 from sqlalchemy import (
-    Table, Column, Integer, String, TIMESTAMP, MetaData, Float, Boolean, BINARY, DECIMAL, ForeignKey, Date, select, func, NVARCHAR, text
+    Column, Integer, String, TIMESTAMP, MetaData, Float, Boolean, BINARY, DECIMAL, ForeignKey, Date, NVARCHAR
 )
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import Relationship, relationship, Mapped, mapped_column, column_property, as_declarative, declared_attr
-from sqlalchemy_utils import ChoiceType, EmailType
+from sqlalchemy.orm import relationship, Mapped, mapped_column, as_declarative, declared_attr
 
-from database import EBMSBase as Base
-
-
-@as_declarative(metadata=MetaData())
-class TestBase:
-    @classmethod
-    @declared_attr
-    def __tablename__(cls):
-        return cls.__name__.lower()
-
-    __allow_unmapped__ = False  # for (Column)
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__}(id={self.id})>"
-
-
-class Capacity(Base):
-    __tablename__ = "stages_capacity"
-    __table_args__ = {'extend_existing': True}
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    per_day: Mapped[int] = mapped_column()
-    category_id: Mapped[str] = mapped_column(ForeignKey('INPRODTYPE.AUTOID'))
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-    # category = relationship("Inprodtype", back_populates="rel_capacity")
+from common.models import EBMSBase as Base
 
 
 class Arinv(Base):
-    __tablename__ = 'ARINV'
-    __table_args__ = {'extend_existing': True}
-
     arinv_guid = Column('ARINV_GUID', NVARCHAR, primary_key=True)
     recno5 = Column("RECNO5", Integer)
     id = Column("ID", String)
@@ -158,15 +126,9 @@ class Arinv(Base):
     externalid = Column("EXTERNALID", String)
     p_rounddif = Column("P_ROUNDDIF", DECIMAL)
     details = relationship('Arinvdet', back_populates="order", innerjoin=True, primaryjoin='Arinv.autoid == Arinvdet.doc_aid')
-    # sales_order = relationship(
-    #     'SalesOrder', back_populates="origin_order", innerjoin=True, primaryjoin='Arinv.autoid == SalesOrder.order'
-    # )
 
 
 class Arinvdet(Base):
-    __tablename__ = "ARINVDET"
-    __table_args__ = {'extend_existing': True}
-
     arinvdet_guid = Column('ARINVDET_GUID', String, primary_key=True)
     recno5 = Column('RECNO5', Integer)
     invoice = Column('INVOICE', String)
@@ -249,31 +211,18 @@ class Arinvdet(Base):
     tax_expl = Column('TAX_EXPL', String)
     on_site = Column('ON_SITE', DECIMAL)
     order = relationship('Arinv', back_populates='details')
-    # rel_item = relationship('Item', back_populates='item', innerjoin=True, primaryjoin="Arinvdet.autoid==Item.origin_item", single_parent=True)
     rel_inventry = relationship('Inventry', back_populates='arinvdet')
 
 
 class Inprodtype(Base):
-    __tablename__ = "INPRODTYPE"
-    __table_args__ = {'extend_existing': True}
-    __bind_key__ = 'ebms'
-
     inprodtype_guid: Mapped[str] = mapped_column('INPRODTYPE_GUID', String(36), primary_key=True)
     recno5: Mapped[int] = mapped_column('RECNO5', Integer)
     prod_type: Mapped[str] = mapped_column('PROD_TYPE', String(20))
     ar_aid: Mapped[str] = mapped_column('AR_AID', String(16))
     autoid: Mapped[str] = mapped_column('AUTOID', String(16))
-    # flows: Mapped[List["Flow"]] = relationship("Flow", back_populates="ebms_category", innerjoin=True, primaryjoin="Inprodtype.autoid==Flow.category_id")
-    # flow_count: Mapped[int] = column_property(func.count('Flow.category_id'))
-    # total_capacity: Mapped[int] = column_property(select(func.sum(Capacity.per_day)).where(Capacity.category_id == autoid))
-    # capacity: Mapped[int] = column_property(select(Capacity.per_day).where(Capacity.category_id == autoid).scalar_subquery())
-    # rel_capacity: Mapped["Capacity"] = relationship("Capacity", back_populates="category", uselist=False, innerjoin=True, primaryjoin="Inprodtype.autoid==Capacity.category_id")
 
 
 class Inventry(Base):
-    __tablename__ = "INVENTRY"
-    __table_args__ = {'extend_existing': True}
-
     inventry_guid = Column('INVENTRY_GUID', String, primary_key=True)
     recno5 = Column('RECNO5', Integer)
     id = Column('ID', String)
@@ -422,79 +371,3 @@ class Inventry(Base):
     no_out_off = Column('NO_OUT_OFF', DECIMAL)
     prod_type = Column('PROD_TYPE', String)
     arinvdet = relationship("Arinvdet", back_populates="rel_inventry", innerjoin=True, primaryjoin='Inventry.id == Arinvdet.inven')
-
-
-# class Flow(Base):
-#     __tablename__ = "stages_flow"
-#     __table_args__ = {'extend_existing': True}
-#
-#     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-#     name: Mapped[str] = mapped_column(String(100))
-#     description: Mapped[str] = mapped_column(String(1000))
-#     position: Mapped[int] = mapped_column(Integer)
-#     color = mapped_column(String(100), default="#000000")
-#     need_manager: Mapped[bool] = mapped_column(Boolean)
-#     category_id: Mapped[int] = mapped_column(Integer)
-#     created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-#     # ebms_category = relationship("Inprodtype", back_populates="flows")
-#     rel_flow_item = relationship("Item", back_populates="rel_flow")
-#     stages = relationship("Stage", back_populates="flow")
-
-
-# class Stage(Base):
-#     __tablename__ = "stages_stage"
-#     __table_args__ = {'extend_existing': True}
-#
-#     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-#     name: Mapped[str] = mapped_column(String(100))
-#     description: Mapped[str] = mapped_column(String(1000))
-#     position: Mapped[int] = mapped_column(Integer)
-#     default: Mapped[bool] = mapped_column(Boolean)
-#     color: Mapped[str] = mapped_column(String(100), default="#000000")
-#     flow_id: Mapped[int] = mapped_column(ForeignKey('stages_flow.id'))
-#     flow = relationship("Flow", back_populates="stages", innerjoin=True, primaryjoin='Stage.flow_id == Flow.id')
-
-
-class Item(Base):
-    __tablename__ = "stages_item"
-    __table_args__ = {'extend_existing': True}
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order: Mapped[str] = mapped_column(String(100))
-    origin_item: Mapped[str] = mapped_column(String(100))
-    flow: Mapped[int] = mapped_column(Integer, ForeignKey('stages_flow.id'))
-    priority: Mapped[int] = mapped_column(Integer)
-    production_date: Mapped[datetime] = mapped_column(TIMESTAMP)
-    stage: Mapped[int] = mapped_column(Integer, ForeignKey('stages_stage.id'))
-    # item = relationship("Arinvdet", back_populates="rel_item", single_parent=True)
-    rel_flow = relationship("Flow", back_populates="rel_flow_item")
-    # rel_comments = relationship("Comment", back_populates="comments", innerjoin=True, primaryjoin='Item.id == Comment.item')
-
-
-class Comment(Base):
-    __tablename__ = "stages_comment"
-    __table_args__ = {'extend_existing': True}
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user: Mapped[int] = mapped_column(ForeignKey('users_user.id'))
-    item: Mapped[int] = mapped_column(ForeignKey('stages_item.id'))
-    text: Mapped[str] = mapped_column(String(1000))
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-    # comments = relationship("Item", backref="rel_comments")
-
-
-class SalesOrder(Base):
-    __tablename__ = "stages_salesorder"
-    __table_args__ = {'extend_existing': True}
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    order: Mapped[str] = mapped_column()
-    packages: Mapped[int] = mapped_column()
-    location: Mapped[str] = mapped_column()
-    priority: Mapped[int] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-    production_date: Mapped[datetime] = mapped_column(TIMESTAMP)
-    # origin_order = relationship("Arinv", back_populates="sales_order")
-
-
-

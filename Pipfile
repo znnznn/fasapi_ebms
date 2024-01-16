@@ -12,7 +12,6 @@ starlette = "*"
 pydantic-settings = "*"
 pydantic-extra-types = "*"
 pydantic-core = "*"
-sqlalchemy = "*"
 typing-extensions = "*"
 python-decouple = "*"
 fastapi-users = {extras = ["sqlalchemy"], version = "*"}
@@ -26,6 +25,8 @@ fastapi-debug-toolbar = "*"
 jinja2 = "*"
 fastapi-restful = {extras = ["all"], version = "*"}
 asyncpg = "*"
+sqlalchemy = {extras = ["asyncio"], version = "*"}
+psycopg2 = "*"
 
 [dev-packages]
 

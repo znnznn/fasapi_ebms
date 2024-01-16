@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from database import get_async_session
-from origin_db.models import Arinv, Arinvdet, Inprodtype, Item, Flow, Stage, Capacity
+from origin_db.models import Arinv, Arinvdet, Inprodtype
 # from origin_db.models import create_cache
 from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema
 
@@ -38,7 +38,6 @@ async def order_retrieve(order_id: int, session: AsyncSession = Depends(get_asyn
 
 @router.get("/categories", response_model=list[CategorySchema])
 async def get_categories(limit: int = 100, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
-    print(5555555555)
     time1 = time.time()
     # count_flow = aliased(Flow, name="count_flow")
     # count_flow = func.count(Inprodtype.flows).label("flow_count")

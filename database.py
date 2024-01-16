@@ -12,20 +12,14 @@ from sqlalchemy.orm.session import _EntityBindKey, _SessionBind
 from sqlalchemy_utils import EmailType, ChoiceType
 
 from common.constants import Role
+from common.models import EBMSBase, DefaultBase
 from settings import EBMS_DB, Default_DB
+from users.models import User
+
 
 # EBMS_DATABASE_URL = 'mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
 #     DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
 # )
-
-
-class EBMSBase(DeclarativeBase):
-    __bind_key__ = 'ebms'
-
-
-class DefaultBase(DeclarativeBase):
-    __bind_key__ = 'default'
-
 
 engines = {
     EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(

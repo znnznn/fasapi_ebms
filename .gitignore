@@ -168,3 +168,4 @@ cython_debug/
 # macOS
 .DS_Store!/.env
 !/.env
+/.env

@@ -16,7 +16,7 @@ class UserRead(schemas.BaseUser[int]):
     # else:  # pragma: no cover
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserCreate(schemas.BaseUserCreate):
