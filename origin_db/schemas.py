@@ -3,40 +3,7 @@ from typing import List, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class CommentSchema(BaseModel):
-    id: int = Field(default=None)
-    user: int = Field(default=None)
-    item: int = Field(default=None)
-    text: str = Field(default=None)
-    created_at: str = Field(default=None)
-
-
-class StageSchema(BaseModel):
-    id: int = Field(default=None)
-    name: str = Field(default=None)
-    description: str | None = Field(default=None)
-    position: int = Field(default=None)
-    default: bool = Field(default=None)
-    color: str = Field(default=None)
-    flow_id: int = Field(default=None)
-    # stage_count: str = Field(default=None)
-
-
-class FlowSchema(BaseModel):
-    id: int = Field(default=None)
-    name: str | None = Field(default=None)
-    description: str | None = Field(default=None)
-    position: int = Field(default=None)
-    category_id: str = Field(default=None)
-    stages: List[StageSchema] | None
-    created_at: datetime = Field(default=None)
-
-
-class CapacitySchema(BaseModel):
-    id: int = Field(default=None)
-    per_day: int = Field(default=None)
-    category_id: int = Field(default=None)
+from stages.schemas import ItemSchema
 
 
 class CategorySchema(BaseModel):
@@ -50,28 +17,6 @@ class CategorySchema(BaseModel):
     ar_aid: str = Field(default=None)
     autoid: str = Field(default=None)
     # flow_count: int | None = Field(default=None, alias="flow_count", serialization_alias="flow_count")
-
-    class Config:
-        orm_mode = True
-        populate_by_name = True
-
-
-class SalesOrderSchema(BaseModel):
-    id: int = Field(default=None)
-    order: int = Field(default=None)
-    packages: int = Field(default=None)
-    location: int = Field(default=None)
-    production_date: str = Field(default=None)
-    priority: int = Field(default=None)
-
-
-class ItemSchema(BaseModel):
-    id: int = Field(default=None)
-    flow: int = Field(default=None)
-    origin_item: int = Field(default=None)
-    production_date: str = Field(default=None)
-    priority: int = Field(default=None)
-    # comments: List[CommentSchema] = Field(default=None)
 
     class Config:
         orm_mode = True

@@ -27,6 +27,7 @@ fastapi-restful = {extras = ["all"], version = "*"}
 asyncpg = "*"
 sqlalchemy = {extras = ["asyncio"], version = "*"}
 psycopg2 = "*"
+fastapi-pagination = "*"
 
 [dev-packages]
 
