@@ -3,6 +3,7 @@ from pprint import pprint
 from typing import List
 
 from fastapi import APIRouter, Depends
+from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import select, func, label, cast, Integer, String, text
 from sqlalchemy.orm import joinedload, selectinload, subqueryload, with_loader_criteria, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,7 +37,7 @@ async def order_retrieve(order_id: int, session: AsyncSession = Depends(get_asyn
     return result.all()
 
 
-@router.get("/categories", response_model=list[CategorySchema])
+@router.get("/categories", response_model=LimitOffsetPage [CategorySchema])
 async def get_categories(limit: int = 100, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
     time1 = time.time()
     # count_flow = aliased(Flow, name="count_flow")

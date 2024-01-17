@@ -18,7 +18,6 @@ class User(DefaultBase):
     password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    comments = relationship("Comment", back_populates="user", innerjoin=True, primaryjoin='User.id == Comment.user_id')
 
 
 class CategoryAccess(DefaultBase):

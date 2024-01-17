@@ -49,7 +49,7 @@ class Comment(DefaultBase):
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     text: Mapped[str] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-    item = relationship("Item", backref="comments")
+    item = relationship("Item", back_populates="comments")
 
 
 class SalesOrder(DefaultBase):
