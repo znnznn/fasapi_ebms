@@ -6,7 +6,7 @@ from database import get_async_session
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
-    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn
+    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut
 )
 
 
@@ -184,7 +184,7 @@ async def get_flow(id: int, session: AsyncSession = Depends(get_async_session)):
     return await FlowsService(db_session=session).get(id)
 
 
-@router.post("/flows", tags=["flows"], response_model=FlowSchema)
+@router.post("/flows", tags=["flows"], response_model=FlowSchemaOut)
 async def create_flow(flow: FlowSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await FlowsService(db_session=session).create(flow)
 

@@ -25,7 +25,7 @@ class ErrorResponse(BaseModel):
 
 
 app = FastAPI(
-    title="FastAPI", debug=True, default_response_class=JSONResponse,
+    title="Wiseline Metals", debug=True, default_response_class=JSONResponse,
     responses={
         400: {"model": ErrorResponse},
         401: {"model": ErrorResponse},

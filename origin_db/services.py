@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from common.constants import InputSchemaType, OriginModelType
 from database import get_async_session
@@ -64,3 +65,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def __init__(self, model: Type[Arinv] = Arinv, db_session: AsyncSession = Depends(get_async_session)):
         super().__init__(model=model, db_session=db_session)
+
+    async def list(self):
+        query = select(self.model).options(selectinload(self.model.details, Arinvdet.rel_item)).group_by(Arinv)
+        objs: ScalarResult[Arinv] = await self.db_session.scalars(query)
+        return objs.all()

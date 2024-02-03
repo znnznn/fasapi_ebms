@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from stages.schemas import ItemSchema
 
@@ -9,14 +9,13 @@ from stages.schemas import ItemSchema
 class CategorySchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     guid: str = Field(default=None, alias="inprodtype_guid", serialization_alias="guid")
-    # flows: int = Field(default=0)
-    # flows: List[FlowSchema] | None
-    # capacity: int | None = Field(default=None)
-    # total_capacity: int | None = Field(default=None)
+    capacity: int | None = Field(default=None, alias="capacity", serialization_alias="capacity")
+    capacity_id: int | None = Field(default=None, alias="capacity_id", serialization_alias="capacity_id")
+    total_capacity: int | None = Field(default=None, alias="total_capacity", serialization_alias="total_capacity")
     prod_type: str = Field(default=None)
     ar_aid: str = Field(default=None)
     autoid: str = Field(default=None)
-    # flow_count: int | None = Field(default=None, alias="flow_count", serialization_alias="flow_count")
+    flow_count: int | None = Field(default=None, alias="flow_count", serialization_alias="flow_count")
 
     class Config:
         orm_mode = True
@@ -46,13 +45,22 @@ class ArinvDetSchema(BaseModel):
 
 
 class ArinvSchema(BaseModel):
-    recno5: int = Field(default=None, arbitrary_types_allowed=True)
+    id: int = Field(default=None, alias="autoid", serialization_alias="id")
+    customer: str = Field(default=None, serialization_alias="customer", alias="name")
+    invoice: str = Field(default=None)
+
+    @field_validator('invoice')
+    @classmethod
+    def validate_invoice(cls, v: str):
+        return v.strip()
 
 
 class ArinvRelatedArinvDetSchema(BaseModel):
-    id_det: int = Field(default=None, alias="recno5", serialization_alias="id_det")
-    autoid: str = Field(default=None, arbitrary_types_allowed=True)
-    details: List[ArinvDetSchema] = Field(default=None, arbitrary_types_allowed=True)
+    id: int = Field(default=None, alias="autoid", serialization_alias="id")
+    count_items: int = Field(default=0, serialization_alias="count_items")
+    customer: str = Field(default=None, serialization_alias="customer", alias="name")
+    invoice: str = Field(default=None)
+    origin_items: List[ArinvDetSchema] = Field(default=None, alias="details", serialization_alias="origin_items")
 
     class Config:
         orm_mode = True

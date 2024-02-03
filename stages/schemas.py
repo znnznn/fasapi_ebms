@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -35,7 +36,7 @@ class StageSchema(BaseModel):
     position: int = Field(default=None)
     default: bool = Field(default=None)
     color: str = Field(default=None)
-    flow_id: int = Field(default=None)
+    flow_id: int | None = Field(default=None)
 
 
 class StageSchemaIn(BaseModel):
@@ -52,16 +53,20 @@ class FlowSchema(BaseModel):
     name: str | None = Field(default=None)
     description: str | None = Field(default=None)
     position: int = Field(default=None)
-    category_id: str = Field(default=None)
+    category_autoid: str = Field(default=None)
     stages: List[StageSchema] | None
-    created_at: str = Field(default=None)
+    created_at: datetime = Field(default=None)
 
 
 class FlowSchemaIn(BaseModel):
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
     position: Optional[int] = Field(default=None)
-    category_id: Optional[str] = Field(default=None)
+    category_autoid: Optional[str] = Field(default=None)
+
+
+class FlowSchemaOut(FlowSchemaIn):
+    id: int
 
 
 class ItemSchema(BaseModel):
