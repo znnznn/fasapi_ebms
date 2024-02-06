@@ -75,7 +75,7 @@ class ItemSchema(BaseModel):
     origin_item: str = Field(default=None)
     flow_id: int = Field(default=None)
     priority: int = Field(default=None)
-    production_date: str = Field(default=None)
+    production_date: datetime = Field(default=None)
     stage: StageSchema | None = Field(default=None)
 
 
@@ -84,8 +84,12 @@ class ItemSchemaIn(BaseModel):
     origin_item: Optional[str] = Field(default=None)
     flow_id: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
-    production_date: Optional[str] = Field(default=None)
+    production_date: datetime = Field(default=None)
     stage: Optional[StageSchema] = Field(default=None)
+
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True
 
 
 class SalesOrderSchema(BaseModel):
@@ -94,7 +98,7 @@ class SalesOrderSchema(BaseModel):
     packages: int = Field(default=None)
     location: int = Field(default=None)
     priority: int = Field(default=None)
-    created_at: str = Field(default=None)
+    created_at: datetime = Field(default=None)
 
 
 class SalesOrderSchemaIn(BaseModel):
@@ -102,3 +106,4 @@ class SalesOrderSchemaIn(BaseModel):
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
+    created_at: datetime = Field(default=datetime.now())

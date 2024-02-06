@@ -13,41 +13,52 @@ from starlette.requests import Request
 from database import get_async_session
 from origin_db.models import Arinv, Arinvdet, Inprodtype
 # from origin_db.models import create_cache
-from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema
-from origin_db.services import CategoryService
-from stages.models import Flow
-from stages.services import FlowsService, ItemsService, CapacitiesService
+from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema, ArinPaginateSchema
+from origin_db.services import CategoryService, OriginOrderService
+from stages.models import Flow, SalesOrder, Item
+from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
 
 router = APIRouter(prefix="/ebms", tags=["ebms"])
 
 
-@router.get("/orders", response_model=LimitOffsetPage[ArinvRelatedArinvDetSchema])
-async def orders(limit: int = 100, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
-    time1 = time.time()
-    list_of_orders = select(Arinv).offset(offset).limit(limit).order_by(Arinv.recno5)
-    result = await session.scalars(list_of_orders)
-    print(time.time() - time1)
-    return paginate(result.all())
+@router.get("/orders/", response_model=ArinPaginateSchema)
+async def orders(limit: int = 10, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
+    result = await OriginOrderService(db_session=session).list(limit=limit, offset=offset)
+    autoids = [i.autoid for i in result["results"]]
+    items = await ItemsService(db_session=session).get_min_max_production_date(autoids=autoids)
+    sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+    items_data = {i.order: i for i in items}
+    sales_order_data = {i.order: i for i in sales_order}
+    for i in result["results"]:
+        if order := items_data.get(i.autoid):
+            i.start_date = order.min_date
+            i.end_date = order.max_date
+        if order := sales_order_data.get(i.autoid):
+            i.sales_order = order
+    return result
 
 
-@router.get("/orders/{order_id}", response_model=list[ArinvRelatedArinvDetSchema])
-async def order_retrieve(order_id: int, session: AsyncSession = Depends(get_async_session)):
-    time1 = time.time()
-    # details = aliased(Arinvdet, name="details", flat=True)
-    list_of_orders = select(Arinv).where(Arinv.recno5 == order_id).join(Arinvdet).options(selectinload(Arinv.details, Arinvdet.rel_item)
-                                                                                          ).order_by()
-    result = await session.scalars(list_of_orders)
-    print(time.time() - time1)
-    return result.all()
+@router.get("/orders/{order_id}/", response_model=ArinvRelatedArinvDetSchema)
+async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_session)):
+    result = await OriginOrderService(db_session=session).get(autoid=autoid)
+    autoids = [result.autoid]
+    items = await ItemsService(db_session=session).get_min_max_production_date(autoids=autoids)
+    sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+    items_data = {i.order: i for i in items}
+    sales_order_data = {i.order: i for i in sales_order}
+    if item := items_data.get(result.autoid):
+        result.start_date = item.min_date
+        result.end_date = item.max_date
+    if order := sales_order_data.get(result.autoid):
+        result.sales_order = order
+    return result
 
 
-@router.get("/categories", response_model=LimitOffsetPage[CategorySchema])
+@router.get("/categories/", response_model=LimitOffsetPage[CategorySchema])
 async def get_categories(session: AsyncSession = Depends(get_async_session)):
     origin_db_response = await CategoryService(db_session=session).list()
     flows_data = await FlowsService(db_session=session).group_by_category()
     item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(datetime.date.today())
-    paginate(item_ids)
-    print("+++++++++++++------+++++++++++++")
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService(db_session=session).list()
     total_capacity = select(Arinvdet.quan, Arinvdet.heightd, Arinvdet.demd).where(Arinvdet.autoid.in_(item_ids)).group_by(
@@ -56,7 +67,6 @@ async def get_categories(session: AsyncSession = Depends(get_async_session)):
     total_capacity = await session.scalars(total_capacity)
     total_capacity = total_capacity.all()
     print(total_capacity)
-    print("+++++++++++++------+++++++++++++")
     capacities_data = {c.category_autoid: c for c in capacities}
     result = paginate(origin_db_response)
     print(result.items)

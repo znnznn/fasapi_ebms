@@ -67,7 +67,7 @@ app.add_middleware(
 #     )
 
 
-add_pagination(app)
+
 disable_installed_extensions_check()
 
 app.include_router(
@@ -91,3 +91,4 @@ app.include_router(origin_router)
 app.include_router(stages_router)
 
 # app.include_router(test_router)
+add_pagination(app)

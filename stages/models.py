@@ -35,7 +35,7 @@ class Stage(DefaultBase):
 
 class Item(DefaultBase):
     order: Mapped[str] = mapped_column(String(100), nullable=True)
-    origin_item: Mapped[str] = mapped_column(String(100), nullable=True)
+    origin_item: Mapped[str] = mapped_column(String(100), nullable=True, unique=True)
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
     production_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
@@ -54,7 +54,7 @@ class Comment(DefaultBase):
 
 
 class SalesOrder(DefaultBase):
-    order: Mapped[str] = mapped_column(String(100), nullable=True)
+    order: Mapped[str] = mapped_column(String(100), nullable=True, unique=True)
     packages: Mapped[POSITIVE_INT]
     location: Mapped[POSITIVE_INT]
     priority: Mapped[POSITIVE_INT]

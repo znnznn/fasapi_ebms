@@ -3,7 +3,7 @@ from typing import List, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from stages.schemas import ItemSchema
+from stages.schemas import ItemSchema, SalesOrderSchema
 
 
 class CategorySchema(BaseModel):
@@ -23,6 +23,7 @@ class CategorySchema(BaseModel):
 
 
 class ArinvDetSchema(BaseModel):
+    id: str = Field(default=None, alias="autoid", serialization_alias="id")
     id_det: int = Field(default=None, alias="recno5", serialization_alias="id_det")
     description: str = Field(default=None, serialization_alias="description", alias="descr")
     item: ItemSchema = Field(default=None)
@@ -45,9 +46,14 @@ class ArinvDetSchema(BaseModel):
 
 
 class ArinvSchema(BaseModel):
-    id: int = Field(default=None, alias="autoid", serialization_alias="id")
+    id: str = Field(default=None, alias="autoid", serialization_alias="id")
     customer: str = Field(default=None, serialization_alias="customer", alias="name")
     invoice: str = Field(default=None)
+    ship_date: datetime = Field(default=None, serialization_alias="ship_date")
+    c_name: str = Field(default=None, serialization_alias="c_name")
+    c_city: str = Field(default=None, serialization_alias="c_city")
+    start_date: datetime = Field(default=None, serialization_alias="start_date")
+    end_date: datetime = Field(default=None, serialization_alias="end_date")
 
     @field_validator('invoice')
     @classmethod
@@ -55,13 +61,16 @@ class ArinvSchema(BaseModel):
         return v.strip()
 
 
-class ArinvRelatedArinvDetSchema(BaseModel):
-    id: int = Field(default=None, alias="autoid", serialization_alias="id")
+class ArinvRelatedArinvDetSchema(ArinvSchema):
     count_items: int = Field(default=0, serialization_alias="count_items")
-    customer: str = Field(default=None, serialization_alias="customer", alias="name")
-    invoice: str = Field(default=None)
+    sales_order: SalesOrderSchema = Field(default=None)
     origin_items: List[ArinvDetSchema] = Field(default=None, alias="details", serialization_alias="origin_items")
 
     class Config:
         orm_mode = True
         # populate_by_name = True
+
+
+class ArinPaginateSchema(BaseModel):
+    results: List[ArinvRelatedArinvDetSchema]
+    count: int

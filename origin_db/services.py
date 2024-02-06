@@ -1,10 +1,10 @@
 from typing import Generic, Type, Optional
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import select, ScalarResult, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria
 
 from common.constants import InputSchemaType, OriginModelType
 from database import get_async_session
@@ -66,7 +66,41 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def __init__(self, model: Type[Arinv] = Arinv, db_session: AsyncSession = Depends(get_async_session)):
         super().__init__(model=model, db_session=db_session)
 
-    async def list(self):
-        query = select(self.model).options(selectinload(self.model.details, Arinvdet.rel_item)).group_by(Arinv)
-        objs: ScalarResult[Arinv] = await self.db_session.scalars(query)
-        return objs.all()
+    async def list(self, limit: int = 10, offset: int = 0) -> dict:
+        query = select(
+            self.model,
+        ).join(
+            Arinvdet
+        ).options(
+            selectinload(Arinv.details)
+        ).order_by(
+            Arinv.recno5
+        ).group_by(
+            self.model
+        )
+        count = await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
+        objs = await self.db_session.scalars(query.limit(limit).offset(offset))
+        return {
+            "results": objs.all(),
+            "count": count
+        }
+
+    async def get(self, autoid: str) -> Optional[OriginModelType]:
+        query = select(
+            self.model,
+        ).where(
+            self.model.autoid == autoid
+        ).join(
+            Arinvdet
+        ).options(
+            selectinload(Arinv.details)
+        ).order_by(
+            Arinv.recno5
+        ).group_by(
+            self.model
+        )
+        result = await self.db_session.scalars(query)
+        try:
+            return result.one()
+        except NoResultFound:
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")

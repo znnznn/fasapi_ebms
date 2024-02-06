@@ -143,7 +143,19 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
+    async def get_min_max_production_date(self, autoids: list[str]):
+        stmt = select(
+            Item.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
+        ).where(Item.order.in_(autoids)).group_by(Item.order)
+        objs = await self.db_session.execute(stmt)
+        return objs.all()
+
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
     def __init__(self, model: Type[SalesOrder] = SalesOrder, db_session: AsyncSession = Depends(get_async_session)):
         super().__init__(model=model, db_session=db_session)
+
+    async def list_by_orders(self, autoids: list[str]):
+        stmt = select(SalesOrder).where(SalesOrder.order.in_(autoids))
+        objs = await self.db_session.scalars(stmt)
+        return objs.all()
