@@ -5,7 +5,7 @@ import sqlalchemy
 from fastapi import APIRouter, Depends
 from fastapi_restful.cbv import cbv
 from pydantic import BaseModel
-from sqlalchemy import select, ScalarResult, func, Integer
+from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
@@ -76,12 +76,15 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return instance
 
     async def partial_update(self, id: int, obj: dict) -> Optional[ModelType]:
+        print(obj)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
+        print(("********************************************"))
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
         for key, value in obj.items():
             setattr(instance, key, value)
+        print(instance)
         try:
             self.db_session.add(instance)
             await self.db_session.commit()
@@ -143,11 +146,44 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
-    async def get_min_max_production_date(self, autoids: list[str]):
+    async def group_by_order_annotated_statistics(self, autoids: list[str]):
+        """
+            Returns annotated:
+                - completed
+                - min_date
+                - max_date
+        """
+        subq = select(self.model.order).where(
+            self.model.order.in_(autoids), and_(
+                or_(
+                    self.model.production_date.is_(None),
+                    self.model.stage_id.is_(None),
+                    Stage.name != "Done",
+                ))
+        ).join(Stage).where(self.model.order.in_(autoids))
         stmt = select(
-            Item.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
+            self.model.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
+            case((subq.exists(), 0), else_=1).label("completed"),
         ).where(Item.order.in_(autoids)).group_by(Item.order)
         objs = await self.db_session.execute(stmt)
+        return objs.all()
+
+    async def get_related_items(self, autoids: list[str]):
+        stmt = select(self.model).where(self.model.order.in_(autoids)).options(
+            selectinload(self.model.stage),
+            selectinload(self.model.comments),
+            selectinload(self.model.flow).selectinload(Flow.stages),
+        )
+        objs = await self.db_session.scalars(stmt)
+        return objs.all()
+
+    async def list(self):
+        stmt = select(self.model).options(
+            selectinload(self.model.stage),
+            selectinload(self.model.comments),
+            selectinload(self.model.flow).selectinload(Flow.stages),
+        )
+        objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 
 
@@ -156,6 +192,6 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         super().__init__(model=model, db_session=db_session)
 
     async def list_by_orders(self, autoids: list[str]):
-        stmt = select(SalesOrder).where(SalesOrder.order.in_(autoids))
+        stmt = select(self.model).where(self.model.order.in_(autoids))
         objs = await self.db_session.scalars(stmt)
         return objs.all()

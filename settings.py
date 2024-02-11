@@ -4,11 +4,8 @@ from pydantic_settings import BaseSettings
 
 SECRET_KEY = config("SECRET_KEY", cast=str)
 
-# DB_USER = config("DB_USER", cast=str, default="postgres")
-# DB_PASS = config("MSSQL_SA_PASSWORD", cast=str, default="postgres")
-# DB_HOST = config("DB_HOST", cast=str, default="localhost")
-# DB_PORT = config("DB_PORT", cast=int, default=5432)
-# DB_NAME = config("DB_NAME", cast=str, default="stock")
+FILTERING_DATA_STARTING_YEAR = config('FILTERING_DATA_STARTING_YEAR', default='2023', cast=str)
+LIST_EXCLUDED_PROD_TYPES = ("", "Vents")
 
 ALGORITHM = "SHA256"
 ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int, default=30)

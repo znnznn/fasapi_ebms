@@ -126,96 +126,130 @@ class Arinv(Base):
     externalid: Mapped[str] = mapped_column("EXTERNALID", String)
     p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL)
     details = relationship('Arinvdet', back_populates="order", innerjoin=True, primaryjoin='Arinv.autoid == Arinvdet.doc_aid')
+    _sales_order = None
 
     @hybrid_property
     def count_items(self):
         return len(self.details)
 
+    @hybrid_property
+    def sales_order(self):
+        return self._sales_order
+
+    @sales_order.setter
+    def sales_order(self, value):
+        self._sales_order = value
+
 
 class Arinvdet(Base):
-    arinvdet_guid = Column('ARINVDET_GUID', String, primary_key=True)
-    recno5 = Column('RECNO5', Integer)
-    invoice = Column('INVOICE', String)
-    id = Column('ID', String)
-    doc_type = Column('DOC_TYPE', String)
-    doc_aid = Column('DOC_AID', String, ForeignKey(Arinv.autoid))
-    inv_date = Column('INV_DATE', TIMESTAMP)
-    quan = Column('QUAN', DECIMAL)
-    ship = Column('SHIP', DECIMAL)
-    m_quan = Column('M_QUAN', DECIMAL)
-    orig_quan = Column('ORIG_QUAN', DECIMAL)
-    inven = Column('INVEN', String, ForeignKey('INVENTRY.ID'))
-    c_type = Column('C_TYPE', DECIMAL)
-    unit_meas = Column('UNIT_MEAS', String)
-    descr = Column('DESCR', String)
-    unit = Column('UNIT', DECIMAL)
-    price = Column('PRICE', DECIMAL)
-    so_amount = Column('SO_AMOUNT', DECIMAL)
-    discount = Column('DISCOUNT', DECIMAL)
-    sodiscount = Column('SODISCOUNT', DECIMAL)
-    timestamp = Column('TIMESTAMP', String)
-    par_time = Column('PAR_TIME', String)
-    gpar_time = Column('GPAR_TIME', String)
-    status = Column('STATUS', DECIMAL)
-    u_cost = Column('U_COST', DECIMAL)
-    costs = Column('COSTS', DECIMAL)
-    tax_group = Column('TAX_GROUP', String)
-    exm_overid = Column('EXM_OVERID', String)
-    ship_date = Column('SHIP_DATE', TIMESTAMP)
-    weight = Column('WEIGHT', DECIMAL)
-    print = Column('PRINT', Boolean),
-    ap_partime = Column('AP_PARTIME', String)
-    print_quan = Column('PRINT_QUAN', Boolean)
-    print_uom = Column('PRINT_UOM', Boolean)
-    account = Column('ACCOUNT', String)
-    warehouse = Column('WAREHOUSE', String)
-    autoid = Column('AUTOID', String)
-    pcm_type = Column('PCM_TYPE', DECIMAL)
-    pcm_perc = Column('PCM_PERC', DECIMAL)
-    mto = Column('MTO', Boolean)
-    mto_d_sync = Column('MTO_D_SYNC', Boolean)
-    drop_ven = Column('DROP_VEN', String)
-    drop_part = Column('DROP_PART', String)
-    drop_aid = Column('DROP_AID', String)
-    purc_meth = Column('PURC_METH', DECIMAL)
-    c_price = Column('C_PRICE', DECIMAL)
-    c_unit = Column('C_UNIT', DECIMAL)
-    fxline = Column('FXLINE', Boolean)
-    c_formula = Column('C_FORMULA', String)
-    width = Column('WIDTH', String)
-    widthd = Column('WIDTHD', DECIMAL)
-    height = Column('HEIGHT', String)
-    heightd = Column('HEIGHTD', DECIMAL)
-    dem = Column('DEM', String)
-    demd = Column('DEMD', DECIMAL)
-    manual_p = Column('MANUAL_P', Boolean)
-    manual_c = Column('MANUAL_C', Boolean)
-    round = Column('ROUND', DECIMAL)
-    comment = Column('COMMENT', String)
-    ea_quan = Column('EA_QUAN', DECIMAL)
-    r_ea_quan = Column('R_EA_QUAN', DECIMAL)
-    report_n = Column('REPORT_N', String)
-    random_w = Column('RANDOM_W', Boolean)
-    random_h = Column('RANDOM_H', Boolean)
-    item_num = Column('ITEM_NUM', String)
-    feet = Column('FEET', DECIMAL)
-    inchesd = Column('INCHESD', DECIMAL)
-    inches = Column('INCHES', String)
-    c_mfg = Column('C_MFG', DECIMAL)
-    r_serial = Column('R_SERIAL', String)
-    su_autoid = Column('SU_AUTOID', String)
-    trade_in = Column('TRADE_IN', Boolean)
-    in_level = Column('IN_LEVEL', String)
-    job_id = Column('JOB_ID', String)
-    jobstg_id = Column('JOBSTG_ID', String)
-    aia = Column('AIA', String)
-    retn_type = Column('RETN_TYPE', String)
-    retn_perc = Column('RETN_PERC', DECIMAL)
-    int_note = Column('INT_NOTE', String)
-    tax_expl = Column('TAX_EXPL', String)
-    on_site = Column('ON_SITE', DECIMAL)
+    arinvdet_guid: Mapped[str] = mapped_column('ARINVDET_GUID', String, primary_key=True)
+    recno5: Mapped[int] = mapped_column('RECNO5', Integer)
+    invoice: Mapped[str] = mapped_column('INVOICE', String)
+    id: Mapped[str] = mapped_column('ID', String)
+    doc_type: Mapped[str] = mapped_column('DOC_TYPE', String)
+    doc_aid: Mapped[str] = mapped_column('DOC_AID', String, ForeignKey('ARINV.AUTOID'))
+    inv_date: Mapped[datetime] = mapped_column('INV_DATE', TIMESTAMP)
+    quan: Mapped[float] = mapped_column('QUAN', DECIMAL)
+    ship: Mapped[float] = mapped_column('SHIP', DECIMAL)
+    m_quan: Mapped[float] = mapped_column('M_QUAN', DECIMAL)
+    orig_quan: Mapped[float] = mapped_column('ORIG_QUAN', DECIMAL)
+    inven: Mapped[str] = mapped_column('INVEN', String, ForeignKey('INVENTRY.ID'))
+    c_type: Mapped[float] = mapped_column('C_TYPE', DECIMAL)
+    unit_meas: Mapped[str] = mapped_column('UNIT_MEAS', String)
+    descr: Mapped[str] = mapped_column('DESCR', String)
+    unit: Mapped[float] = mapped_column('UNIT', DECIMAL)
+    price: Mapped[float] = mapped_column('PRICE', DECIMAL)
+    so_amount: Mapped[float] = mapped_column('SO_AMOUNT', DECIMAL)
+    discount: Mapped[float] = mapped_column('DISCOUNT', DECIMAL)
+    sodiscount: Mapped[float] = mapped_column('SODISCOUNT', DECIMAL)
+    timestamp: Mapped[str] = mapped_column('TIMESTAMP', String)
+    par_time: Mapped[str] = mapped_column('PAR_TIME', String)
+    gpar_time: Mapped[str] = mapped_column('GPAR_TIME', String)
+    status: Mapped[float] = mapped_column('STATUS', DECIMAL)
+    u_cost: Mapped[float] = mapped_column('U_COST', DECIMAL)
+    costs: Mapped[float] = mapped_column('COSTS', DECIMAL)
+    tax_group: Mapped[str] = mapped_column('TAX_GROUP', String)
+    exm_overid: Mapped[str] = mapped_column('EXM_OVERID', String)
+    ship_date: Mapped[datetime] = mapped_column('SHIP_DATE', TIMESTAMP)
+    weight: Mapped[float] = mapped_column('WEIGHT', DECIMAL)
+    print: Mapped[bool] = mapped_column('PRINT', Boolean)
+    ap_partime: Mapped[str] = mapped_column('AP_PARTIME', String)
+    print_quan: Mapped[bool] = mapped_column('PRINT_QUAN', Boolean)
+    print_uom: Mapped[bool] = mapped_column('PRINT_UOM', Boolean)
+    account: Mapped[str] = mapped_column('ACCOUNT', String)
+    warehouse: Mapped[str] = mapped_column('WAREHOUSE', String)
+    autoid: Mapped[str] = mapped_column('AUTOID', String)
+    pcm_type: Mapped[float] = mapped_column('PCM_TYPE', DECIMAL)
+    pcm_perc: Mapped[float] = mapped_column('PCM_PERC', DECIMAL)
+    mto: Mapped[bool] = mapped_column('MTO', Boolean)
+    mto_d_sync: Mapped[bool] = mapped_column('MTO_D_SYNC', Boolean)
+    drop_ven: Mapped[str] = mapped_column('DROP_VEN', String)
+    drop_part: Mapped[str] = mapped_column('DROP_PART', String)
+    drop_aid: Mapped[str] = mapped_column('DROP_AID', String)
+    purc_meth: Mapped[float] = mapped_column('PURC_METH', DECIMAL)
+    c_price: Mapped[float] = mapped_column('C_PRICE', DECIMAL)
+    c_unit: Mapped[float] = mapped_column('C_UNIT', DECIMAL)
+    fxline: Mapped[bool] = mapped_column('FXLINE', Boolean)
+    c_formula: Mapped[str] = mapped_column('C_FORMULA', String)
+    width: Mapped[str] = mapped_column('WIDTH', String)
+    widthd: Mapped[float] = mapped_column('WIDTHD', DECIMAL)
+    height: Mapped[str] = mapped_column('HEIGHT', String)
+    heightd: Mapped[float] = mapped_column('HEIGHTD', DECIMAL)
+    dem: Mapped[str] = mapped_column('DEM', String)
+    demd: Mapped[float] = mapped_column('DEMD', DECIMAL)
+    manual_p: Mapped[bool] = mapped_column('MANUAL_P', Boolean)
+    manual_c: Mapped[bool] = mapped_column('MANUAL_C', Boolean)
+    round: Mapped[float] = mapped_column('ROUND', DECIMAL)
+    comment: Mapped[str] = mapped_column('COMMENT', String)
+    ea_quan: Mapped[float] = mapped_column('EA_QUAN', DECIMAL)
+    r_ea_quan: Mapped[float] = mapped_column('R_EA_QUAN', DECIMAL)
+    report_n: Mapped[str] = mapped_column('REPORT_N', String)
+    random_w: Mapped[bool] = mapped_column('RANDOM_W', Boolean)
+    random_h: Mapped[bool] = mapped_column('RANDOM_H', Boolean)
+    item_num: Mapped[str] = mapped_column('ITEM_NUM', String)
+    feet: Mapped[float] = mapped_column('FEET', DECIMAL)
+    inchesd: Mapped[float] = mapped_column('INCHESD', DECIMAL)
+    inches: Mapped[str] = mapped_column('INCHES', String)
+    c_mfg: Mapped[float] = mapped_column('C_MFG', DECIMAL)
+    r_serial: Mapped[str] = mapped_column('R_SERIAL', String)
+    su_autoid: Mapped[str] = mapped_column('SU_AUTOID', String)
+    trade_in: Mapped[bool] = mapped_column('TRADE_IN', Boolean)
+    in_level: Mapped[str] = mapped_column('IN_LEVEL', String)
+    job_id: Mapped[str] = mapped_column('JOB_ID', String)
+    jobstg_id: Mapped[str] = mapped_column('JOBSTG_ID', String)
+    aia: Mapped[str] = mapped_column('AIA', String)
+    retn_type: Mapped[str] = mapped_column('RETN_TYPE', String)
+    retn_perc: Mapped[float] = mapped_column('RETN_PERC', DECIMAL)
+    int_note: Mapped[str] = mapped_column('INT_NOTE', String)
+    tax_expl: Mapped[str] = mapped_column('TAX_EXPL', String)
+    on_site: Mapped[float] = mapped_column('ON_SITE', DECIMAL)
     order = relationship('Arinv', back_populates='details')
     rel_inventry = relationship('Inventry', back_populates='arinvdet', primaryjoin="Inventry.id == Arinvdet.inven")
+    _item = None
+
+    @hybrid_property
+    def category(self):
+        return self.rel_inventry.prod_type
+
+    @hybrid_property
+    def profile(self):
+        return self.rel_inventry.rol_profile
+
+    @hybrid_property
+    def color(self):
+        return self.rel_inventry.rol_color
+
+    @hybrid_property
+    def customer(self):
+        return self.order.name
+
+    @hybrid_property
+    def item(self):
+        return self._item
+
+    @item.setter
+    def item(self, value):
+        self._item = value
 
 
 class Inprodtype(Base):
@@ -232,8 +266,8 @@ class Inprodtype(Base):
 class Inventry(Base):
     inventry_guid: Mapped[str] = mapped_column('INVENTRY_GUID', String, primary_key=True)
     recno5: Mapped[int] = mapped_column('RECNO5', Integer)
-    id = Column('ID', String)
-    tree_id = Column('TREE_ID', String)
+    id: Mapped[str] = mapped_column('ID', String)
+    tree_id: Mapped[str] = mapped_column('TREE_ID', String)
     upc: Mapped[str] = mapped_column('UPC', String)
     type: Mapped[str] = mapped_column('TYPE', String)
     c_type: Mapped[DECIMAL] = mapped_column('C_TYPE', DECIMAL)

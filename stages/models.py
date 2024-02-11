@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from common.models import DefaultBase, POSITIVE_INT
@@ -31,6 +32,7 @@ class Stage(DefaultBase):
     color: Mapped[str] = mapped_column(String(100), default="#000000")
     flow_id: Mapped[int] = mapped_column(ForeignKey('flow.id', ondelete="CASCADE"), nullable=True)
     flow = relationship("Flow", back_populates="stages")
+    items = relationship("Item", back_populates="stage", primaryjoin='Stage.id == Item.stage_id', innerjoin=True)
 
 
 class Item(DefaultBase):
@@ -39,9 +41,14 @@ class Item(DefaultBase):
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
     production_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
-    stage: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
+    stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
     flow = relationship("Flow", back_populates="items")
     comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id')
+    stage = relationship("Stage", back_populates="items")
+
+    @hybrid_property
+    def stage_name(self):
+        return self.stage.name
 
 
 class Comment(DefaultBase):

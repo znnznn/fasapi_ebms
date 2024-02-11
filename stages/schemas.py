@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator, model_validator
 
 
 class CapacitySchema(BaseModel):
@@ -29,23 +29,25 @@ class CommentSchemaIn(BaseModel):
     text: Optional[str] = Field(default=None)
 
 
-class StageSchema(BaseModel):
-    id: int = Field(default=None)
-    name: str = Field(default=None)
-    description: str | None = Field(default=None)
-    position: int = Field(default=None)
-    default: bool = Field(default=None)
-    color: str = Field(default=None)
-    flow_id: int | None = Field(default=None)
-
-
 class StageSchemaIn(BaseModel):
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
     position: Optional[int] = Field(default=None)
     default: Optional[bool] = Field(default=None)
     color: Optional[str] = Field(default=None)
-    flow_id: Optional[int] = Field(default=None)
+    flow_id: Optional[int] = Field(default=None, alias="flow")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class StageSchema(StageSchemaIn):
+    id: int = Field(default=None)
+    flow_id: int | None = Field(default=None, serialization_alias="flow")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
 
 
 class FlowSchema(BaseModel):
@@ -73,23 +75,37 @@ class ItemSchema(BaseModel):
     id: int = Field(default=None)
     order: str = Field(default=None)
     origin_item: str = Field(default=None)
-    flow_id: int = Field(default=None)
+    flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
-    production_date: datetime = Field(default=None)
+    production_date: datetime | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
+    comments: List[CommentSchema] | None
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
 
 
 class ItemSchemaIn(BaseModel):
     order: Optional[str] = Field(default=None)
     origin_item: Optional[str] = Field(default=None)
-    flow_id: Optional[int] = Field(default=None)
+    flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
-    production_date: datetime = Field(default=None)
-    stage: Optional[StageSchema] = Field(default=None)
+    production_date: Optional[datetime] = Field(default=None)
+    stage_id: Optional[int] = Field(default=None, alias="stage")
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class ItemSchemaOut(ItemSchemaIn):
+    id: int
+    flow_id: int = Field(None, serialization_alias="flow")
+    stage_id: int = Field(None, serialization_alias="stage")
 
     class Config:
         orm_mode = True
-        arbitrary_types_allowed = True
+        allow_population_by_field_name = True
 
 
 class SalesOrderSchema(BaseModel):

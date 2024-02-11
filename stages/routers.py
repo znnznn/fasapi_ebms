@@ -6,7 +6,7 @@ from database import get_async_session
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
-    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut
+    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut, ItemSchemaOut
 )
 
 
@@ -67,8 +67,9 @@ async def update_stage(id: int, stage: StageSchemaIn, session: AsyncSession = De
 
 
 @router.patch("/stages/{id}/", tags=["stage"], response_model=StageSchema)
-async def partial_update_stage(id: int, stage: StageSchemaIn, session: AsyncSession = Depends(get_async_session)):
-    stage = stage.model_dump(exclude_unset=True)
+async def partial_update_stage(id: int, data: StageSchemaIn, session: AsyncSession = Depends(get_async_session)):
+    stage = data.model_dump(exclude_unset=True)
+    print(stage)
     return await StagesService(db_session=session).partial_update(id, stage)
 
 
@@ -120,17 +121,17 @@ async def get_item(id: int, session: AsyncSession = Depends(get_async_session)):
     return await ItemsService(db_session=session).get(id)
 
 
-@router.post("/items", tags=["items"], response_model=ItemSchema)
+@router.post("/items/", tags=["items"], response_model=ItemSchemaOut)
 async def create_item(item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await ItemsService(db_session=session).create(item)
 
 
-@router.put("/items/{id}/", tags=["items"], response_model=ItemSchema)
+@router.put("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await ItemsService(db_session=session).update(id, item)
 
 
-@router.patch("/items/{id}/", tags=["items"], response_model=ItemSchema)
+@router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def partial_update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
     item = item.model_dump(exclude_unset=True)
     return await ItemsService(db_session=session).partial_update(id, item)
@@ -141,34 +142,34 @@ async def delete_item(id: int, session: AsyncSession = Depends(get_async_session
     return await ItemsService(db_session=session).delete(id)
 
 
-@router.get("/salesorders/", tags=["salesorders"], response_model=LimitOffsetPage[SalesOrderSchema])
+@router.get("/sales-orders/", tags=["sales-orders"], response_model=LimitOffsetPage[SalesOrderSchema])
 async def get_salesorders(session: AsyncSession = Depends(get_async_session)):
     result = await SalesOrdersService(db_session=session).list()
     return paginate(result)
 
 
-@router.get("/salesorders/{id}/", tags=["salesorders"], response_model=SalesOrderSchema)
+@router.get("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def get_salesorder(id: int, session: AsyncSession = Depends(get_async_session)):
     return await SalesOrdersService(db_session=session).get(id)
 
 
-@router.post("/salesorders/", tags=["salesorders"], response_model=SalesOrderSchema)
+@router.post("/sales-orders/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def create_salesorder(salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await SalesOrdersService(db_session=session).create(salesorder)
 
 
-@router.put("/salesorders/{id}/", tags=["salesorders"], response_model=SalesOrderSchema)
+@router.put("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def update_salesorder(id: int, salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await SalesOrdersService(db_session=session).update(id, salesorder)
 
 
-@router.patch("/salesorders/{id}/", tags=["salesorders"], response_model=SalesOrderSchema)
+@router.patch("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def partial_update_salesorder(id: int, salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session)):
     salesorder = salesorder.model_dump(exclude_unset=True)
     return await SalesOrdersService(db_session=session).partial_update(id, salesorder)
 
 
-@router.delete("/salesorders/{id}/", tags=["salesorders"])
+@router.delete("/sales-orders/{id}/", tags=["sales-orders"])
 async def delete_salesorder(id: int, session: AsyncSession = Depends(get_async_session)):
     return await SalesOrdersService(db_session=session).delete(id)
 
@@ -189,12 +190,12 @@ async def create_flow(flow: FlowSchemaIn, session: AsyncSession = Depends(get_as
     return await FlowsService(db_session=session).create(flow)
 
 
-@router.put("/flows/{id}/", tags=["flows"], response_model=FlowSchema)
+@router.put("/flows/{id}/", tags=["flows"], response_model=FlowSchemaOut)
 async def update_flow(id: int, flow: FlowSchemaIn, session: AsyncSession = Depends(get_async_session)):
     return await FlowsService(db_session=session).update(id, flow)
 
 
-@router.patch("/flows/{id}/", tags=["flows"], response_model=FlowSchema)
+@router.patch("/flows/{id}/", tags=["flows"], response_model=FlowSchemaOut)
 async def partial_update_flow(id: int, flow: FlowSchemaIn, session: AsyncSession = Depends(get_async_session)):
     flow = flow.model_dump(exclude_unset=True)
     return await FlowsService(db_session=session).partial_update(id, flow)

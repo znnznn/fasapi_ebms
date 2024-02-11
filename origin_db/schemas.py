@@ -26,19 +26,19 @@ class ArinvDetSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     id_det: int = Field(default=None, alias="recno5", serialization_alias="id_det")
     description: str = Field(default=None, serialization_alias="description", alias="descr")
-    item: ItemSchema = Field(default=None)
-    # category: str = Field(default=None)
+    item: ItemSchema | None = Field(default=None)
+    category: str = Field(default=None)
     bends: float = Field(default=0, serialization_alias="bends", alias="demd")
     length: float = Field(default=0, serialization_alias="length", alias="heightd")
     width_d: float = Field(default=0, serialization_alias="width_d", alias="widthd")
     quantity: float = Field(default=0, serialization_alias='quantity', alias="quan")
-    # customer: str = Field(default=None)  # TODO: add customer  as arinv.name
-    # order: str = Field(default=None)   # TODO: add order
+    customer: str = Field(default=None)
+    order: str = Field(default=None, serialization_alias="order", alias="doc_aid")
     id_inventory: str = Field(default=None, serialization_alias="id_inventory", alias="inven")
-    origin_order: int = Field(default=None, serialization_alias="origin_order", alias="Arinv.recno5")   # TODO: add origin_order as arinv.recno5
-    # completed: bool = Field(default=False)
-    # profile: bool = Field(default=False)  # TODO: add profile as inven.rol_profile
-    # color: str = Field(default=None)  # TODO: add color as inven.rol_color
+    origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
+    # completed: bool = Field(default=False) # TODO: check this
+    profile: bool = Field(default=False)
+    color: str = Field(default=None)
 
     class Config:
         orm_mode = True
@@ -63,7 +63,8 @@ class ArinvSchema(BaseModel):
 
 class ArinvRelatedArinvDetSchema(ArinvSchema):
     count_items: int = Field(default=0, serialization_alias="count_items")
-    sales_order: SalesOrderSchema = Field(default=None)
+    completed: bool = Field(default=False)
+    sales_order: SalesOrderSchema | None = Field(default=None)
     origin_items: List[ArinvDetSchema] = Field(default=None, alias="details", serialization_alias="origin_items")
 
     class Config:
@@ -73,4 +74,9 @@ class ArinvRelatedArinvDetSchema(ArinvSchema):
 
 class ArinPaginateSchema(BaseModel):
     results: List[ArinvRelatedArinvDetSchema]
+    count: int
+
+
+class ArinvDetPaginateSchema(BaseModel):
+    results: List[ArinvDetSchema]
     count: int
