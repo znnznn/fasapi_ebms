@@ -53,6 +53,15 @@ class CategoryService(BaseService[Inprodtype, CategorySchema]):
     def __init__(self, model: Type[Inprodtype] = Inprodtype, db_session: AsyncSession = Depends(get_async_session)):
         super().__init__(model=model, db_session=db_session)
 
+    async def list(self):
+        stmt = select(self.model).where(
+            and_(
+                self.model.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+            )
+        )
+        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(stmt)
+        return objs.all()
+
 
 class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def __init__(self, model: Type[Arinvdet] = Arinvdet, db_session: AsyncSession = Depends(get_async_session)):
@@ -67,11 +76,11 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
             self.model.order
         ).where(
             and_(
-                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-                self.model.par_time == '',
-                self.model.inven != None,
-                self.model.inven != '',
+                # self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                # self.model.par_time == '',
+                # self.model.inven != None,
+                # self.model.inven != '',
             ),
         ).options(
             selectinload(self.model.rel_inventry),
@@ -122,7 +131,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         ).join(
             Arinvdet
         ).options(
-            selectinload(Arinv.details)
+            selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).order_by(
             Arinv.recno5
         ).group_by(

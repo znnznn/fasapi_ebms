@@ -36,7 +36,7 @@ class ArinvDetSchema(BaseModel):
     order: str = Field(default=None, serialization_alias="order", alias="doc_aid")
     id_inventory: str = Field(default=None, serialization_alias="id_inventory", alias="inven")
     origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
-    # completed: bool = Field(default=False) # TODO: check this
+    completed: bool = Field(default=False) # TODO: check this
     profile: bool = Field(default=False)
     color: str = Field(default=None)
 
@@ -49,11 +49,11 @@ class ArinvSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     customer: str = Field(default=None, serialization_alias="customer", alias="name")
     invoice: str = Field(default=None)
-    ship_date: datetime = Field(default=None, serialization_alias="ship_date")
+    ship_date: datetime | None = Field(default=None, serialization_alias="ship_date")
     c_name: str = Field(default=None, serialization_alias="c_name")
     c_city: str = Field(default=None, serialization_alias="c_city")
-    start_date: datetime = Field(default=None, serialization_alias="start_date")
-    end_date: datetime = Field(default=None, serialization_alias="end_date")
+    start_date: datetime | None = Field(default=None, serialization_alias="start_date")
+    end_date: datetime | None = Field(default=None, serialization_alias="end_date")
 
     @field_validator('invoice')
     @classmethod

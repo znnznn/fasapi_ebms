@@ -10,11 +10,12 @@ from common.models import DefaultBase, POSITIVE_INT
 class Capacity(DefaultBase):
     per_day: Mapped[POSITIVE_INT]
     category_autoid: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    # flows = relationship("Flow", back_populates="capacity", primaryjoin='Capacity.category_autoid == Flow.category_autoid', innerjoin=True)
 
 
 class Flow(DefaultBase):
     name: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(String(1000),  nullable=True)
+    description: Mapped[str] = mapped_column(String(1000), nullable=True)
     position: Mapped[POSITIVE_INT]
     color = mapped_column(String(100), default="#000000")
     need_manager: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -22,6 +23,7 @@ class Flow(DefaultBase):
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
     items = relationship("Item", back_populates="flow", primaryjoin='Flow.id == Item.flow_id', innerjoin=True)
     stages = relationship("Stage", back_populates="flow", primaryjoin='Flow.id == Stage.flow_id', innerjoin=True)
+    # capacity = relationship("Capacity", back_populates="flows", primaryjoin='Flow.category_autoid == Capacity.category_autoid', innerjoin=True)
 
 
 class Stage(DefaultBase):

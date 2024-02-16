@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import TypeVar, Generic, Type, Any, Optional, List, Sequence
 
 import sqlalchemy
@@ -76,15 +76,12 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return instance
 
     async def partial_update(self, id: int, obj: dict) -> Optional[ModelType]:
-        print(obj)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
-        print(("********************************************"))
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
         for key, value in obj.items():
             setattr(instance, key, value)
-        print(instance)
         try:
             self.db_session.add(instance)
             await self.db_session.commit()
@@ -141,9 +138,26 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
     def __init__(self, model: Type[Item] = Item, db_session: AsyncSession = Depends(get_async_session)):
         super().__init__(model=model, db_session=db_session)
 
-    async def get_autoid_by_production_date(self, production_date: date):
+    async def get_autoid_by_production_date(self, production_date: str):
+        production_date = datetime.strptime(production_date, "%Y-%m-%dT%H:%M:%S") or date.today().strftime("%Y-%m-%d")
         stmt = select(self.model.origin_item).where(self.model.production_date == production_date)
         objs = await self.db_session.scalars(stmt)
+        return objs.all()
+
+    async def group_by_item_statistics(self, autoids: list[str]):
+        """
+            Returns annotated:
+                - completed
+        """
+        subq = case((and_(
+            self.model.production_date != None,
+            Stage.name == "Done",
+        ), 1), else_=0).label("completed")
+        stmt = select(
+            self.model.origin_item,
+            subq,
+        ).where(self.model.origin_item.in_(autoids)).join(Stage).group_by(self.model.origin_item, self.model.production_date, Stage.name)
+        objs = await self.db_session.execute(stmt)
         return objs.all()
 
     async def group_by_order_annotated_statistics(self, autoids: list[str]):
@@ -154,22 +168,31 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 - max_date
         """
         subq = select(self.model.order).where(
-            self.model.order.in_(autoids), and_(
-                or_(
-                    self.model.production_date.is_(None),
-                    self.model.stage_id.is_(None),
-                    Stage.name != "Done",
-                ))
-        ).join(Stage).where(self.model.order.in_(autoids))
+            and_(
+                self.model.order.in_(autoids),
+                self.model.production_date != None,
+                self.model.stage_id != None,
+                Stage.name == "Done",
+            )
+        ).join(Stage)
         stmt = select(
             self.model.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
-            case((subq.exists(), 0), else_=1).label("completed"),
+            case((subq.exists(), 1), else_=0).label("completed"),
         ).where(Item.order.in_(autoids)).group_by(Item.order)
         objs = await self.db_session.execute(stmt)
         return objs.all()
 
-    async def get_related_items(self, autoids: list[str]):
+    async def get_related_items_by_order(self, autoids: list[str]):
         stmt = select(self.model).where(self.model.order.in_(autoids)).options(
+            selectinload(self.model.stage),
+            selectinload(self.model.comments),
+            selectinload(self.model.flow).selectinload(Flow.stages),
+        )
+        objs = await self.db_session.scalars(stmt)
+        return objs.all()
+
+    async def get_related_items_by_origin_items(self, autoids: list[str]):
+        stmt = select(self.model).where(self.model.origin_item.in_(autoids)).options(
             selectinload(self.model.stage),
             selectinload(self.model.comments),
             selectinload(self.model.flow).selectinload(Flow.stages),

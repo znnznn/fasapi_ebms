@@ -80,6 +80,7 @@ class ItemSchema(BaseModel):
     production_date: datetime | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
     comments: List[CommentSchema] | None
+    completed: bool = Field(default=False)
 
     class Config:
         orm_mode = True
@@ -100,8 +101,8 @@ class ItemSchemaIn(BaseModel):
 
 class ItemSchemaOut(ItemSchemaIn):
     id: int
-    flow_id: int = Field(None, serialization_alias="flow")
-    stage_id: int = Field(None, serialization_alias="stage")
+    flow_id: Optional[int] = Field(None, serialization_alias="flow")
+    stage_id: Optional[int] = Field(None, serialization_alias="stage")
 
     class Config:
         orm_mode = True
@@ -122,4 +123,4 @@ class SalesOrderSchemaIn(BaseModel):
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
-    created_at: datetime = Field(default=datetime.now())
+    created_at: Optional[datetime] = Field(default=datetime.now())

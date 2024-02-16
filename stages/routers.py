@@ -134,6 +134,7 @@ async def update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depen
 @router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def partial_update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
     item = item.model_dump(exclude_unset=True)
+    print(item)
     return await ItemsService(db_session=session).partial_update(id, item)
 
 
