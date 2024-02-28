@@ -22,6 +22,11 @@ class CategorySchema(BaseModel):
         populate_by_name = True
 
 
+class CategoryPaginateSchema(BaseModel):
+    count: int
+    results: List[CategorySchema]
+
+
 class ArinvDetSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     id_det: int = Field(default=None, alias="recno5", serialization_alias="id_det")

@@ -4,18 +4,22 @@ from pprint import pprint
 from typing import List
 
 from fastapi import APIRouter, Depends
+from fastapi_filter import FilterDepends
 from fastapi_pagination import LimitOffsetPage, paginate
-from sqlalchemy import select, func, label, cast, Integer, String, text
+from sqlalchemy import select, func, label, cast, Integer, String, text, case
 from sqlalchemy.orm import joinedload, selectinload, subqueryload, with_loader_criteria, aliased, join
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from database import get_async_session
+from origin_db.filters import CategoryFilter
 from origin_db.models import Arinv, Arinvdet, Inprodtype, Inventry
 # from origin_db.models import create_cache
-from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema, ArinPaginateSchema, ArinvDetPaginateSchema
+from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema, ArinPaginateSchema, ArinvDetPaginateSchema, \
+    CategoryPaginateSchema
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService
 from settings import LIST_EXCLUDED_PROD_TYPES
+from stages.filters import ItemFilter
 from stages.models import Flow, SalesOrder, Item
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
 
@@ -69,17 +73,26 @@ async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_
     return result
 
 
-@router.get("/categories/", response_model=LimitOffsetPage[CategorySchema])
-async def get_categories(session: AsyncSession = Depends(get_async_session)):
+@router.get("/categories/", response_model=CategoryPaginateSchema)
+async def get_categories(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session),
+        category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+        item_filter: ItemFilter = FilterDepends(ItemFilter),
+):
     """ quan, heightd, demd """
-    origin_db_response = await CategoryService(db_session=session).list()
+    result = await CategoryService(db_session=session, list_filter=category_filter).list(limit=limit, offset=offset)
     flows_data = await FlowsService(db_session=session).group_by_category()
-    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date('2024-02-15T10:27:39')
+    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService(db_session=session).list()
     total_capacity = select(
-        Inventry.prod_type, func.sum(Arinvdet.demd).label("demd"), func.sum(Arinvdet.heightd).label("heightd"),
-        func.sum(Arinvdet.quan).label("quan"),
+        Inventry.prod_type,
+        func.sum(case(
+            (Inventry.prod_type == 'Trim', Arinvdet.demd),
+            (Arinvdet.heightd != 0, ((Arinvdet.heightd / 12) * Arinvdet.quan)),
+            else_=Arinvdet.quan
+        )).label("total_capacity"),
     ).where(
         Arinvdet.autoid.in_(item_ids), Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES), Arinvdet.par_time == '',
     ).join(
@@ -90,16 +103,15 @@ async def get_categories(session: AsyncSession = Depends(get_async_session)):
 
     total_capacity = await session.execute(total_capacity)
     total_capacity = total_capacity.all()
-    total_capacity = {i.prod_type: i for i in total_capacity}
+    total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
     capacities_data = {c.category_autoid: c for c in capacities}
-    result = paginate(origin_db_response)
-    for category in result.items:
-        capacity = capacities_data.get(category.id)
-        category.flow_count = flows_data.get(category.id)
+    for category in result["results"]:
+        capacity = capacities_data.get(category.autoid)
+        category.flow_count = flows_data.get(category.autoid)
         category.capacity = capacity.per_day if capacity else None
         category.capacity_id = capacity.id if capacity else None
-        if capacity := total_capacity.get(category.prod_type):
-            category.total_capacity = capacity.demd
+        if category_total_capacity := total_capacity.get(category.prod_type):
+            category.total_capacity = category_total_capacity
     return result
 
 

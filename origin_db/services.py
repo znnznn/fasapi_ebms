@@ -1,6 +1,7 @@
 from typing import Generic, Type, Optional
 
 from fastapi import Depends, HTTPException
+from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, and_, or_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_c
 
 from common.constants import InputSchemaType, OriginModelType
 from database import get_async_session
+from origin_db.filters import CategoryFilter
 from origin_db.models import Inprodtype, Arinvdet, Arinv, Inventry
 from origin_db.schemas import CategorySchema, ArinvDetSchema, ArinvRelatedArinvDetSchema
 from settings import FILTERING_DATA_STARTING_YEAR, LIST_EXCLUDED_PROD_TYPES
@@ -15,9 +17,15 @@ from settings import FILTERING_DATA_STARTING_YEAR, LIST_EXCLUDED_PROD_TYPES
 
 class BaseService(Generic[OriginModelType, InputSchemaType]):
 
-    def __init__(self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session)):
+    def __init__(
+            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+    ):
         self.model = model
         self.db_session = db_session
+        self.filter = list_filter
+
+    async def count_query_objs(self, query):
+        return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
 
     async def get(self, autoid: int) -> Optional[OriginModelType]:
         stmt = select(self.model).where(self.model.autoid == autoid)
@@ -50,17 +58,28 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
 
 
 class CategoryService(BaseService[Inprodtype, CategorySchema]):
-    def __init__(self, model: Type[Inprodtype] = Inprodtype, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[Inprodtype] = Inprodtype,
+            db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[CategoryFilter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    async def list(self):
-        stmt = select(self.model).where(
+    async def list(self, limit: int = 10, offset: int = 0) -> dict:
+        query = select(self.model).where(
             and_(
                 self.model.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
             )
-        )
-        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(stmt)
-        return objs.all()
+        ).order_by(self.model.prod_type)
+        if self.filter:
+            query = self.filter.filter(query)
+        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(query)
+        count = await self.count_query_objs(query.limit(limit).offset(offset))
+
+        return {
+            "count": count,
+            "results": objs.all(),
+        }
 
 
 class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):

@@ -3,6 +3,7 @@ from typing import TypeVar, Generic, Type, Any, Optional, List, Sequence
 
 import sqlalchemy
 from fastapi import APIRouter, Depends
+from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_restful.cbv import cbv
 from pydantic import BaseModel
 from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_
@@ -21,9 +22,10 @@ from stages.schemas import FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, Commen
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
-    def __init__(self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session)):
+    def __init__(self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None):
         self.model = model
         self.db_session = db_session
+        self.filter = list_filter
 
     async def validate_autoid(self, autoid: str, model: EBMSBase):
         smt = select(model).where(model.autoid == autoid)
@@ -106,11 +108,16 @@ class CapacitiesService(BaseService[Capacity, CapacitySchemaIn]):
 
 
 class FlowsService(BaseService[Flow, FlowSchemaIn]):
-    def __init__(self, model: Type[Flow] = Flow, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[Flow] = Flow, db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
     async def list(self):
         stmt = select(self.model).options(selectinload(Flow.stages))
+        if self.filter:
+            stmt = self.filter.filter(stmt)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 
@@ -125,21 +132,28 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
 
 
 class StagesService(BaseService[Stage, StageSchemaIn]):
-    def __init__(self, model: Type[Stage] = Stage, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[Stage] = Stage, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
 
 class CommentsService(BaseService[Comment, CommentSchemaIn]):
-    def __init__(self, model: Type[Comment] = Comment, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[Comment] = Comment, db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
 
 class ItemsService(BaseService[Item, ItemSchemaIn]):
-    def __init__(self, model: Type[Item] = Item, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[Item] = Item, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    async def get_autoid_by_production_date(self, production_date: str):
-        production_date = datetime.strptime(production_date, "%Y-%m-%dT%H:%M:%S") or date.today().strftime("%Y-%m-%d")
+    async def get_autoid_by_production_date(self, production_date: str | None):
+        production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
         stmt = select(self.model.origin_item).where(self.model.production_date == production_date)
         objs = await self.db_session.scalars(stmt)
         return objs.all()
@@ -211,8 +225,11 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
-    def __init__(self, model: Type[SalesOrder] = SalesOrder, db_session: AsyncSession = Depends(get_async_session)):
-        super().__init__(model=model, db_session=db_session)
+    def __init__(
+            self, model: Type[SalesOrder] = SalesOrder, db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
     async def list_by_orders(self, autoids: list[str]):
         stmt = select(self.model).where(self.model.order.in_(autoids))
