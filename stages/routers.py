@@ -1,8 +1,10 @@
 from fastapi import Depends, APIRouter
+from fastapi_filter import FilterDepends
 from fastapi_pagination import LimitOffsetPage, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
+from stages.filters import ItemFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
@@ -111,8 +113,8 @@ async def delete_comment(id: int, session: AsyncSession = Depends(get_async_sess
 
 
 @router.get("/items/", tags=["items"], response_model=LimitOffsetPage[ItemSchema])
-async def get_items(session: AsyncSession = Depends(get_async_session)):
-    result = await ItemsService(db_session=session).list()
+async def get_items(session: AsyncSession = Depends(get_async_session), item_filter: ItemFilter = FilterDepends(ItemFilter)):
+    result = await ItemsService(db_session=session, list_filter=item_filter).list()
     return paginate(result)
 
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckConstraint
+from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckConstraint, DATE
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -42,7 +42,7 @@ class Item(DefaultBase):
     origin_item: Mapped[str] = mapped_column(String(100), nullable=True, unique=True)
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
-    production_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
+    production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
     flow = relationship("Flow", back_populates="items")
     comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id')
@@ -57,7 +57,7 @@ class Comment(DefaultBase):
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete="CASCADE"))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     text: Mapped[str] = mapped_column(String(500))
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
     item = relationship("Item", back_populates="comments")
     user = relationship("User", back_populates="comments", lazy="joined")
 
@@ -67,5 +67,5 @@ class SalesOrder(DefaultBase):
     packages: Mapped[POSITIVE_INT]
     location: Mapped[POSITIVE_INT]
     priority: Mapped[POSITIVE_INT]
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP)
-    production_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
+    production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)

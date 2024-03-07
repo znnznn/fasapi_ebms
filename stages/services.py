@@ -6,14 +6,15 @@ from fastapi import APIRouter, Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_restful.cbv import cbv
 from pydantic import BaseModel
-from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_
+from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_, Result
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, Query
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
-from common.constants import ModelType, InputSchemaType
+from common.constants import ModelType, InputSchemaType, OriginModelType
+from common.filters import RenameFieldFilter
 from common.models import EBMSBase
 from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet
@@ -22,12 +23,22 @@ from stages.schemas import FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, Commen
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
-    def __init__(self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None):
+    def __init__(self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[RenameFieldFilter] = None):
         self.model = model
         self.db_session = db_session
         self.filter = list_filter
 
-    async def validate_autoid(self, autoid: str, model: EBMSBase):
+    def get_query(self, limit: int = None, offset: int = None) -> Query:
+        query = select(self.model)
+        if self.filter:
+            query = self.filter.filter(query)
+        if limit:
+            query = query.limit(limit)
+        if offset:
+            query = query.offset(offset)
+        return query
+
+    async def validate_autoid(self, autoid: str, model):
         smt = select(model).where(model.autoid == autoid)
         result = await self.db_session.scalar(smt)
         if not result:
@@ -41,10 +52,24 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
 
-    async def list(self):
-        stmt = select(self.model)
-        objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
+    async def paginated_list(self, limit: int = 10, offset: int = 0):
+        objs: ScalarResult[ModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset))
         return objs.all()
+
+    async def list(self):
+        query = self.get_query()
+        if self.filter and self.filter.is_filtering_values:
+            print(55555)
+            query = self.filter.filter(query)
+        objs = await self.db_session.scalars(query)
+        return objs.all()
+
+    async def get_filtering_origin_items_autoids(self) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.origin_item))
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        return None
 
     async def create(self, obj: InputSchemaType) -> ModelType:
         if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
@@ -54,7 +79,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         if getattr(obj, "origin_item", None) and issubclass(self.model, Item):
             await self.validate_autoid(obj.origin_item, Arinvdet)
         try:
-            stmt = self.model(**obj.model_dump())
+            print(obj.model_dump(exclude_none=True, exclude_unset=True))
+            stmt = self.model(**obj.model_dump(exclude_none=True, exclude_unset=True))
             self.db_session.add(stmt)
             await self.db_session.commit()
             await self.db_session.refresh(stmt)
@@ -154,7 +180,8 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def get_autoid_by_production_date(self, production_date: str | None):
         production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
-        stmt = select(self.model.origin_item).where(self.model.production_date == production_date)
+        print(production_date)
+        stmt = select(self.model.origin_item).where(and_(func.date(self.model.production_date) == production_date))
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
@@ -220,6 +247,10 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             selectinload(self.model.comments),
             selectinload(self.model.flow).selectinload(Flow.stages),
         )
+        if self.filter:
+            print(88888)
+            stmt = self.filter.filter(stmt)
+            print(99999)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 

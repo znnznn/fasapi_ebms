@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, root_validator, model_validator
@@ -17,16 +17,19 @@ class CapacitySchemaIn(BaseModel):
 
 class CommentSchema(BaseModel):
     id: int = Field(default=None)
-    user: int = Field(default=None)
-    item: int = Field(default=None)
+    user_id: int = Field(default=None, serialization_alias="user")
+    item_id: int = Field(default=None, serialization_alias="item")
     text: str = Field(default=None)
-    created_at: str = Field(default=None)
+    created_at: datetime = Field(default=None)
 
 
 class CommentSchemaIn(BaseModel):
-    user: Optional[int] = Field(default=None)
-    item: Optional[int] = Field(default=None)
+    user_id: Optional[int] = Field(default=None, alias="user")
+    item_id: Optional[int] = Field(default=None, alias="item")
     text: Optional[str] = Field(default=None)
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class StageSchemaIn(BaseModel):
@@ -77,7 +80,7 @@ class ItemSchema(BaseModel):
     origin_item: str = Field(default=None)
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
-    production_date: datetime | None = Field(default=None)
+    production_date: date | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
     comments: List[CommentSchema] | None
     completed: bool = Field(default=False)
@@ -92,7 +95,7 @@ class ItemSchemaIn(BaseModel):
     origin_item: Optional[str] = Field(default=None)
     flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
-    production_date: Optional[datetime] = Field(default=None)
+    production_date: Optional[date] = Field(default=None)
     stage_id: Optional[int] = Field(default=None, alias="stage")
 
     class Config:
@@ -115,7 +118,7 @@ class SalesOrderSchema(BaseModel):
     packages: int = Field(default=None)
     location: int = Field(default=None)
     priority: int = Field(default=None)
-    created_at: datetime = Field(default=None)
+    created_at: date = Field(default=None)
 
 
 class SalesOrderSchemaIn(BaseModel):
@@ -123,4 +126,4 @@ class SalesOrderSchemaIn(BaseModel):
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
-    created_at: Optional[datetime] = Field(default=datetime.now())
+    created_at: Optional[date] = Field(default=datetime.now().date())

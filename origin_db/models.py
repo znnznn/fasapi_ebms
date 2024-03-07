@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, TIMESTAMP, MetaData, Float, Boolean, BINARY, DECIMAL, ForeignKey, Date, NVARCHAR, func
+    Column, Integer, String, TIMESTAMP, MetaData, Float, Boolean, BINARY, DECIMAL, ForeignKey, Date, NVARCHAR, func, DATE
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, Mapped, mapped_column, as_declarative, declared_attr, column_property
@@ -170,7 +170,7 @@ class Arinvdet(Base):
     costs: Mapped[float] = mapped_column('COSTS', DECIMAL)
     tax_group: Mapped[str] = mapped_column('TAX_GROUP', String)
     exm_overid: Mapped[str] = mapped_column('EXM_OVERID', String)
-    ship_date: Mapped[datetime] = mapped_column('SHIP_DATE', TIMESTAMP)
+    ship_date: Mapped[DATE] = mapped_column('SHIP_DATE', TIMESTAMP)
     weight: Mapped[float] = mapped_column('WEIGHT', DECIMAL)
     print: Mapped[bool] = mapped_column('PRINT', Boolean)
     ap_partime: Mapped[str] = mapped_column('AP_PARTIME', String)
@@ -250,6 +250,10 @@ class Arinvdet(Base):
     @item.setter
     def item(self, value):
         self._item = value
+
+    @hybrid_property
+    def invoice(self):
+        return str(self.order.invoice).strip()
 
 
 class Inprodtype(Base):

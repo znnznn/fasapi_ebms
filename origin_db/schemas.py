@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -29,21 +29,23 @@ class CategoryPaginateSchema(BaseModel):
 
 class ArinvDetSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
-    id_det: int = Field(default=None, alias="recno5", serialization_alias="id_det")
-    description: str = Field(default=None, serialization_alias="description", alias="descr")
-    item: ItemSchema | None = Field(default=None)
     category: str = Field(default=None)
-    bends: float = Field(default=0, serialization_alias="bends", alias="demd")
-    length: float = Field(default=0, serialization_alias="length", alias="heightd")
-    width_d: float = Field(default=0, serialization_alias="width_d", alias="widthd")
+    description: str = Field(default=None, serialization_alias="description", alias="descr")
     quantity: float = Field(default=0, serialization_alias='quantity', alias="quan")
+    shipped: float = Field(default=0, serialization_alias="shipped", alias="ship")
+    ship_date: date | None = Field(default=None, serialization_alias="ship_date")
+    width: float = Field(default=0, serialization_alias="width", alias="widthd")
+    weight: float = Field(default=0, serialization_alias="weight")
+    length: float = Field(default=0, serialization_alias="length", alias="heightd")
+    bends: float = Field(default=0, serialization_alias="bends", alias="demd")
     customer: str = Field(default=None)
-    order: str = Field(default=None, serialization_alias="order", alias="doc_aid")
-    id_inventory: str = Field(default=None, serialization_alias="id_inventory", alias="inven")
+    order: str = Field(default=None, serialization_alias="order", alias="invoice")
+    id_inven: str = Field(default=None, serialization_alias="id_inven", alias="inven")
     origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
-    completed: bool = Field(default=False) # TODO: check this
+    completed: bool = Field(default=False)  # TODO: check this
     profile: bool = Field(default=False)
     color: str = Field(default=None)
+    item: ItemSchema | None = Field(default=None)
 
     class Config:
         orm_mode = True
@@ -54,11 +56,11 @@ class ArinvSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     customer: str = Field(default=None, serialization_alias="customer", alias="name")
     invoice: str = Field(default=None)
-    ship_date: datetime | None = Field(default=None, serialization_alias="ship_date")
+    ship_date: date | None = Field(default=None, serialization_alias="ship_date")
     c_name: str = Field(default=None, serialization_alias="c_name")
     c_city: str = Field(default=None, serialization_alias="c_city")
-    start_date: datetime | None = Field(default=None, serialization_alias="start_date")
-    end_date: datetime | None = Field(default=None, serialization_alias="end_date")
+    start_date: date | None = Field(default=None, serialization_alias="start_date")
+    end_date: date | None = Field(default=None, serialization_alias="end_date")
 
     @field_validator('invoice')
     @classmethod
@@ -83,5 +85,10 @@ class ArinPaginateSchema(BaseModel):
 
 
 class ArinvDetPaginateSchema(BaseModel):
-    results: List[ArinvDetSchema]
     count: int
+    results: List[ArinvDetSchema]
+
+
+class InventrySchema(BaseModel):
+    autoid: str = Field(default=None)
+    prod_type: str = Field(default=None)
