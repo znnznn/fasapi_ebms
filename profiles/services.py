@@ -9,7 +9,7 @@ from sqlalchemy.orm import Query
 from common.constants import ModelType, InputSchemaType
 from database import get_async_session
 from profiles.models import CompanyProfile, UserProfile
-from profiles.schemas import CompanyProfileSchema, UserProfileSchema
+from profiles.schemas import CompanyProfileSchema, UserProfileSchema, UserProfileCreateSchema
 from stages.services import BaseService
 
 
@@ -52,4 +52,5 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         for setting in user_profile_settings:
             if setting.page == obj.page:
                 return await self.update(setting.id, obj)
+        obj = UserProfileCreateSchema(creator=user_id, **obj.model_dump())
         return await super().create(obj)

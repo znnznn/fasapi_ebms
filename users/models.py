@@ -21,6 +21,9 @@ class User(DefaultBase):
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     comments = relationship("Comment", back_populates="user", innerjoin=True, primaryjoin='User.id == Comment.user_id')
     category = relationship("CategoryAccess", back_populates="user", innerjoin=True, primaryjoin='User.id == CategoryAccess.user_id')
+    user_profiles = relationship(
+        "UserProfile", back_populates="user", innerjoin=True, primaryjoin='User.id == UserProfile.creator', uselist=True
+    )
 
     @hybrid_property
     def role_name(self):

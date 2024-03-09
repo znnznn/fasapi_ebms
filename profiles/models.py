@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, TIMESTAMP, ForeignKey, String, func
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from common.models import DefaultBase
 
@@ -18,3 +18,4 @@ class UserProfile(DefaultBase):
     creator: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete="CASCADE"))
     page: Mapped[str] = mapped_column(String(255))
     show_columns: Mapped[str] = mapped_column(String(255))
+    user = relationship("User", back_populates="user_profiles")
