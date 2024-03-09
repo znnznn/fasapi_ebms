@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, MetaData, Table, Boolean, func, Enum
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import mapped_column, Mapped, declared_attr, relationship
 from sqlalchemy_utils import ChoiceType, EmailType
 
@@ -19,8 +20,17 @@ class User(DefaultBase):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     comments = relationship("Comment", back_populates="user", innerjoin=True, primaryjoin='User.id == Comment.user_id')
+    category = relationship("CategoryAccess", back_populates="user", innerjoin=True, primaryjoin='User.id == CategoryAccess.user_id')
+    user_profiles = relationship(
+        "UserProfile", back_populates="user", innerjoin=True, primaryjoin='User.id == UserProfile.creator', uselist=True
+    )
+
+    @hybrid_property
+    def role_name(self):
+        return self.role.value
 
 
 class CategoryAccess(DefaultBase):
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete="CASCADE"))
     category_autoid: Mapped[str] = mapped_column(String(100), nullable=False)
+    user = relationship("User", back_populates="category")

@@ -1,24 +1,26 @@
-from typing import Optional
-
+from typing import Optional, List
 from fastapi_users import schemas, models
-from fastapi_users.schemas import PYDANTIC_V2
-from pydantic import EmailStr, BaseModel
+from pydantic import EmailStr, BaseModel, Field
 
-from common.constants import Role
+from common.constants import RoleModel, Role
+from profiles.schemas import UserProfileSchema
 
+
+class CategoryAccessSchema(BaseModel):
+    user_id: int
+    category_autoid: str
+
+    class Config:
+        from_attributes = True
 
 class UserRead(schemas.BaseUser[int]):
     id: models.ID
     email: EmailStr
     first_name: str
     last_name: str
-    # role: str
-    is_active: bool = True
-    is_superuser: bool = False
-
-    # if PYDANTIC_V2:  # pragma: no cover
-    #     model_config = ConfigDict(from_attributes=True)  # type: ignore
-    # else:  # pragma: no cover
+    role: str = Field(alias="role_name")
+    category: Optional[List[CategoryAccessSchema]]
+    user_profiles: Optional[List[UserProfileSchema]]
 
     class Config:
         from_attributes = True
