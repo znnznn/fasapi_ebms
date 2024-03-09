@@ -26,7 +26,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         except exceptions.UserNotExists:
             self.password_helper.hash(credentials.password)
             return None
-        is_verified = django_pbkdf2_sha256.verify(credentials.password, user.password)
+        # is_verified = django_pbkdf2_sha256.verify(credentials.password, user.password)
+        is_verified, updated_password_hash = self.password_helper.verify_and_update(
+            credentials.password, user.password
+        )
         if not is_verified:
             return None
         return user

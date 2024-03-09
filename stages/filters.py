@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 
 from typing_extensions import Literal
 
@@ -43,34 +43,44 @@ class FlowFilter(RenameFieldFilter):
 
 class StageFilter(RenameFieldFilter):
     status: Optional[str] = None
+    status_not_in: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Stage
         related_fields = {
             'status': 'name',
+            'status_not_in': 'name__not_in',
         }
 
 
 class ItemFilter(RenameFieldFilter):
     production_date: Optional[date] = None
     status: Optional[StageFilter] = FilterDepends(StageFilter)
+    status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
     is_scheduled: Optional[bool] = None
-    # flow: Optional[FlowFilter] = FilterDepends(FlowFilter)
+    flow: Optional[FlowFilter] = FilterDepends(FlowFilter)
     stage_id__isnull: Optional[bool] = None
+    flow_id__isnull: Optional[bool] = None
     date_range: Optional[str] = None
     timedelta: Optional[int] = None
     completed: Optional[bool] = None
     has_comments: Optional[CommentFilter] = FilterDepends(CommentFilter)
+    over_due: Optional[bool] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Item
+        ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status',)
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         related_fields = {
             'is_scheduled': 'production_date__isnull',
-            # 'has_comments': 'comments__is_not',
         }
         model_related_fields = {
             'status': 'stage_id__isnull',
+            'flow': 'flow_id__isnull',
+        }
+        join_tables = {
+            'status': Stage,
+            'flow': Flow,
         }
 
     def get_value(self, field_name, value):
@@ -117,7 +127,14 @@ class ItemFilter(RenameFieldFilter):
         if completed := fields.pop('completed', None):
             fields['status'] = 'Done'
             fields['is_scheduled'] = True
-        # if has_comments := fields.pop('has_comments', None):
-        #     fields['comments__exists'] = True
+        over_due = fields.pop('over_due', None)
+        if isinstance(over_due, bool):
+            if over_due:
+                fields['production_date__lt'] = datetime.now().date()
+                fields['status_not_in'] = 'Done,'
+            else:
+                fields['production_date__lt'] = datetime.now().date()
+                fields['status_not_in'] = 'Done,'
+                self.Constants.exclude = True
 
         return fields

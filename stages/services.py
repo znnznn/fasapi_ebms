@@ -23,7 +23,10 @@ from stages.schemas import FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, Commen
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
-    def __init__(self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[RenameFieldFilter] = None):
+    def __init__(
+            self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[RenameFieldFilter] = None
+    ):
         self.model = model
         self.db_session = db_session
         self.filter = list_filter
@@ -59,7 +62,6 @@ class BaseService(Generic[ModelType, InputSchemaType]):
     async def list(self):
         query = self.get_query()
         if self.filter and self.filter.is_filtering_values:
-            print(55555)
             query = self.filter.filter(query)
         objs = await self.db_session.scalars(query)
         return objs.all()
@@ -79,7 +81,6 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         if getattr(obj, "origin_item", None) and issubclass(self.model, Item):
             await self.validate_autoid(obj.origin_item, Arinvdet)
         try:
-            print(obj.model_dump(exclude_none=True, exclude_unset=True))
             stmt = self.model(**obj.model_dump(exclude_none=True, exclude_unset=True))
             self.db_session.add(stmt)
             await self.db_session.commit()
@@ -180,7 +181,6 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def get_autoid_by_production_date(self, production_date: str | None):
         production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
-        print(production_date)
         stmt = select(self.model.origin_item).where(and_(func.date(self.model.production_date) == production_date))
         objs = await self.db_session.scalars(stmt)
         return objs.all()
@@ -248,11 +248,21 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             selectinload(self.model.flow).selectinload(Flow.stages),
         )
         if self.filter:
-            print(88888)
             stmt = self.filter.filter(stmt)
-            print(99999)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
+
+    async def get_filtering_origin_items_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.origin_item))
+            query = self.filter.sort(query)
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        if do_ordering:
+            query = self.filter.sort(select(self.model.origin_item))
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all()
+        return None
 
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):

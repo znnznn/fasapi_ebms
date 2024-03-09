@@ -5,9 +5,10 @@ from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, and_, or_, case, Result, Sequence
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria
+from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria, Query
 
 from common.constants import InputSchemaType, OriginModelType
+from common.filters import RenameFieldFilter
 from database import get_async_session
 from origin_db.filters import CategoryFilter
 from origin_db.models import Inprodtype, Arinvdet, Arinv, Inventry
@@ -19,17 +20,17 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
     default_ordering_field = 'recno5'
 
     def __init__(
-            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[RenameFieldFilter] = None
     ):
         self.model = model
         self.db_session = db_session
         self.filter = list_filter
 
-    def get_query(self, limit: int = None, offset: int = None):
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
         query = select(self.model).where(and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR))
         if self.filter:
-            print(2)
-            query = self.filter.filter(query)
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
         if limit:
             query = query.limit(limit)
         if offset:
@@ -39,9 +40,9 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
     async def count_query_objs(self, query) -> int:
         return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
 
-    async def paginated_list(self, limit: int = 10, offset: int = 0) -> dict:
+    async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
         count = await self.count_query_objs(self.get_query())
-        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset))
+        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
         return {
             "count": count,
             "results": objs.all(),
@@ -55,7 +56,7 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
 
-    async def list(self):
+    async def list(self, kwargs: Optional[dict] = None) -> Sequence[OriginModelType]:
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query())
         return objs.all()
 
@@ -84,14 +85,14 @@ class CategoryService(BaseService[Inprodtype, CategorySchema]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    def get_query(self, limit: int = None, offset: int = None):
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(self.model).where(
             and_(
                 self.model.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
             )
         ).order_by(self.model.prod_type)
         if self.filter:
-            query = self.filter.filter(query)
+            query = self.filter.filter(query, **kwargs)
         if limit:
             query = query.limit(limit)
         if offset:
@@ -107,7 +108,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    def get_query(self, limit: int = None, offset: int = None):
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model
         ).join(
@@ -125,21 +126,24 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         ).options(
             selectinload(self.model.rel_inventry),
             selectinload(self.model.order),
-        ).order_by(
-            getattr(self.model, self.default_ordering_field)
         ).group_by(
             self.model
         )
         if self.filter:
-            query = self.filter.filter(query)
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
+        else:
+            query = query.order_by(getattr(self.model, self.default_ordering_field))
         if limit:
             query = query.limit(limit)
         if offset:
             query = query.offset(offset)
         return query
 
-    async def list(self, limit: int = 10, offset: int = 0) -> dict:
-        return await self.paginated_list(limit=limit, offset=offset)
+    async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
+        print(kwargs)
+        print(888)
+        return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
 
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
@@ -150,7 +154,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    def get_query(self, limit: int = None, offset: int = None):
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
         ).where(
@@ -159,13 +163,13 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             Arinvdet
         ).options(
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
-        ).order_by(
-            getattr(self.model, self.default_ordering_field)
         ).group_by(
             self.model
         )
         if self.filter:
-            query = self.filter.filter(query)
+            query = self.filter.filter(query, **kwargs)
+        else:
+            query = query.order_by(getattr(self.model, self.default_ordering_field))
         if limit:
             query = query.limit(limit)
         if offset:

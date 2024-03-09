@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from fastapi_filter import FilterDepends
+from sqlalchemy import Select, or_
+from sqlalchemy.orm import Query
 
 from common.filters import RenameFieldFilter
 from origin_db.models import Inprodtype, Arinvdet, Inventry, Arinv
@@ -9,6 +11,8 @@ from origin_db.models import Inprodtype, Arinvdet, Inventry, Arinv
 
 class OrderFilter(RenameFieldFilter):
     order: Optional[str] = None
+    invoice: Optional[str] = None
+    name: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Arinv
@@ -51,9 +55,16 @@ class OriginItemFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Arinvdet
+        search_fields_by_models = {
+            Arinv: ('invoice', 'name'),
+        }
         related_fields = {
             'bends': 'demd',
             'length': 'heightd',
             'width': 'widthd',
             'quantity': 'quan',
         }
+        ordering_fields = (
+            'quan', 'weight', 'width', 'widthd', 'height', 'heightd', 'ship_date', "category", 'bends', 'length', 'width', 'quantity',
+            'id_inven', 'order',
+        )

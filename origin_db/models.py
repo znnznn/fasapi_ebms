@@ -223,7 +223,7 @@ class Arinvdet(Base):
     int_note: Mapped[str] = mapped_column('INT_NOTE', String)
     tax_expl: Mapped[str] = mapped_column('TAX_EXPL', String)
     on_site: Mapped[float] = mapped_column('ON_SITE', DECIMAL)
-    order = relationship('Arinv', back_populates='details')
+    order = relationship('Arinv', back_populates='details', lazy='selectin')
     rel_inventry = relationship('Inventry', back_populates='arinvdet', primaryjoin="Inventry.id == Arinvdet.inven")
     _item = None
 

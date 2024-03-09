@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends
 from fastapi_filter import FilterDepends
+from sqlalchemy import case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
 from origin_db.filters import CategoryFilter, OriginItemFilter
+from origin_db.models import Arinvdet
 from origin_db.schemas import ArinvRelatedArinvDetSchema, ArinPaginateSchema, ArinvDetPaginateSchema, CategoryPaginateSchema, CategorySchema
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter
@@ -54,7 +56,7 @@ async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_
         result.sales_order = order
     for detail in result.details:
         if item := items_data.get(detail.autoid):
-            detail.completed = True if item.production_date and item.stage.name == 'Done' else False
+            detail.completed = True if item.stage and item.production_date and item.stage.name == 'Done' else False
             detail.item = item
     return result
 
@@ -114,9 +116,15 @@ async def get_items(
         session: AsyncSession = Depends(get_async_session),
         origin_item_filter: OriginItemFilter = FilterDepends(OriginItemFilter),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
+        ordering: str = None
 ):
+    if ordering:
+        item_filter = ItemFilter(order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True))
+        origin_item_filter = OriginItemFilter(
+            order_by=ordering, **origin_item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
+        )
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
-    print(filtering_items)
+    extra_ordering = None
     if filtering_items:
         filtering_fields = origin_item_filter.model_dump(exclude_unset=True, exclude_none=True)
         if item_filter.is_exclude:
@@ -124,7 +132,17 @@ async def get_items(
         else:
             filtering_fields["autoid__in"] = filtering_items
         origin_item_filter = OriginItemFilter(**filtering_fields)
-    result = await OriginItemService(db_session=session, list_filter=origin_item_filter).list(limit=limit, offset=offset)
+    if not item_filter.is_filtering_values and item_filter.order_by:
+        filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
+    if item_filter.order_by:
+        default_position = len(filtering_items) + 2
+        data_for_ordering = {v: i for i, v in enumerate(filtering_items, 1)}
+        extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
+    result = await OriginItemService(
+        db_session=session, list_filter=origin_item_filter
+    ).list(
+        limit=limit, offset=offset, extra_ordering=extra_ordering
+    )
     autoids = [i.autoid for i in result["results"]]
     items_statistic = await ItemsService(db_session=session).group_by_item_statistics(autoids=autoids)
     related_items = await ItemsService(db_session=session).get_related_items_by_origin_items(autoids=autoids)
