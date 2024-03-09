@@ -23,9 +23,9 @@ from users.models import User
 
 engines = {
     EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
-        EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME), echo=True),
+        EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME)),
     DefaultBase: create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
-        Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME), echo=True),
+        Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME)),
 }
 
 async_session_maker = async_sessionmaker(binds=engines, expire_on_commit=False)

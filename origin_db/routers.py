@@ -1,22 +1,14 @@
-import datetime
-import time
-from pprint import pprint
-from typing import List
-
 from fastapi import APIRouter, Depends
-from fastapi_pagination import LimitOffsetPage, paginate
-from sqlalchemy import select, func, label, cast, Integer, String, text
-from sqlalchemy.orm import joinedload, selectinload, subqueryload, with_loader_criteria, aliased, join
+from fastapi_filter import FilterDepends
+from sqlalchemy import case
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.requests import Request
 
 from database import get_async_session
-from origin_db.models import Arinv, Arinvdet, Inprodtype, Inventry
-# from origin_db.models import create_cache
-from origin_db.schemas import ArinvSchema, ArinvRelatedArinvDetSchema, CategorySchema, ArinPaginateSchema, ArinvDetPaginateSchema
-from origin_db.services import CategoryService, OriginOrderService, OriginItemService
-from settings import LIST_EXCLUDED_PROD_TYPES
-from stages.models import Flow, SalesOrder, Item
+from origin_db.filters import CategoryFilter, OriginItemFilter
+from origin_db.models import Arinvdet
+from origin_db.schemas import ArinvRelatedArinvDetSchema, ArinPaginateSchema, ArinvDetPaginateSchema, CategoryPaginateSchema, CategorySchema
+from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
+from stages.filters import ItemFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
 
 router = APIRouter(prefix="/ebms", tags=["ebms"])
@@ -64,48 +56,93 @@ async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_
         result.sales_order = order
     for detail in result.details:
         if item := items_data.get(detail.autoid):
-            detail.completed = True if item.production_date and item.stage.name == 'Done' else False
+            detail.completed = True if item.stage and item.production_date and item.stage.name == 'Done' else False
             detail.item = item
     return result
 
 
-@router.get("/categories/", response_model=LimitOffsetPage[CategorySchema])
-async def get_categories(session: AsyncSession = Depends(get_async_session)):
-    """ quan, heightd, demd """
-    origin_db_response = await CategoryService(db_session=session).list()
+@router.get("/categories/", response_model=CategoryPaginateSchema)
+async def get_categories(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session),
+        category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+        item_filter: ItemFilter = FilterDepends(ItemFilter),
+):
+    result = await CategoryService(db_session=session, list_filter=category_filter).paginated_list(limit=limit, offset=offset)
     flows_data = await FlowsService(db_session=session).group_by_category()
-    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date('2024-02-15T10:27:39')
+    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService(db_session=session).list()
-    total_capacity = select(
-        Inventry.prod_type, func.sum(Arinvdet.demd).label("demd"), func.sum(Arinvdet.heightd).label("heightd"),
-        func.sum(Arinvdet.quan).label("quan"),
-    ).where(
-        Arinvdet.autoid.in_(item_ids), Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES), Arinvdet.par_time == '',
-    ).join(
-        Inventry.arinvdet,
-    ).group_by(
-        Inventry.prod_type
-    )
-
-    total_capacity = await session.execute(total_capacity)
-    total_capacity = total_capacity.all()
-    total_capacity = {i.prod_type: i for i in total_capacity}
+    total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
+    total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
     capacities_data = {c.category_autoid: c for c in capacities}
-    result = paginate(origin_db_response)
-    for category in result.items:
-        capacity = capacities_data.get(category.id)
-        category.flow_count = flows_data.get(category.id)
+    for category in result["results"]:
+        capacity = capacities_data.get(category.autoid)
+        category.flow_count = flows_data.get(category.autoid)
         category.capacity = capacity.per_day if capacity else None
         category.capacity_id = capacity.id if capacity else None
-        if capacity := total_capacity.get(category.prod_type):
-            category.total_capacity = capacity.demd
+        if category_total_capacity := total_capacity.get(category.prod_type):
+            category.total_capacity = category_total_capacity
+    return result
+
+
+@router.get("/categories/all/", response_model=list[CategorySchema])
+async def get_categories_all(
+        session: AsyncSession = Depends(get_async_session),
+        item_filter: ItemFilter = FilterDepends(ItemFilter),
+        category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+):
+    result = await CategoryService(db_session=session, list_filter=category_filter).list()
+    flows_data = await FlowsService(db_session=session).group_by_category()
+    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
+    item_ids = item_ids if item_ids else ["-1"]
+    capacities = await CapacitiesService(db_session=session).list()
+    total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
+    total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
+    capacities_data = {c.category_autoid: c for c in capacities}
+    for category in result:
+        capacity = capacities_data.get(category.autoid)
+        category.flow_count = flows_data.get(category.autoid)
+        category.capacity = capacity.per_day if capacity else None
+        category.capacity_id = capacity.id if capacity else None
+        if category_total_capacity := total_capacity.get(category.prod_type):
+            category.total_capacity = category_total_capacity
     return result
 
 
 @router.get("/items/", response_model=ArinvDetPaginateSchema)
-async def get_items(limit: int = 10, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
-    result = await OriginItemService(db_session=session).list(limit=limit, offset=offset)
+async def get_items(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session),
+        origin_item_filter: OriginItemFilter = FilterDepends(OriginItemFilter),
+        item_filter: ItemFilter = FilterDepends(ItemFilter),
+        ordering: str = None
+):
+    if ordering:
+        item_filter = ItemFilter(order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True))
+        origin_item_filter = OriginItemFilter(
+            order_by=ordering, **origin_item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
+        )
+    filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
+    extra_ordering = None
+    if filtering_items:
+        filtering_fields = origin_item_filter.model_dump(exclude_unset=True, exclude_none=True)
+        if item_filter.is_exclude:
+            filtering_fields["autoid__not_in"] = filtering_items
+        else:
+            filtering_fields["autoid__in"] = filtering_items
+        origin_item_filter = OriginItemFilter(**filtering_fields)
+    if not item_filter.is_filtering_values and item_filter.order_by:
+        filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
+    if item_filter.order_by:
+        default_position = len(filtering_items) + 2
+        data_for_ordering = {v: i for i, v in enumerate(filtering_items, 1)}
+        extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
+    result = await OriginItemService(
+        db_session=session, list_filter=origin_item_filter
+    ).list(
+        limit=limit, offset=offset, extra_ordering=extra_ordering
+    )
     autoids = [i.autoid for i in result["results"]]
     items_statistic = await ItemsService(db_session=session).group_by_item_statistics(autoids=autoids)
     related_items = await ItemsService(db_session=session).get_related_items_by_origin_items(autoids=autoids)

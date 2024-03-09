@@ -12,9 +12,9 @@ from starlette.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from users.auth import auth_backend
+from users.auth import auth_backend_refresh
 from users.mixins import fastapi_users, current_user
-from users.schemas import UserRead, UserCreate
+from users.schemas import UserRead, UserCreate, UserUpdate
 from origin_db.routers import router as origin_router
 from stages.routers import router as stages_router
 # from stages.manager import router as test_router
@@ -71,19 +71,26 @@ app.add_middleware(
 disable_installed_extensions_check()
 
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix="/auth/jwt",
-    tags=["auth"],
+    fastapi_users.get_auth_router(auth_backend_refresh),
+    prefix="/token",
+    tags=["token"],
 )
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
+    prefix="/users",
+    tags=["users"],
 )
 
 app.include_router(
     fastapi_users.get_reset_password_router(),
-    prefix="/auth",
+    prefix="/users",
+    tags=["users"],
+)
+
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"],
 )
 
 app.include_router(origin_router)

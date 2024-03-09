@@ -4,10 +4,15 @@ from fastapi_users import schemas, models
 from fastapi_users.schemas import PYDANTIC_V2
 from pydantic import EmailStr, BaseModel
 
+from common.constants import Role
+
 
 class UserRead(schemas.BaseUser[int]):
     id: models.ID
     email: EmailStr
+    first_name: str
+    last_name: str
+    # role: str
     is_active: bool = True
     is_superuser: bool = False
 
