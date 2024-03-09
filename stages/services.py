@@ -18,6 +18,7 @@ from common.filters import RenameFieldFilter
 from common.models import EBMSBase
 from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet
+from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
 from stages.schemas import FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, CommentSchemaIn, ItemSchemaIn, SalesOrderSchemaIn
 
@@ -30,6 +31,17 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         self.model = model
         self.db_session = db_session
         self.filter = list_filter
+
+    async def validate_production_date(self, production_date: date):
+        company_working_weekend = await self.db_session.scalars(select(CompanyProfile))
+        company_working_weekend = company_working_weekend.first()
+        if company_working_weekend:
+            company_working_weekend = company_working_weekend.working_weekend
+        else:
+            company_working_weekend = False
+        if not company_working_weekend and production_date.isoweekday() > 5:
+            raise HTTPException(status_code=400, detail="Production date cannot be on a weekend")
+        return production_date
 
     def get_query(self, limit: int = None, offset: int = None) -> Query:
         query = select(self.model)
@@ -80,6 +92,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             await self.validate_autoid(obj.order, Arinv)
         if getattr(obj, "origin_item", None) and issubclass(self.model, Item):
             await self.validate_autoid(obj.origin_item, Arinvdet)
+        if data := getattr(obj, "production_date", None):
+            await self.validate_production_date(data)
         try:
             stmt = self.model(**obj.model_dump(exclude_none=True, exclude_unset=True))
             self.db_session.add(stmt)
@@ -90,6 +104,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return stmt
 
     async def update(self, id: int, obj: InputSchemaType) -> Optional[ModelType]:
+        if data := getattr(obj, "production_date", None):
+            await self.validate_production_date(data)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
         if not instance:
@@ -105,6 +121,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return instance
 
     async def partial_update(self, id: int, obj: dict) -> Optional[ModelType]:
+        if data := obj.get("production_date", None):
+            await self.validate_production_date(data)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
         if not instance:

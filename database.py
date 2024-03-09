@@ -15,7 +15,7 @@ from common.constants import Role
 from common.models import EBMSBase, DefaultBase
 from settings import EBMS_DB, Default_DB
 from users.models import User
-
+from users.services import UserService
 
 # EBMS_DATABASE_URL = 'mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
 #     DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
@@ -37,4 +37,4 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserDatabase(session, User)
+    yield UserService(session, User)

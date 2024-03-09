@@ -3,6 +3,7 @@ from typing import TypeVar
 
 import typing_extensions
 from pydantic import BaseModel
+from sqlalchemy_utils import ChoiceType
 
 from common.models import DefaultBase, EBMSBase
 
@@ -13,7 +14,7 @@ InputSchemaType = TypeVar("InputSchemaType", bound=BaseModel)
 IncEx: typing_extensions.TypeAlias = 'set[int] | set[str] | dict[int, Any] | dict[str, Any] | None'
 
 
-class Role(str, Enum):
+class Role:
     ADMIN = "admin"
     MANAGER = "manager"
     WORKER = "worker"
@@ -23,3 +24,13 @@ class Role(str, Enum):
         (MANAGER, "manager"),
         (WORKER, "worker"),
     ]
+
+
+class RoleModel(ChoiceType):
+    admin: str
+    manager: str
+    worker: str
+
+    # @classmethod
+    # def choices(cls):
+    #     return [(x.value, x.name) for x in cls]

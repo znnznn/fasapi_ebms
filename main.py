@@ -17,6 +17,7 @@ from users.mixins import fastapi_users, current_user
 from users.schemas import UserRead, UserCreate, UserUpdate
 from origin_db.routers import router as origin_router
 from stages.routers import router as stages_router
+from profiles.routers import router as profiles_router
 # from stages.manager import router as test_router
 
 
@@ -96,6 +97,8 @@ app.include_router(
 app.include_router(origin_router)
 
 app.include_router(stages_router)
+
+app.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
 
 # app.include_router(test_router)
 add_pagination(app)
