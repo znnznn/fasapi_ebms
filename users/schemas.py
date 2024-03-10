@@ -38,3 +38,14 @@ class UserCreate(schemas.BaseUserCreate):
 class UserUpdate(schemas.BaseUserUpdate):
     pass
 
+
+class UsersPaginatedSchema(BaseModel):
+    count: int
+    results: List[UserRead]
+
+
+class PasswordResetConfirmationSchema(BaseModel):
+    token: str
+    uid64: str
+    new_password1: str
+    new_password2: str
