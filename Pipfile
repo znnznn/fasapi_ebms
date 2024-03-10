@@ -29,6 +29,7 @@ sqlalchemy = {extras = ["asyncio"], version = "*"}
 psycopg2 = "*"
 fastapi-pagination = "*"
 fastapi-filter = {extras = ["all"], version = "*"}
+resend = "*"
 
 [dev-packages]
 

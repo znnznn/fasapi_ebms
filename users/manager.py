@@ -1,9 +1,11 @@
 import re
 from typing import Optional, Union
 
+import jwt
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, IntegerIDMixin, models, InvalidPasswordException, exceptions
+from fastapi_users.jwt import generate_jwt, decode_jwt
 from passlib.handlers.django import django_pbkdf2_sha256
 from starlette.responses import Response
 
@@ -11,7 +13,7 @@ from database import get_user_db
 from settings import SECRET_KEY
 from .models import User
 from .schemas import UserCreate
-
+from .utils import EmailSender
 
 SECRET = SECRET_KEY
 
@@ -78,6 +80,64 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 reason="Password should not contain e-mail"
             )
 
+    async def forgot_password(
+            self, user: models.UP, request: Optional[Request] = None
+    ) -> None:
+        if not user.is_active:
+            raise exceptions.UserInactive()
+
+        token_data = {
+            "sub": str(user.id),
+            "password_fgpt": self.password_helper.hash(user.password),
+            "aud": self.reset_password_token_audience,
+        }
+        token = generate_jwt(
+            token_data,
+            self.reset_password_token_secret,
+            self.reset_password_token_lifetime_seconds,
+        )
+        await self.on_after_forgot_password(user, token, request)
+
+    async def reset_password(
+            self, token: str, password: str, request: Optional[Request] = None
+    ) -> models.UP:
+        try:
+            data = decode_jwt(
+                token,
+                self.reset_password_token_secret,
+                [self.reset_password_token_audience],
+            )
+        except jwt.PyJWTError:
+            raise exceptions.InvalidResetPasswordToken()
+
+        try:
+            user_id = data["sub"]
+            password_fingerprint = data["password_fgpt"]
+        except KeyError:
+            raise exceptions.InvalidResetPasswordToken()
+
+        try:
+            parsed_id = self.parse_id(user_id)
+        except exceptions.InvalidID:
+            raise exceptions.InvalidResetPasswordToken()
+
+        user = await self.get(parsed_id)
+
+        valid_password_fingerprint, _ = self.password_helper.verify_and_update(
+            user.password, password_fingerprint
+        )
+        if not valid_password_fingerprint:
+            raise exceptions.InvalidResetPasswordToken()
+
+        if not user.is_active:
+            raise exceptions.UserInactive()
+
+        updated_user = await self._update(user, {"password": password})
+
+        await self.on_after_reset_password(user, request)
+
+        return updated_user
+
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
 
@@ -85,6 +145,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             self, user: User, token: str, request: Optional[Request] = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
+        EmailSender().send_email_reset_password(request=request, obj_user=user, token=token)
 
     async def on_after_request_verify(
             self, user: User, token: str, request: Optional[Request] = None

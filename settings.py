@@ -10,6 +10,11 @@ LIST_EXCLUDED_PROD_TYPES = ("", "Vents")
 ALGORITHM = "SHA256"
 ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int, default=30)
 
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='')
+
+FRONTEND_HOST = config('FRONTEND_HOST', default='dev-embs.com', cast=str)
+
 
 class EBMSDatabase(BaseSettings):
     env_file: str = ".env"
