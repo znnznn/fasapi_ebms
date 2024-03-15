@@ -48,7 +48,8 @@ class RenameFieldFilter(Filter):
         return self.Constants.do_ordering
 
     def get_join_table(self, field_name: str) -> Optional[ModelType | OriginModelType]:
-        if join_tables := getattr(self.Constants, "join_tables", None):
+        join_tables = getattr(self.Constants, "join_tables", None)
+        if join_tables is not None:
             return join_tables.get(field_name, None)
 
     def get_search_query(self, query, value) -> Optional[Union[Select, Query]]:
@@ -114,6 +115,7 @@ class RenameFieldFilter(Filter):
         join_table = None
         count_join = 0
         for field_name, value in self.filtering_fields:
+            print(field_name, value)
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
@@ -139,7 +141,7 @@ class RenameFieldFilter(Filter):
                 if field_name == self.Constants.search_field_name and hasattr(self.Constants, "search_fields_by_models"):
                     query = self.get_search_query(query, value)
                 else:
-                    model_field = getattr(self.Constants.model, self.related_field(field_name))
+                    model_field = getattr(self.Constants.model, field_name)
                     query = query.filter(getattr(model_field, operator)(value))
         # print(query.compile(compile_kwargs={"literal_binds": True})
         extra_ordering = kwargs.get("extra_ordering")

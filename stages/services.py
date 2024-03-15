@@ -1,3 +1,4 @@
+import calendar
 from datetime import date, datetime
 from typing import TypeVar, Generic, Type, Any, Optional, List, Sequence
 
@@ -203,6 +204,20 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
+    async def get_autoids_and_production_date_by_month(self, year: int, month: int):
+        list_of_days = [datetime(year, month, day).strftime('%Y-%m-%d') for day in range(1, calendar.monthrange(year, month)[1] + 1)]
+        min_date = min(list_of_days)
+        max_date = max(list_of_days)
+        stmt = select(self.model).where(
+            and_(
+                func.date(self.model.production_date) >= datetime.strptime(min_date, "%Y-%m-%d"),
+                func.date(self.model.production_date) <= datetime.strptime(max_date, "%Y-%m-%d")
+            )
+        )
+        objs = await self.db_session.scalars(stmt)
+        result = objs.all()
+        return result
+
     async def group_by_item_statistics(self, autoids: list[str]):
         """
             Returns annotated:
@@ -294,3 +309,15 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         stmt = select(self.model).where(self.model.order.in_(autoids))
         objs = await self.db_session.scalars(stmt)
         return objs.all()
+
+    async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.order))
+            query = self.filter.sort(query)
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        if do_ordering:
+            query = self.filter.sort(select(self.model.order))
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all()
+        return None
