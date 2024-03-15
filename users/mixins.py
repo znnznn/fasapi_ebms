@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import Depends, HTTPException
-from fastapi_users import FastAPIUsers
+from fastapi_users import FastAPIUsers, BaseUserManager, models, exceptions
 from starlette import status
 
 from common.constants import Role
@@ -35,6 +35,24 @@ async def is_role(user=Depends(active_user_with_permission), role=List[str]):
     if user.role in role:
         return user
     raise HTTPException(detail="Permission denied.", status_code=status.HTTP_403_FORBIDDEN)
+
+
+async def is_owner_profile(id: int, user=Depends(active_user_with_permission)):
+    if user.id == id:
+        return user
+    raise HTTPException(detail="Permission denied.", status_code=status.HTTP_403_FORBIDDEN)
+
+
+async def get_user_or_404_by_admin(
+        id: str,
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user=Depends(is_admin),
+) -> models.UP:
+    try:
+        parsed_id = user_manager.parse_id(id)
+        return await user_manager.get(parsed_id)
+    except (exceptions.UserNotExists, exceptions.InvalidID) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
 class RoleChecker:

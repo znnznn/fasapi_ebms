@@ -47,7 +47,7 @@ class EmailSender:
         return ''.join([http, FRONTEND_HOST, '/password-reset/', uidb64, '/', token, '/'])
 
     def send_email_reset_password(self, request, obj_user, token):
-        invite_url =self.get_uuid_token_url(request, obj_user, token)
+        invite_url = self.get_uuid_token_url(request, obj_user, token)
         text = """We received a request to reset your password.\n
                   If this was you, click the button below to set up a new
                   password for your account. If this wasn't you, ignore
@@ -69,9 +69,9 @@ class EmailSender:
         )
         return True
 
-    def send_email_invite_new_user(self, request, obj_user):
-        invite_url = self.get_uuid_token_url(request, obj_user)
-        text = f"""Congratulation {obj_user.get_full_name()}!\n
+    def send_email_invite_new_user(self, request, obj_user, token):
+        invite_url = self.get_uuid_token_url(request, obj_user, token)
+        text = f"""Congratulation {obj_user.first_name} {obj_user.last_name}!\n
                   You have been invited to join our company as {obj_user.role}\n
                   Click the button below to set up a new password for your account."""
         context = {
@@ -81,7 +81,7 @@ class EmailSender:
             'button_title': 'set up password',
             'invite_url': invite_url
         }
-        html = render_to_string('main.html', context=context, request=request)
+        html = templates.get_template('main.html').render({'request': request, **context})
         self.email_send(
             subject=context['title'],
             from_email=self.from_email,

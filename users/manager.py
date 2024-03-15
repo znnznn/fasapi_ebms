@@ -22,6 +22,19 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
+    async def get_forgot_password_token(self, user):
+        token_data = {
+            "sub": str(user.id),
+            "password_fgpt": self.password_helper.hash(user.password),
+            "aud": self.reset_password_token_audience,
+        }
+        token = generate_jwt(
+            token_data,
+            self.reset_password_token_secret,
+            self.reset_password_token_lifetime_seconds,
+        )
+        return token
+
     async def authenticate(self, credentials: OAuth2PasswordRequestForm) -> Optional[models.UP]:
         try:
             user = await self.get_by_email(credentials.username)
@@ -86,16 +99,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         if not user.is_active:
             raise exceptions.UserInactive()
 
-        token_data = {
-            "sub": str(user.id),
-            "password_fgpt": self.password_helper.hash(user.password),
-            "aud": self.reset_password_token_audience,
-        }
-        token = generate_jwt(
-            token_data,
-            self.reset_password_token_secret,
-            self.reset_password_token_lifetime_seconds,
-        )
+        token = await self.get_forgot_password_token(user)
         await self.on_after_forgot_password(user, token, request)
 
     async def reset_password(
@@ -140,6 +144,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
+        token = await self.get_forgot_password_token(user)
+        EmailSender().send_email_invite_new_user(request=request, obj_user=user, token=token)
 
     async def on_after_forgot_password(
             self, user: User, token: str, request: Optional[Request] = None

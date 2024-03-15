@@ -1,8 +1,11 @@
+import calendar
+from collections import defaultdict
+from datetime import datetime
 from typing import Generic, Type, Optional, List
 
 from fastapi import Depends, HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, and_, or_, case, Result, Sequence
+from sqlalchemy import select, ScalarResult, func, and_, or_, case, Result, Sequence, literal_column, join, union_all, literal
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria, Query
@@ -141,8 +144,6 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         return query
 
     async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
-        print(kwargs)
-        print(888)
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
 
@@ -161,6 +162,17 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
         ).join(
             Arinvdet
+        ).join(
+            Inventry
+        ).where(
+            and_(
+                Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                Inventry.prod_type.isnot(None),
+                Arinvdet.par_time == '',
+                Arinvdet.inven != None,
+                Arinvdet.inven != '',
+            ),
         ).options(
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
@@ -168,6 +180,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
         else:
             query = query.order_by(getattr(self.model, self.default_ordering_field))
         if limit:
@@ -176,8 +189,8 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             query = query.offset(offset)
         return query
 
-    async def list(self, limit: int = 10, offset: int = 0) -> dict:
-        return await self.paginated_list(limit=limit, offset=offset)
+    async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
+        return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
     async def get(self, autoid: str) -> Optional[OriginModelType]:
         query = select(
@@ -224,3 +237,38 @@ class InventryService(BaseService[Inventry, InventrySchema]):
             self.model.prod_type
         )
         return await self.db_session.execute(stmt)
+
+    async def count_capacity_by_days(self, items_data: dict) -> Sequence[Result]:
+        """  Return total capacity for an inventory group by prod type with count arinv"""
+        compair_data = defaultdict(list)
+        for autoid, date in items_data.items():
+            compair_data[date.strftime('%Y-%m-%d')].append(autoid)
+        list_subqueries = []
+        for production_date, autoids in compair_data.items():
+            stmt = select(
+                self.model.prod_type,
+                literal(production_date).label("production_date"),
+                func.count(Arinvdet.doc_aid).label("count_orders"),
+                func.sum(case(
+                    (self.model.prod_type == 'Trim', Arinvdet.demd),
+                    (Arinvdet.heightd != 0, ((Arinvdet.heightd / 12) * Arinvdet.quan)),
+                    else_=Arinvdet.quan
+                )).label("total_capacity"),
+            ).where(
+                Arinvdet.autoid.in_(autoids), Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES), Arinvdet.par_time == '',
+            ).join(
+                self.model.arinvdet,
+            ).group_by(
+                self.model.prod_type,
+            )
+
+            list_subqueries.append(stmt)
+        list_subqueries = union_all(*list_subqueries)
+        list_subqueries_alias = list_subqueries.alias('list_subqueries_alias')
+        stmt = select(
+            list_subqueries_alias.c.production_date, list_subqueries_alias.c.total_capacity, list_subqueries_alias.c.prod_type,
+            list_subqueries_alias.c.count_orders,
+        )
+        objs = await self.db_session.execute(stmt)
+        result = objs.all()
+        return result

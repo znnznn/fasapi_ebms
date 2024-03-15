@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 
 from common.constants import IncEx
 from common.filters import RenameFieldFilter
-from stages.models import Item, Stage, Flow, Comment
+from stages.models import Item, Stage, Flow, Comment, SalesOrder
 
 
 class CommentFilter(RenameFieldFilter):
@@ -138,3 +138,14 @@ class ItemFilter(RenameFieldFilter):
                 self.Constants.exclude = True
 
         return fields
+
+
+class SalesOrderFilter(RenameFieldFilter):
+    production_date: Optional[date] = None
+
+    class Constants(RenameFieldFilter.Constants):
+        model = SalesOrder
+        # related_fields = {
+        #     'status': 'name',
+        #     'status_not_in': 'name__not_in',
+        # }

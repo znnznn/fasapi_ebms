@@ -80,8 +80,8 @@ class ArinvRelatedArinvDetSchema(ArinvSchema):
 
 
 class ArinPaginateSchema(BaseModel):
-    results: List[ArinvRelatedArinvDetSchema]
     count: int
+    results: List[ArinvRelatedArinvDetSchema]
 
 
 class ArinvDetPaginateSchema(BaseModel):
@@ -92,3 +92,7 @@ class ArinvDetPaginateSchema(BaseModel):
 class InventrySchema(BaseModel):
     autoid: str = Field(default=None)
     prod_type: str = Field(default=None)
+
+
+class CapacitiesCalendarSchema(BaseModel):
+    capacity: int

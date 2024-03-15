@@ -76,17 +76,6 @@ app.include_router(
     prefix="/token",
     tags=["token"],
 )
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/users",
-    tags=["users"],
-)
-
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
 
 app.include_router(origin_router)
 
@@ -96,5 +85,4 @@ app.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
 
 app.include_router(users_router, prefix="/users", tags=["users"])
 
-# app.include_router(test_router)
 add_pagination(app)
