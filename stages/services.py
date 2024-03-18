@@ -86,6 +86,13 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             return objs.all() or ['-1']
         return None
 
+    async def get_filtering_origin_orders_autoids(self, **kwargs) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.order), **kwargs)
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        return None
+
     async def create(self, obj: InputSchemaType) -> ModelType:
         if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
             await self.validate_autoid(obj.category_autoid, Inprodtype)

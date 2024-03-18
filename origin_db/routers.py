@@ -38,7 +38,7 @@ async def orders(
         )
     filtering_sales_orders = await SalesOrdersService(
         db_session=session, list_filter=sales_order_filter
-    ).get_filtering_origin_items_autoids()
+    ).get_filtering_origin_orders_autoids()
     extra_ordering = None
     if filtering_sales_orders:
         filtering_fields = sales_order_filter.model_dump(exclude_unset=True, exclude_none=True)
@@ -46,11 +46,10 @@ async def orders(
             filtering_fields["autoid__not_in"] = filtering_sales_orders
         else:
             filtering_fields["autoid__in"] = filtering_sales_orders
-        origin_item_filter = OriginItemFilter(**filtering_fields)
     if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
         filtering_sales_orders = await SalesOrdersService(
             db_session=session, list_filter=sales_order_filter
-        ).get_filtering_origin_items_autoids(do_ordering=True)
+        ).get_filtering_origin_orders_autoids(do_ordering=True)
     if sales_order_filter.order_by:
         default_position = len(filtering_sales_orders) + 2
         data_for_ordering = {v: i for i, v in enumerate(filtering_sales_orders, 1)}
