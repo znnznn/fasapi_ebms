@@ -86,6 +86,13 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             return objs.all() or ['-1']
         return None
 
+    async def get_filtering_origin_orders_autoids(self, **kwargs) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.order), **kwargs)
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        return None
+
     async def create(self, obj: InputSchemaType) -> ModelType:
         if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
             await self.validate_autoid(obj.category_autoid, Inprodtype)
@@ -297,6 +304,18 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             return objs.all()
         return None
 
+    async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
+        if self.filter and self.filter.is_filtering_values:
+            query = self.filter.filter(select(self.model.order))
+            query = self.filter.sort(query)
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all() or ['-1']
+        if do_ordering:
+            query = self.filter.sort(select(self.model.origin_item))
+            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            return objs.all()
+        return None
+
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
     def __init__(
@@ -311,6 +330,13 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         return objs.all()
 
     async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
+        # subq = select(self.model.order).where(
+        #     and_(
+        #         self.model.production_date != None,
+        #         self.model.stage_id != None,
+        #         Stage.name == "Done",
+        #     )
+        # ).join(Stage)
         if self.filter and self.filter.is_filtering_values:
             query = self.filter.filter(select(self.model.order))
             query = self.filter.sort(query)

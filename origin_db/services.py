@@ -8,7 +8,7 @@ from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, and_, or_, case, Result, Sequence, literal_column, join, union_all, literal
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria, Query
+from sqlalchemy.orm import selectinload, joinedload, subqueryload, with_loader_criteria, Query, contains_eager, aliased
 
 from common.constants import InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
@@ -156,12 +156,33 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
+        det = select(
+            Arinvdet.autoid
+        ).join(
+            Arinvdet.rel_inventry
+        ).join(
+            Arinvdet.order
+        ).where(
+            and_(
+                Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                Arinvdet.par_time == '',
+                Arinvdet.inven != None,
+                Arinvdet.inven != '',
+            ),
+        ).options(
+            selectinload(Arinvdet.rel_inventry),
+            selectinload(Arinvdet.order),
+        ).group_by(
+            Arinvdet
+        )
+        # ).scalar_subquery().correlate(Inventry)
         query = select(
             self.model,
         ).where(
             and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
         ).join(
-            Arinvdet
+            Arinv.details,
         ).join(
             Inventry
         ).where(
@@ -174,6 +195,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 Arinvdet.inven != '',
             ),
         ).options(
+            # contains_eager(Arinv.details,).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
             self.model
@@ -205,6 +227,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             getattr(self.model, self.default_ordering_field)
         ).group_by(
             self.model
+
         )
         result = await self.db_session.scalars(query)
         try:

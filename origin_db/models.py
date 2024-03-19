@@ -250,10 +250,10 @@ class Arinvdet(Base):
     @item.setter
     def item(self, value):
         self._item = value
-
-    @hybrid_property
-    def invoice(self):
-        return str(self.order.invoice).strip()
+    #
+    # @hybrid_property
+    # def invoice(self):
+    #     return str(self.order.invoice).strip()
 
 
 class Inprodtype(Base):

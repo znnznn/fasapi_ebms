@@ -142,10 +142,14 @@ class ItemFilter(RenameFieldFilter):
 
 class SalesOrderFilter(RenameFieldFilter):
     production_date: Optional[date] = None
+    priority: Optional[int] = None
+    is_scheduled: Optional[bool] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = SalesOrder
-        # related_fields = {
-        #     'status': 'name',
-        #     'status_not_in': 'name__not_in',
-        # }
+        related_fields = {
+            'start_date': 'production_date',
+            'end_date': 'production_date',
+            'is_scheduled': 'production_date__isnull',
+        }
+        revert_values_fields = ('production_date__isnull',)

@@ -27,6 +27,7 @@ async def orders(
         session: AsyncSession = Depends(get_async_session),
         origin_order_filter: OrderFilter = FilterDepends(OrderFilter),
         sales_order_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter),
+        # item_filter: ItemFilter = FilterDepends(ItemFilter),
         ordering: str = None,
 ):
     if ordering:
@@ -38,23 +39,33 @@ async def orders(
         )
     filtering_sales_orders = await SalesOrdersService(
         db_session=session, list_filter=sales_order_filter
-    ).get_filtering_origin_items_autoids()
+    ).get_filtering_origin_orders_autoids()
+    # filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_orders_autoids()
     extra_ordering = None
+    # filtering_fields = None
     if filtering_sales_orders:
-        filtering_fields = sales_order_filter.model_dump(exclude_unset=True, exclude_none=True)
+        print(filtering_sales_orders)
+        filtering_fields = origin_order_filter.model_dump(exclude_unset=True, exclude_none=True)
         if sales_order_filter.is_exclude:
             filtering_fields["autoid__not_in"] = filtering_sales_orders
         else:
             filtering_fields["autoid__in"] = filtering_sales_orders
-        origin_item_filter = OriginItemFilter(**filtering_fields)
+        origin_order_filter = OrderFilter(**filtering_fields)
     if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
         filtering_sales_orders = await SalesOrdersService(
             db_session=session, list_filter=sales_order_filter
-        ).get_filtering_origin_items_autoids(do_ordering=True)
+        ).get_filtering_origin_orders_autoids(do_ordering=True)
     if sales_order_filter.order_by:
         default_position = len(filtering_sales_orders) + 2
         data_for_ordering = {v: i for i, v in enumerate(filtering_sales_orders, 1)}
         extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
+    # if filtering_items:
+    #     if filtering_fields is None:
+    #         filtering_fields = origin_order_filter.model_dump(exclude_unset=True, exclude_none=True)
+    #     if sales_order_filter.is_exclude:
+    #         filtering_fields["autoid__not_in"] = filtering_sales_orders
+    #     else:
+    #         filtering_fields["autoid__in"] = filtering_sales_orders
     result = await OriginOrderService(
         db_session=session, list_filter=origin_order_filter
     ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
@@ -66,6 +77,7 @@ async def orders(
     items = {i.origin_item: i for i in items}
     sales_order_data = {i.order: i for i in sales_order}
     for i in result["results"]:
+        completed = []
         if order := items_dates.get(i.autoid):
             i.start_date = order.min_date
             i.end_date = order.max_date
@@ -76,6 +88,10 @@ async def orders(
             if item := items.get(detail.autoid):
                 detail.completed = True if item.production_date and item.stage.name == 'Done' else False
                 detail.item = item
+                completed.append(detail.completed)
+            else:
+                completed.append(False)
+        i.completed = all(completed)
     return result
 
 
@@ -89,6 +105,7 @@ async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_
     items_statistic_data = {i.order: i for i in items}
     items_data = {i.origin_item: i for i in related_items}
     sales_order_data = {i.order: i for i in sales_order}
+    completed = []
     if item := items_statistic_data.get(result.autoid):
         result.start_date = item.min_date
         result.end_date = item.max_date
@@ -99,6 +116,10 @@ async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_
         if item := items_data.get(detail.autoid):
             detail.completed = True if item.stage and item.production_date and item.stage.name == 'Done' else False
             detail.item = item
+            completed.append(detail.completed)
+        else:
+            completed.append(False)
+    result.completed = all(completed)
     return result
 
 

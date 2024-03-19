@@ -39,7 +39,7 @@ class ArinvDetSchema(BaseModel):
     length: float = Field(default=0, serialization_alias="length", alias="heightd")
     bends: float = Field(default=0, serialization_alias="bends", alias="demd")
     customer: str = Field(default=None)
-    order: str = Field(default=None, serialization_alias="order", alias="invoice")
+    order: str = Field(default=None, serialization_alias="order", alias="invoice",)
     id_inven: str = Field(default=None, serialization_alias="id_inven", alias="inven")
     origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
     completed: bool = Field(default=False)  # TODO: check this
@@ -50,6 +50,11 @@ class ArinvDetSchema(BaseModel):
     class Config:
         orm_mode = True
         # populate_by_name = True
+
+    @field_validator('order')
+    @classmethod
+    def validate_order(cls, v: str):
+        return v.strip()
 
 
 class ArinvSchema(BaseModel):

@@ -26,7 +26,6 @@ _orm_operator_transformer = {
 
 
 class RenameFieldFilter(Filter):
-    search: Optional[str] = None
     order_by: Optional[List[str]] = None
 
     class Constants(Filter.Constants):
