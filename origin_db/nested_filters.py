@@ -9,13 +9,13 @@ from origin_db.models import Arinv, Arinvdet, Inventry
 
 class NestedInventryFilter(RenameFieldFilter):
     category: Optional[str] = None
-    categories: Optional[List[str]] = None
+    categories: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Inventry
         related_fields = {
             'category': 'prod_type',
-            'categories': 'prod_type',
+            'categories': 'prod_type__in',
         }
 
 

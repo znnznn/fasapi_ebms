@@ -12,7 +12,7 @@ from origin_db.nested_filters import NestedOrderFilter, NestedOriginItemFilter
 
 class InventryFilter(RenameFieldFilter):
     category: Optional[str] = None
-    categories: Optional[List[str]] = None
+    categories: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Inventry
@@ -24,11 +24,13 @@ class InventryFilter(RenameFieldFilter):
 
 class CategoryFilter(RenameFieldFilter):
     name: Optional[str] = None
+    categories: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Inprodtype
         related_fields = {
             'name': 'prod_type',
+            'categories': 'prod_type__in',
         }
 
 
@@ -74,6 +76,8 @@ class OrderFilter(RenameFieldFilter):
     name: Optional[str] = None
     date: Optional[date] = None
     categories: Optional[NestedOriginItemFilter] = FilterDepends(NestedOriginItemFilter)
+    autoid__in: Optional[List[str]] = None
+    autoid__not_in: Optional[List[str]] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Arinv

@@ -175,13 +175,14 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             selectinload(Arinvdet.order),
         ).group_by(
             Arinvdet
-        ).scalar_subquery().correlate(Inventry)
+        )
+        # ).scalar_subquery().correlate(Inventry)
         query = select(
             self.model,
         ).where(
             and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
         ).join(
-            Arinvdet, Arinvdet.autoid == det
+            Arinv.details,
         ).join(
             Inventry
         ).where(
@@ -193,10 +194,9 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 Arinvdet.inven != None,
                 Arinvdet.inven != '',
             ),
-        ).options(contains_eager(
-            Arinv.details
-        )
-            # selectinload(sub).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
+        ).options(
+            # contains_eager(Arinv.details,).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
+            selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
             self.model
         )
