@@ -33,6 +33,17 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         self.db_session = db_session
         self.filter = list_filter
 
+    async def root_validator(self, obj: InputSchemaType) -> InputSchemaType:
+        if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
+            await self.validate_autoid(obj.category_autoid, Inprodtype)
+        if getattr(obj, "order", None) and issubclass(self.model, (SalesOrder, Item)):
+            await self.validate_autoid(obj.order, Arinv)
+        if getattr(obj, "origin_item", None) and issubclass(self.model, Item):
+            await self.validate_autoid(obj.origin_item, Arinvdet)
+        if data := getattr(obj, "production_date", None):
+            await self.validate_production_date(data)
+        return obj
+
     async def validate_production_date(self, production_date: date):
         company_working_weekend = await self.db_session.scalars(select(CompanyProfile))
         company_working_weekend = company_working_weekend.first()
@@ -44,10 +55,11 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             raise HTTPException(status_code=400, detail="Production date cannot be on a weekend")
         return production_date
 
-    def get_query(self, limit: int = None, offset: int = None) -> Query:
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
         query = select(self.model)
         if self.filter:
-            query = self.filter.filter(query)
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
         if limit:
             query = query.limit(limit)
         if offset:
@@ -60,23 +72,27 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         if not result:
             raise HTTPException(status_code=404, detail=f"{model.__name__} with autoid {autoid} not found")
 
+    async def count_query_objs(self, query) -> int:
+        return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
+
+    async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
+        count = await self.count_query_objs(self.get_query())
+        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
+        return {
+            "count": count,
+            "results": objs.all(),
+        }
+
     async def get(self, id: int) -> Optional[ModelType]:
-        stmt = select(self.model).where(self.model.id == id)
+        stmt = self.get_query().where(self.model.id == id)
         result = await self.db_session.scalars(stmt)
         try:
             return result.one()
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
 
-    async def paginated_list(self, limit: int = 10, offset: int = 0):
-        objs: ScalarResult[ModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset))
-        return objs.all()
-
-    async def list(self):
-        query = self.get_query()
-        if self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(query)
-        objs = await self.db_session.scalars(query)
+    async def list(self, **kwargs: Optional[dict]) -> Sequence[OriginModelType]:
+        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(**kwargs))
         return objs.all()
 
     async def get_filtering_origin_items_autoids(self) -> Sequence[str] | None:
@@ -94,14 +110,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return None
 
     async def create(self, obj: InputSchemaType) -> ModelType:
-        if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
-            await self.validate_autoid(obj.category_autoid, Inprodtype)
-        if getattr(obj, "order", None) and issubclass(self.model, (SalesOrder, Item)):
-            await self.validate_autoid(obj.order, Arinv)
-        if getattr(obj, "origin_item", None) and issubclass(self.model, Item):
-            await self.validate_autoid(obj.origin_item, Arinvdet)
-        if data := getattr(obj, "production_date", None):
-            await self.validate_production_date(data)
+        obj = await self.root_validator(obj)
         try:
             stmt = self.model(**obj.model_dump(exclude_none=True, exclude_unset=True))
             self.db_session.add(stmt)
@@ -112,8 +121,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return stmt
 
     async def update(self, id: int, obj: InputSchemaType) -> Optional[ModelType]:
-        if data := getattr(obj, "production_date", None):
-            await self.validate_production_date(data)
+        obj = await self.root_validator(obj)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
         if not instance:
@@ -129,8 +137,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return instance
 
     async def partial_update(self, id: int, obj: dict) -> Optional[ModelType]:
-        if data := obj.get("production_date", None):
-            await self.validate_production_date(data)
+        baseschema = type('BaseModel', (), obj)
+        await self.root_validator(baseschema)
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
         if not instance:
@@ -167,10 +175,36 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    async def list(self):
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
+        query = select(self.model).options(selectinload(Flow.stages))
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
+        if limit:
+            query = query.limit(limit)
+        if offset:
+            query = query.offset(offset)
+        return query
+
+    async def create(self, obj: InputSchemaType) -> Optional[ModelType]:
+        new_flow = await super().create(obj)
+        stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None))
+        default_stages = await self.db_session.scalars(stmt)
+        created_stages = []
+        for stage in default_stages.all():
+            stage.flow_id = new_flow.id
+            stage.default = False
+            created_stages.append(stage)
+        self.db_session.add_all(created_stages)
+        await self.db_session.commit()
+        await self.db_session.refresh(new_flow)
+        return new_flow
+
+    async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
         stmt = select(self.model).options(selectinload(Flow.stages))
         if self.filter:
-            stmt = self.filter.filter(stmt)
+            stmt = self.filter.filter(stmt, **kwargs)
+            stmt = stmt.order_by(self.model.id)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 
@@ -204,6 +238,21 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             self, model: Type[Item] = Item, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
+        query = select(self.model).options(
+            selectinload(self.model.stage),
+            selectinload(self.model.comments),
+            selectinload(self.model.flow).selectinload(Flow.stages),
+        )
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
+        if limit:
+            query = query.limit(limit)
+        if offset:
+            query = query.offset(offset)
+        return query
 
     async def get_autoid_by_production_date(self, production_date: str | None):
         production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
@@ -281,14 +330,15 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
-    async def list(self):
+    async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
         stmt = select(self.model).options(
             selectinload(self.model.stage),
             selectinload(self.model.comments),
             selectinload(self.model.flow).selectinload(Flow.stages),
         )
         if self.filter:
-            stmt = self.filter.filter(stmt)
+            stmt = self.filter.filter(stmt, **kwargs)
+            stmt = self.filter.sort(stmt)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 

@@ -1,6 +1,5 @@
 from fastapi import Depends, APIRouter
 from fastapi_filter import FilterDepends
-from fastapi_pagination import LimitOffsetPage, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
@@ -8,7 +7,8 @@ from stages.filters import ItemFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
-    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut, ItemSchemaOut
+    SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut, ItemSchemaOut, FlowPaginatedSchema, SalesPaginatedSchema,
+    PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema
 )
 
 
@@ -20,10 +20,13 @@ async def create_capacity(store: CapacitySchemaIn, session: AsyncSession = Depen
     return await CapacitiesService(db_session=session).create(store)
 
 
-@router.get("/capacities/", tags=["capacity"], response_model=LimitOffsetPage[CapacitySchema])
-async def get_capacities(session: AsyncSession = Depends(get_async_session)):
-    result = await CapacitiesService(db_session=session).list()
-    return paginate(result)
+@router.get("/capacities/", tags=["capacity"], response_model=CapacityPaginatedSchema)
+async def get_capacities(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session)
+):
+    result = await CapacitiesService(db_session=session).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/capacities/{id}/", tags=["capacity"], response_model=CapacitySchema)
@@ -47,10 +50,13 @@ async def delete_capacity(id: int, session: AsyncSession = Depends(get_async_ses
     return await CapacitiesService(db_session=session).delete(id)
 
 
-@router.get("/stages/", tags=["stage"], response_model=LimitOffsetPage[StageSchema])
-async def get_stages(session: AsyncSession = Depends(get_async_session)):
-    result = await StagesService(db_session=session).list()
-    return paginate(result)
+@router.get("/stages/", tags=["stage"], response_model=StagePaginatedSchema)
+async def get_stages(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session)
+):
+    result = await StagesService(db_session=session).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/stages/{id}/", tags=["stage"], response_model=StageSchema)
@@ -71,7 +77,6 @@ async def update_stage(id: int, stage: StageSchemaIn, session: AsyncSession = De
 @router.patch("/stages/{id}/", tags=["stage"], response_model=StageSchema)
 async def partial_update_stage(id: int, data: StageSchemaIn, session: AsyncSession = Depends(get_async_session)):
     stage = data.model_dump(exclude_unset=True)
-    print(stage)
     return await StagesService(db_session=session).partial_update(id, stage)
 
 
@@ -80,10 +85,13 @@ async def delete_stage(id: int, session: AsyncSession = Depends(get_async_sessio
     return await StagesService(db_session=session).delete(id)
 
 
-@router.get("/comments/", tags=["comments"], response_model=LimitOffsetPage[CommentSchema])
-async def get_comments(session: AsyncSession = Depends(get_async_session)):
-    result = await CommentsService(db_session=session).list()
-    return paginate(result)
+@router.get("/comments/", tags=["comments"], response_model=CommentPaginatedSchema)
+async def get_comments(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session)
+):
+    result = await CommentsService(db_session=session).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/comments/{id}/", tags=["comments"], response_model=CommentSchema)
@@ -112,10 +120,14 @@ async def delete_comment(id: int, session: AsyncSession = Depends(get_async_sess
     return await CommentsService(db_session=session).delete(id)
 
 
-@router.get("/items/", tags=["items"], response_model=LimitOffsetPage[ItemSchema])
-async def get_items(session: AsyncSession = Depends(get_async_session), item_filter: ItemFilter = FilterDepends(ItemFilter)):
-    result = await ItemsService(db_session=session, list_filter=item_filter).list()
-    return paginate(result)
+@router.get("/items/", tags=["items"], response_model=PaginatedItemSchema)
+async def get_items(
+        limit: int = 10, offset: int = 0,
+        session: AsyncSession = Depends(get_async_session),
+        item_filter: ItemFilter = FilterDepends(ItemFilter)
+):
+    result = await ItemsService(db_session=session, list_filter=item_filter).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/items/{id}/", tags=["items"], response_model=ItemSchema)
@@ -136,7 +148,6 @@ async def update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depen
 @router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def partial_update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
     item = item.model_dump(exclude_unset=True)
-    print(item)
     return await ItemsService(db_session=session).partial_update(id, item)
 
 
@@ -145,10 +156,10 @@ async def delete_item(id: int, session: AsyncSession = Depends(get_async_session
     return await ItemsService(db_session=session).delete(id)
 
 
-@router.get("/sales-orders/", tags=["sales-orders"], response_model=LimitOffsetPage[SalesOrderSchema])
-async def get_salesorders(session: AsyncSession = Depends(get_async_session)):
-    result = await SalesOrdersService(db_session=session).list()
-    return paginate(result)
+@router.get("/sales-orders/", tags=["sales-orders"], response_model=SalesPaginatedSchema)
+async def get_salesorders(limit: int = 10, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
+    result = await SalesOrdersService(db_session=session).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
@@ -177,10 +188,10 @@ async def delete_salesorder(id: int, session: AsyncSession = Depends(get_async_s
     return await SalesOrdersService(db_session=session).delete(id)
 
 
-@router.get("/flows/", tags=["flows"], response_model=LimitOffsetPage[FlowSchema])
-async def get_flows(session: AsyncSession = Depends(get_async_session)):
-    result = await FlowsService(db_session=session).list()
-    return paginate(result)
+@router.get("/flows/", tags=["flows"], response_model=FlowPaginatedSchema)
+async def get_flows(limit: int = 10, offset: int = 0, session: AsyncSession = Depends(get_async_session)):
+    result = await FlowsService(db_session=session).paginated_list(limit=limit, offset=offset)
+    return result
 
 
 @router.get("/flows/{id}/", tags=["flows"], response_model=FlowSchema)

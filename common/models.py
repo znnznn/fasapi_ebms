@@ -5,6 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, as_declarative, declared_attr, Mappe
 
 
 POSITIVE_INT = Annotated[int, mapped_column(Integer, CheckConstraint('VALUE > 0'), default=0)]
+POSITIVE_INT_OR_ZERO = Annotated[int, mapped_column(Integer, CheckConstraint('VALUE > 0'), default=0, nullable=True)]
 
 
 class EBMSBase(DeclarativeBase):

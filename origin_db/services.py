@@ -45,7 +45,7 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
         count = await self.count_query_objs(self.get_query())
-        objs: ScalarResult[Inprodtype] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
+        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
         return {
             "count": count,
             "results": objs.all(),

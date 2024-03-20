@@ -1,13 +1,18 @@
 from datetime import datetime, date
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, root_validator, model_validator
+from pydantic import BaseModel, Field, root_validator, model_validator, field_validator
 
 
 class CapacitySchema(BaseModel):
     id: int = Field(default=None)
     per_day: int = Field(default=None)
     category_autoid: str = Field(default=None)
+
+
+class CapacityPaginatedSchema(BaseModel):
+    count: int
+    results: List[CapacitySchema]
 
 
 class CapacitySchemaIn(BaseModel):
@@ -21,6 +26,11 @@ class CommentSchema(BaseModel):
     item_id: int = Field(default=None, serialization_alias="item")
     text: str = Field(default=None)
     created_at: datetime = Field(default=None)
+
+
+class CommentPaginatedSchema(BaseModel):
+    count: int
+    results: List[CommentSchema]
 
 
 class CommentSchemaIn(BaseModel):
@@ -53,6 +63,11 @@ class StageSchema(StageSchemaIn):
         allow_population_by_field_name = True
 
 
+class StagePaginatedSchema(BaseModel):
+    count: int
+    results: List[StageSchema]
+
+
 class FlowSchema(BaseModel):
     id: int = Field(default=None)
     name: str | None = Field(default=None)
@@ -74,6 +89,11 @@ class FlowSchemaOut(FlowSchemaIn):
     id: int
 
 
+class FlowPaginatedSchema(BaseModel):
+    count: int
+    results: List[FlowSchema]
+
+
 class ItemSchema(BaseModel):
     id: int = Field(default=None)
     order: str = Field(default=None)
@@ -81,6 +101,8 @@ class ItemSchema(BaseModel):
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
     production_date: date | None = Field(default=None)
+    packages: int | None = Field(default=None)
+    location: int | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
     comments: List[CommentSchema] | None
     completed: bool = Field(default=False)
@@ -89,6 +111,17 @@ class ItemSchema(BaseModel):
         orm_mode = True
         allow_population_by_field_name = True
 
+    @field_validator('packages', 'location')
+    def positive_value(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Value must be greater than or equal to 0.')
+        return v or 0
+
+
+class PaginatedItemSchema(BaseModel):
+    count: int
+    results: List[ItemSchema]
+
 
 class ItemSchemaIn(BaseModel):
     order: Optional[str] = Field(default=None)
@@ -96,10 +129,18 @@ class ItemSchemaIn(BaseModel):
     flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
     production_date: Optional[date] = Field(default=None)
+    packages: Optional[int] = Field(default=None)
+    location: Optional[int] = Field(default=None)
     stage_id: Optional[int] = Field(default=None, alias="stage")
 
     class Config:
         arbitrary_types_allowed = True
+
+    @field_validator('packages', 'location')
+    def positive_value(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Value must be greater than or equal to 0.')
+        return v or 0
 
 
 class ItemSchemaOut(ItemSchemaIn):
@@ -118,7 +159,13 @@ class SalesOrderSchema(BaseModel):
     packages: int = Field(default=None)
     location: int = Field(default=None)
     priority: int = Field(default=None)
-    created_at: date = Field(default=None)
+    production_date: date | None = Field(default=None)
+    created_at: datetime | None = Field(default=None)
+
+
+class SalesPaginatedSchema(BaseModel):
+    count: int
+    results: List[SalesOrderSchema]
 
 
 class SalesOrderSchemaIn(BaseModel):
