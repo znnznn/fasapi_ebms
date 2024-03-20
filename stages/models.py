@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckCon
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.models import DefaultBase, POSITIVE_INT
+from common.models import DefaultBase, POSITIVE_INT, POSITIVE_INT_OR_ZERO
 
 
 class Capacity(DefaultBase):
@@ -43,6 +43,8 @@ class Item(DefaultBase):
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
     production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)
+    packages: Mapped[POSITIVE_INT_OR_ZERO]
+    location: Mapped[POSITIVE_INT_OR_ZERO]
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
     flow = relationship("Flow", back_populates="items")
     comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id')
