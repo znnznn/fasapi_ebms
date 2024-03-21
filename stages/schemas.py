@@ -96,7 +96,7 @@ class FlowPaginatedSchema(BaseModel):
 
 class ItemSchema(BaseModel):
     id: int = Field(default=None)
-    order: str = Field(default=None)
+    order: str | None = Field(default=None)
     origin_item: str = Field(default=None)
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
@@ -174,3 +174,21 @@ class SalesOrderSchemaIn(BaseModel):
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
     created_at: Optional[date] = Field(default=datetime.now().date())
+
+
+class MultiUpdateItemSchema(BaseModel):
+    origin_items: List[str]
+    flow_id: Optional[int] = Field(default=None, serialization_alias="flow", alias="flow")
+    stage_id: Optional[int] = Field(default=None, serialization_alias="stage", alias="stage")
+    packages: Optional[int] = Field(default=None)
+    storage: Optional[int] = Field(default=None)
+    priority: Optional[int] = Field(default=None)
+    production_date: Optional[date] = Field(default=None)
+
+
+class MultiUpdateSalesOrderSchema(BaseModel):
+    origin_orders: List[str]
+    packages: Optional[int] = Field(default=None)
+    location: Optional[int] = Field(default=None)
+    priority: Optional[int] = Field(default=None)
+    production_date: Optional[date] = Field(default=None)
