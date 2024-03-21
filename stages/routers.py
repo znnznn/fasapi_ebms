@@ -8,7 +8,8 @@ from stages.services import CapacitiesService, StagesService, FlowsService, Comm
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
     SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut, ItemSchemaOut, FlowPaginatedSchema, SalesPaginatedSchema,
-    PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema
+    PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema, MultiUpdateItemSchema,
+    MultiUpdateSalesOrderSchema
 )
 
 
@@ -142,11 +143,17 @@ async def create_item(item: ItemSchemaIn, session: AsyncSession = Depends(get_as
 
 @router.put("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
+    if hasattr(item, "flow_id"):
+        if not getattr(item, "stage_id", None):
+            item.stage_id = None
     return await ItemsService(db_session=session).update(id, item)
 
 
 @router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
 async def partial_update_item(id: int, item: ItemSchemaIn, session: AsyncSession = Depends(get_async_session)):
+    if hasattr(item, "flow_id"):
+        if not getattr(item, "stage_id", None):
+            item.stage_id = None
     item = item.model_dump(exclude_unset=True)
     return await ItemsService(db_session=session).partial_update(id, item)
 
@@ -218,3 +225,18 @@ async def partial_update_flow(id: int, flow: FlowSchemaIn, session: AsyncSession
 @router.delete("/flows/{id}/", tags=["flows"])
 async def delete_flow(id: int, session: AsyncSession = Depends(get_async_session)):
     return await FlowsService(db_session=session).delete(id)
+
+
+@router.post("/multiupdate/items/", tags=["multiupdate"], response_model=MultiUpdateItemSchema)
+async def multiupdate_items(items: MultiUpdateItemSchema, session: AsyncSession = Depends(get_async_session)):
+    return await ItemsService(db_session=session).multiupdate(items)
+
+
+@router.post("/multiupdate/orders/", tags=["multiupdate"], response_model=MultiUpdateSalesOrderSchema)
+async def multiupdate_salesorders(salesorders: MultiUpdateSalesOrderSchema, session: AsyncSession = Depends(get_async_session)):
+    return await SalesOrdersService(db_session=session).multiupdate(salesorders)
+
+
+@router.get("/healthcheck/", tags=["healthcheck"])
+async def healthcheck(session: AsyncSession = Depends(get_async_session)):
+    return {"status": "ok"}

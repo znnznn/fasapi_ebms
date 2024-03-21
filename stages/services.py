@@ -1,6 +1,6 @@
 import calendar
 from datetime import date, datetime
-from typing import TypeVar, Generic, Type, Any, Optional, List, Sequence
+from typing import TypeVar, Generic, Type, Any, Optional, List, Sequence, Iterable
 
 import sqlalchemy
 from fastapi import APIRouter, Depends
@@ -21,7 +21,10 @@ from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
-from stages.schemas import FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, CommentSchemaIn, ItemSchemaIn, SalesOrderSchemaIn
+from stages.schemas import (
+    FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, CommentSchemaIn, ItemSchemaIn, SalesOrderSchemaIn, MultiUpdateItemSchema,
+    MultiUpdateSalesOrderSchema
+)
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
@@ -32,6 +35,13 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         self.model = model
         self.db_session = db_session
         self.filter = list_filter
+
+    async def add_all(self, instances: Iterable[object], doing='update') -> None:
+        try:
+            self.db_session.add_all(instances)
+            await self.db_session.commit()
+        except IntegrityError as e:
+            raise HTTPException(status_code=400, detail=f"Failed to {doing} {self.model.__name__} {e}")
 
     async def root_validator(self, obj: InputSchemaType) -> InputSchemaType:
         if getattr(obj, "category_autoid", None) and issubclass(self.model, (Flow, Capacity)):
@@ -44,13 +54,13 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             await self.validate_production_date(data)
         return obj
 
+    async def validate_instance(self, instance: ModelType, input_obj: InputSchemaType) -> tuple[ModelType, InputSchemaType]:
+        return instance, input_obj
+
     async def validate_production_date(self, production_date: date):
         company_working_weekend = await self.db_session.scalars(select(CompanyProfile))
         company_working_weekend = company_working_weekend.first()
-        if company_working_weekend:
-            company_working_weekend = company_working_weekend.working_weekend
-        else:
-            company_working_weekend = False
+        company_working_weekend = company_working_weekend.working_weekend if company_working_weekend else False
         if not company_working_weekend and production_date.isoweekday() > 5:
             raise HTTPException(status_code=400, detail="Production date cannot be on a weekend")
         return production_date
@@ -126,6 +136,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         instance = await self.db_session.scalar(stmt)
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
+        await self.validate_instance(instance, obj)
         for key, value in obj.model_dump().items():
             setattr(instance, key, value)
         try:
@@ -143,6 +154,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         instance = await self.db_session.scalar(stmt)
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
+        await self.validate_instance(instance, baseschema)
         for key, value in obj.items():
             setattr(instance, key, value)
         try:
@@ -239,6 +251,15 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
+    async def validate_instance(self, instance: Item, input_obj: ItemSchemaIn) -> tuple[Item, ItemSchemaIn]:
+        if input_obj.stage_id:
+            stmt = select(Stage).where(Stage.id == input_obj.stage_id, Stage.flow_id == instance.flow_id)
+            stage = await self.db_session.scalar(stmt)
+            if not stage:
+                raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
+            instance.stage = stage
+        return instance, input_obj
+
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
         query = select(self.model).options(
             selectinload(self.model.stage),
@@ -253,6 +274,65 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         if offset:
             query = query.offset(offset)
         return query
+
+    async def multiupdate(self, obj: MultiUpdateItemSchema) -> Optional[MultiUpdateItemSchema]:
+        object_data = obj.model_dump(exclude_unset=True)
+        origin_items = set(object_data.pop("origin_items", []))
+        if production_date := object_data.get("production_date"):
+            await self.validate_production_date(production_date)
+        category = None
+        if flow_id := object_data.get("flow_id"):
+            flow = await self.db_session.scalar(select(Flow).where(Flow.id == flow_id))
+            if not flow:
+                raise HTTPException(status_code=404, detail=f"Flow with id {flow_id} not found")
+            category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
+            category = category.prod_type if category else False
+        origin_items_objs = await self.db_session.scalars(
+            select(Arinvdet).where(Arinvdet.autoid.in_(origin_items)).options(selectinload(Arinvdet.rel_inventry))
+        )
+        stage = None
+        if stage_id := object_data.get("stage_id"):
+            stage = await self.db_session.scalar(select(Stage).where(Stage.id == stage_id).options(selectinload(Stage.flow)))
+            if not stage:
+                raise HTTPException(status_code=404, detail=f"Stage with id {stage_id} not found")
+            flow_id = stage.flow_id
+            category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == stage.flow.category_autoid))
+            category = category.prod_type if category else False
+        origin_items_data = {item.autoid: item for item in origin_items_objs}
+        stmt = select(self.model).where(self.model.origin_item.in_(origin_items))
+        objs = await self.db_session.scalars(stmt)
+        existing_items = set()
+        items = objs.all()
+        for item in items:
+            origin_item = origin_items_data.pop(item.origin_item, None)
+            if not origin_item:
+                continue
+            if flow_id and category is not None:
+                if origin_item.category != category:
+                    raise HTTPException(
+                        status_code=400, detail=f"Cannot update item {item.origin_item} with flow {flow_id} and category {category}"
+                    )
+            if stage_id and item.flow_id != stage.flow_id:
+                raise HTTPException(
+                    status_code=400, detail=f"Cannot update item {item.origin_item} with stage {stage_id} and flow {item.flow_id}"
+                )
+            for key, value in object_data.items():
+                setattr(item, key, value)
+            existing_items.add(item.origin_item)
+        await self.add_all(items)
+        created_items = []
+        for origin_item in origin_items_data.values():
+            if flow_id and category is not None:
+                if origin_item.category != category:
+                    raise HTTPException(
+                        status_code=400, detail=f"Cannot update item {origin_item.autoid} with flow {flow_id} and category {category}"
+                    )
+            if stage_id and stage:
+                object_data["flow_id"] = stage.flow_id
+            created_items.append(Item(origin_item=origin_item.autoid, order=origin_item.doc_aid, **object_data))
+        if created_items:
+            await self.add_all(created_items)
+        return obj
 
     async def get_autoid_by_production_date(self, production_date: str | None):
         production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
@@ -373,6 +453,26 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+
+    async def multiupdate(self, objs: MultiUpdateSalesOrderSchema):
+        object_data = objs.model_dump(exclude_unset=True)
+        origin_orders = set(object_data.pop("origin_orders", []))
+        if production_date := object_data.get("production_date"):
+            await self.validate_production_date(production_date)
+        sales_orders = await self.db_session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
+        origin_orders = await self.db_session.scalars(select(Arinv).where(Arinv.autoid.in_(origin_orders)))
+        origin_orders_data = {obj.autoid: obj for obj in origin_orders}
+        for obj in sales_orders:
+            origin_order = origin_orders_data.pop(obj.order, None)
+            for k, v in object_data.items():
+                setattr(obj, k, v)
+        await self.add_all(sales_orders)
+        if origin_orders_data:
+            new_sales_orders = []
+            for obj in origin_orders_data.values():
+                new_sales_orders.append(SalesOrder(order=obj.autoid, **object_data))
+            await self.add_all(new_sales_orders)
+        return objs
 
     async def list_by_orders(self, autoids: list[str]):
         stmt = select(self.model).where(self.model.order.in_(autoids))
