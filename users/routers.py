@@ -3,22 +3,20 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Body
 from fastapi_users import exceptions, BaseUserManager, models, schemas
-from fastapi_users.manager import UserManagerDependency
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router import ErrorCode
 from fastapi_users.router.common import ErrorModel
 from pydantic import EmailStr
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
 from database import get_async_session, get_user_db
 from users.manager import get_user_manager
-from users.mixins import is_admin_user, is_owner_profile, get_user_or_404_by_admin
-from users.models import User
-from users.schemas import UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, \
-    UserPasswordChangeSchema
+from users.mixins import is_admin_user, is_owner_profile, get_user_or_404_by_admin, active_user_with_permission
+from users.schemas import (
+    UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, UserPasswordChangeSchema
+)
 from users.services import UserService
 
 router = APIRouter()

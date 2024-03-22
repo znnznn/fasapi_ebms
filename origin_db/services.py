@@ -23,7 +23,8 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
     default_ordering_field = 'recno5'
 
     def __init__(
-            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[RenameFieldFilter] = None
+            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session),
+            list_filter: Optional[RenameFieldFilter] = None
     ):
         self.model = model
         self.db_session = db_session

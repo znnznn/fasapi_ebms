@@ -1,11 +1,9 @@
 import base64
 
-from starlette.responses import HTMLResponse
-from starlette.templating import Jinja2Templates
-
 from users.tasks import send_mail
 from settings import FRONTEND_HOST, RESEND_FROM_EMAIL
 from fastapi.templating import Jinja2Templates
+
 templates = Jinja2Templates(directory="users/templates")
 
 
@@ -42,7 +40,6 @@ class EmailSender:
     @staticmethod
     def get_uuid_token_url(request, obj_user, token):
         uidb64 = urlsafe_base64_encode(force_bytes(obj_user.id))
-        # token = urlsafe_base64_encode(force_bytes(token.encode()))
         http = 'https://'
         return ''.join([http, FRONTEND_HOST, '/password-reset/', uidb64, '/', token, '/'])
 
@@ -59,7 +56,7 @@ class EmailSender:
             'button_title': 'Reset password',
             'invite_url': invite_url
         }
-        html = templates.get_template('main.html').render({'request':request, **context})
+        html = templates.get_template('main.html').render({'request': request, **context})
         # html = html.render(html)
         self.email_send(
             subject=context['title'],

@@ -19,6 +19,7 @@ from origin_db.routers import router as origin_router
 from stages.routers import router as stages_router
 from profiles.routers import router as profiles_router
 from users.routers import router as users_router
+from users.auth_routers import router as auth_router
 
 
 class ErrorResponse(BaseModel):
@@ -68,14 +69,14 @@ app.add_middleware(
 #     )
 
 
-
 disable_installed_extensions_check()
 
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend_refresh),
-    prefix="/token",
-    tags=["token"],
-)
+
+# app.include_router(
+#     fastapi_users.get_auth_router(auth_backend_refresh),
+#     prefix="/token",
+#     tags=["token"],
+# )
 
 app.include_router(origin_router)
 
@@ -85,4 +86,4 @@ app.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
 
 app.include_router(users_router, prefix="/users", tags=["users"])
 
-add_pagination(app)
+app.include_router(auth_router, prefix="/token", tags=["token"])

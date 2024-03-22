@@ -24,12 +24,6 @@ class CommentFilter(RenameFieldFilter):
         revert_values_fields = ('user_id__isnull',)
         excluded_fields = ('user_id__isnull',)
 
-    # def get_value(self, field_name, value):
-    #     if field_name == 'user_id__isnull' and value is False:
-    #         value = True
-    #         self.Constants.exclude = True
-    #     return super().get_value(field_name, value)
-
 
 class FlowFilter(RenameFieldFilter):
     flow: Optional[str] = None
