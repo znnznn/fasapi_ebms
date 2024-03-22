@@ -2,26 +2,21 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Body
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import exceptions, BaseUserManager, models, schemas
-from fastapi_users.authentication import Strategy
-from fastapi_users.manager import UserManagerDependency
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router import ErrorCode
 from fastapi_users.router.common import ErrorModel
 from pydantic import EmailStr
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
 from database import get_async_session, get_user_db
-from  users.auth import auth_backend_refresh as backend
 from users.manager import get_user_manager
 from users.mixins import is_admin_user, is_owner_profile, get_user_or_404_by_admin, active_user_with_permission
-from users.models import User
-from users.schemas import UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, \
-    UserPasswordChangeSchema
+from users.schemas import (
+    UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, UserPasswordChangeSchema
+)
 from users.services import UserService
 
 router = APIRouter()
@@ -320,53 +315,3 @@ async def password_change(
         )
     updated_user = await user_manager._update(user, {"password": user_update.new_password1})
     return schemas.model_validate(UserReadShortSchema, updated_user)
-
-
-# get_current_user_token = authenticator.current_user_token(active=True, verified=False)
-#
-# login_responses: OpenAPIResponseType = {
-#     status.HTTP_400_BAD_REQUEST: {
-#         "model": ErrorModel,
-#         "content": {
-#             "application/json": {
-#                 "examples": {
-#                     ErrorCode.LOGIN_BAD_CREDENTIALS: {
-#                         "summary": "Bad credentials or the user is inactive.",
-#                         "value": {"detail": ErrorCode.LOGIN_BAD_CREDENTIALS},
-#                     },
-#                     ErrorCode.LOGIN_USER_NOT_VERIFIED: {
-#                         "summary": "The user is not verified.",
-#                         "value": {"detail": ErrorCode.LOGIN_USER_NOT_VERIFIED},
-#                     },
-#                 }
-#             }
-#         },
-#     },
-#     **backend.transport.get_openapi_login_responses_success(),
-# }
-#
-#
-# @router.post("/", name=f"auth:{backend.name}.login", responses=login_responses)
-# async def login(
-#         request: Request,
-#         credentials: OAuth2PasswordRequestForm = Depends(),
-#         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-#         strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
-# ):
-#     user = await user_manager.authenticate(credentials)
-#
-#     if user is None or not user.is_active:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
-#         )
-#     response = await backend.login(strategy, user)
-#     await user_manager.on_after_login(user, request, response)
-#     return response
-#
-#
-# @router.post("/refresh", name=f"auth:{backend.name}.logout")
-# async def refresh(response: Response, user=Depends(active_user_with_permission)):
-#     res = await backend.get_login_response(user, response)
-#     print(res)
-#     return res
