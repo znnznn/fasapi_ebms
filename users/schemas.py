@@ -13,6 +13,7 @@ class CategoryAccessSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
 class UserRead(schemas.BaseUser[int]):
     id: models.ID
     email: EmailStr

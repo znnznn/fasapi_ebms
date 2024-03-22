@@ -1,10 +1,10 @@
-from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi_users import models
-from fastapi_users.authentication import BearerTransport, JWTStrategy, AuthenticationBackend, Transport, Strategy
+from fastapi_users.authentication import BearerTransport, JWTStrategy, AuthenticationBackend, Strategy
 from fastapi_users.types import DependencyCallable
 from pydantic import BaseModel
 from starlette.responses import Response, JSONResponse
 
+from settings import ACCESS_TOKEN_LIFETIME_SECONDS
 from users.manager import SECRET
 from users.schemas import UserRead
 
@@ -13,6 +13,15 @@ class BearerResponseRefresh(BaseModel):
     access: str
     refresh: str
     user: UserRead
+
+
+class RefreshTokenResponse(BaseModel):
+    refresh: str
+
+
+class AccessTokenRefreshResponse(BaseModel):
+    access: str
+    refresh: str
 
 
 class BearerTransportRefresh(BearerTransport):
@@ -44,7 +53,6 @@ class AuthenticationBackendRefresh(AuthenticationBackend):
             strategy: Strategy[models.UP, models.ID],
             user: models.UP,
     ) -> Response:
-        print(user)
         token = await strategy.write_token(user)
         refresh_strategy = self.get_refresh_strategy()
         refresh_token = await refresh_strategy.write_token(user)
@@ -55,10 +63,11 @@ bearer_transport = BearerTransportRefresh(tokenUrl="token/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=ACCESS_TOKEN_LIFETIME_SECONDS)
+
 
 def get_refresh_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=259200)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=604800)  # 7 days
 
 
 auth_backend_refresh = AuthenticationBackendRefresh(
@@ -67,4 +76,3 @@ auth_backend_refresh = AuthenticationBackendRefresh(
     get_strategy=get_jwt_strategy,
     get_refresh_strategy=get_refresh_jwt_strategy,
 )
-

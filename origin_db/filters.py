@@ -39,7 +39,6 @@ class OriginItemFilter(RenameFieldFilter):
     order_by: Optional[List[str]] = None
     ship_date: Optional[datetime] = None
     weight: Optional[float] = None
-    # order: Optional[NestedOrderFilter] = FilterDepends(NestedOrderFilter)
     order: Optional[str] = None
     category: Optional[InventryFilter] = FilterDepends(InventryFilter)
     categories: Optional[InventryFilter] = FilterDepends(InventryFilter)
