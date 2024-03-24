@@ -70,12 +70,16 @@ async def orders(
         db_session=session, list_filter=origin_order_filter
     ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
     autoids = [i.autoid for i in result["results"]]
+    origin_items = await OriginItemService(db_session=session).list_by_orders(autoids=autoids)
+    origin_items_data = defaultdict(list)
+    for i in origin_items:
+        origin_items_data[i.doc_aid].append(i)
     items_dates = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
-    sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+    sales_orders = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
     items_dates = {i.order: i for i in items_dates}
     items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
     items = {i.origin_item: i for i in items}
-    sales_order_data = {i.order: i for i in sales_order}
+    sales_order_data = {i.order: i for i in sales_orders}
     for i in result["results"]:
         completed = []
         if order := items_dates.get(i.autoid):
@@ -84,6 +88,8 @@ async def orders(
             i.completed = order.completed
         if order := sales_order_data.get(i.autoid):
             i.sales_order = order
+        if joined_items := origin_items_data.get(i.autoid):
+            i.details = joined_items
         for detail in i.details:
             if item := items.get(detail.autoid):
                 detail.completed = True if item.production_date and item.stage.name == 'Done' else False
