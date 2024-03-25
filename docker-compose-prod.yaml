@@ -23,7 +23,6 @@ services:
       - "80:80"
     depends_on:
       - db
-      - ebms_db
 
 volumes:
   static_volume:
