@@ -35,14 +35,14 @@ jobs:
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
           directory: ${{ github.workspace }}
       - name: Stop containers
-        run: docker-compose stop
+        run: docker compose stop
       - name: Build the Docker image
-        run: docker-compose -f docker-compose-prod.yaml build
+        run: docker compose -f docker-compose-prod.yaml build
       - name: Run containers
-        run: docker-compose -f docker-compose-prod.yaml up -d
+        run: docker compose -f docker-compose-prod.yaml up -d
       - name: Run exist containers
         if: ${{ failure() }}
-        run: docker-compose -f docker-compose-prod.yaml up -d
+        run: docker compose -f docker-compose-prod.yaml up -d
       - name: Remove not used images and volumes (clean up file system in AWS)
         if: ${{ success() }}
         run: docker system prune -f -a --volumes
