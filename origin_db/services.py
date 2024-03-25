@@ -147,6 +147,11 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
+    async def list_by_orders(self, autoids: List[str]):
+        stmt = self.get_query().where(self.model.doc_aid.in_(autoids))
+        objs = await self.db_session.scalars(stmt)
+        return objs.all()
+
 
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def __init__(
@@ -156,51 +161,59 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
+    # async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
+    #     count = await self.count_query_objs(super().get_query())
+    #     objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
+    #     return {"count": count, "results": objs.all()}
+
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
-        det = select(
-            Arinvdet.autoid
-        ).join(
-            Arinvdet.rel_inventry
-        ).join(
-            Arinvdet.order
-        ).where(
-            and_(
-                Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-                Arinvdet.par_time == '',
-                Arinvdet.inven != None,
-                Arinvdet.inven != '',
-            ),
-        ).options(
-            selectinload(Arinvdet.rel_inventry),
-            selectinload(Arinvdet.order),
-        ).group_by(
-            Arinvdet
-        )
+        # det = select(
+        #     Arinvdet, Inventry.prod_type
+        # ).join(
+        #     Arinvdet.rel_inventry
+        # ).join(
+        #     Arinvdet.order
+        # ).where(
+        #     and_(
+        #         Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+        #         Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+        #         Inventry.prod_type.isnot(None),
+        #         Arinvdet.par_time == '',
+        #         Arinvdet.inven != None,
+        #         Arinvdet.inven != '',
+        #     ),
+        # ).options(
+        #     selectinload(Arinvdet.rel_inventry),
+        #     selectinload(Arinvdet.order),
+        # ).group_by(
+        #     Arinvdet
+        # ).subquery()
+        # sbq = aliased(Arinvdet, det, name="details")
         # ).scalar_subquery().correlate(Inventry)
         query = select(
             self.model,
         ).where(
             and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
         ).join(
-            Arinv.details,
+            # sbq, sbq.doc_aid == self.model.autoid
+            self.model.details,
         ).join(
             Inventry
         ).where(
             and_(
                 Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                # Arinvdet.autoid.in_(det),
                 Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 Inventry.prod_type.isnot(None),
                 Arinvdet.par_time == '',
-                Arinvdet.inven != None,
-                Arinvdet.inven != '',
             ),
         ).options(
-            # contains_eager(Arinv.details,).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
+            # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
             self.model
         )
+        # print(query.compile(compile_kwargs={"literal_binds": True}))
         if self.filter:
             query = self.filter.filter(query, **kwargs)
             query = self.filter.sort(query)

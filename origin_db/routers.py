@@ -17,6 +17,8 @@ from origin_db.schemas import (
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter, SalesOrderFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
+from users.mixins import active_user_with_permission
+from users.models import User
 
 router = APIRouter(prefix="/ebms", tags=["ebms"])
 
@@ -24,11 +26,13 @@ router = APIRouter(prefix="/ebms", tags=["ebms"])
 @router.get("/orders/", response_model=ArinPaginateSchema)
 async def orders(
         limit: int = 10, offset: int = 0,
+        ordering: str = None,
         session: AsyncSession = Depends(get_async_session),
         origin_order_filter: OrderFilter = FilterDepends(OrderFilter),
         sales_order_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter),
         # item_filter: ItemFilter = FilterDepends(ItemFilter),
-        ordering: str = None,
+        user: User = Depends(active_user_with_permission),
+
 ):
     if ordering:
         sales_order_filter = SalesOrderFilter(
@@ -70,12 +74,16 @@ async def orders(
         db_session=session, list_filter=origin_order_filter
     ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
     autoids = [i.autoid for i in result["results"]]
+    origin_items = await OriginItemService(db_session=session).list_by_orders(autoids=autoids)
+    origin_items_data = defaultdict(list)
+    for i in origin_items:
+        origin_items_data[i.doc_aid].append(i)
     items_dates = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
-    sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+    sales_orders = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
     items_dates = {i.order: i for i in items_dates}
     items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
     items = {i.origin_item: i for i in items}
-    sales_order_data = {i.order: i for i in sales_order}
+    sales_order_data = {i.order: i for i in sales_orders}
     for i in result["results"]:
         completed = []
         if order := items_dates.get(i.autoid):
@@ -84,9 +92,11 @@ async def orders(
             i.completed = order.completed
         if order := sales_order_data.get(i.autoid):
             i.sales_order = order
+        if joined_items := origin_items_data.get(i.autoid):
+            i.details = joined_items
         for detail in i.details:
             if item := items.get(detail.autoid):
-                detail.completed = True if item.production_date and item.stage.name == 'Done' else False
+                detail.completed = True if item.production_date and item.stage and item.stage.name == 'Done' else False
                 detail.item = item
                 completed.append(detail.completed)
             else:
@@ -96,7 +106,10 @@ async def orders(
 
 
 @router.get("/orders/{autoid}/", response_model=ArinvRelatedArinvDetSchema)
-async def order_retrieve(autoid: str, session: AsyncSession = Depends(get_async_session)):
+async def order_retrieve(
+        autoid: str, session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(active_user_with_permission)
+):
     result = await OriginOrderService(db_session=session).get(autoid=autoid)
     autoids = [result.autoid]
     items = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
@@ -129,6 +142,7 @@ async def get_categories(
         session: AsyncSession = Depends(get_async_session),
         category_filter: CategoryFilter = FilterDepends(CategoryFilter),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
+        user: User = Depends(active_user_with_permission),
 ):
     result = await CategoryService(db_session=session, list_filter=category_filter).paginated_list(limit=limit, offset=offset)
     flows_data = await FlowsService(db_session=session).group_by_category()
@@ -153,6 +167,7 @@ async def get_categories_all(
         session: AsyncSession = Depends(get_async_session),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+        user: User = Depends(active_user_with_permission),
 ):
     result = await CategoryService(db_session=session, list_filter=category_filter).list()
     flows_data = await FlowsService(db_session=session).group_by_category()
@@ -174,11 +189,11 @@ async def get_categories_all(
 
 @router.get("/items/", response_model=ArinvDetPaginateSchema)
 async def get_items(
-        limit: int = 10, offset: int = 0,
+        limit: int = 10, offset: int = 0, ordering: str = None,
         session: AsyncSession = Depends(get_async_session),
         origin_item_filter: OriginItemFilter = FilterDepends(OriginItemFilter),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
-        ordering: str = None
+        user: User = Depends(active_user_with_permission),
 ):
     if ordering:
         item_filter = ItemFilter(order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True))
@@ -221,7 +236,8 @@ async def get_items(
 @router.get("/capacities/{year}/{month}", name="capacities_by_month", response_model=dict[str, dict])
 async def get_capacities_calendar(
         year: int, month: int,
-        session: AsyncSession = Depends(get_async_session), category_filter: CategoryFilter = FilterDepends(CategoryFilter)
+        session: AsyncSession = Depends(get_async_session), category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+        user: User = Depends(active_user_with_permission),
 ):
     DateValidator.validate_year(year)
     DateValidator.validate_month(month)

@@ -37,6 +37,12 @@ async def is_role(user=Depends(active_user_with_permission), role=List[str]):
     raise HTTPException(detail="Permission denied.", status_code=status.HTTP_403_FORBIDDEN)
 
 
+async def is_owner_profile_or_admin(id: int, user=Depends(active_user_with_permission)):
+    if user.id == id or user.role == Role.ADMIN:
+        return user
+    raise HTTPException(detail="Permission denied.", status_code=status.HTTP_403_FORBIDDEN)
+
+
 async def is_owner_profile(id: int, user=Depends(active_user_with_permission)):
     if user.id == id:
         return user
@@ -55,7 +61,7 @@ async def get_user_or_404_by_admin(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
-class RoleChecker:
+class IsAuthenticatedAs:
     def __init__(self, *allowed_roles: str):
         self.allowed_roles = allowed_roles
 
@@ -66,6 +72,6 @@ class RoleChecker:
         return user
 
 
-is_admin_user = RoleChecker(Role.ADMIN)
+is_admin_user = IsAuthenticatedAs(Role.ADMIN)
 
-IsAdminOrWorker = RoleChecker(Role.ADMIN, Role.WORKER)
+IsAdminOrWorker = IsAuthenticatedAs(Role.ADMIN, Role.WORKER)

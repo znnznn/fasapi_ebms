@@ -377,18 +377,30 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 - min_date
                 - max_date
         """
-        subq = select(self.model.order).where(
+        # print(787887878778878)
+        subq = select(Item.order).where(
             and_(
-                self.model.order.in_(autoids),
-                self.model.production_date != None,
-                self.model.stage_id != None,
+                Item.order.in_(autoids),
+                Item.production_date != None,
+                Item.stage_id != None,
                 Stage.name == "Done",
             )
         ).join(Stage)
+        # print('sffwefwwefwwefwwefwwef')
         stmt = select(
-            self.model.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
+            Item.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
             case((subq.exists(), 1), else_=0).label("completed"),
-        ).where(Item.order.in_(autoids)).group_by(Item.order)
+        ).where(self.model.order.in_(autoids)).group_by(Item.order)
+        # print('sffwefwwefwwefwwefwwef')
+        # objs = await self.db_session.execute(stmt)
+        # subq = case((and_(
+        #     self.model.production_date != None,
+        #     # Stage.name == "Done",
+        # ), 1), else_=0).label("completed")
+        # stmt = select(
+        #     self.model.order,
+        #     subq,
+        # ).where(self.model.order.in_(autoids)).join(Stage).group_by(self.model.order, self.model.production_date, Stage.name)
         objs = await self.db_session.execute(stmt)
         return objs.all()
 

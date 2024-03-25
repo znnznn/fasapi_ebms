@@ -72,12 +72,6 @@ app.add_middleware(
 disable_installed_extensions_check()
 
 
-# app.include_router(
-#     fastapi_users.get_auth_router(auth_backend_refresh),
-#     prefix="/token",
-#     tags=["token"],
-# )
-
 app.include_router(origin_router)
 
 app.include_router(stages_router)
