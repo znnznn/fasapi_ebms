@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    volumes:
+      - ./:/code
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: db
+  web:
+    build: .
+    env_file:
+      - .env
+    command: sh -c "chmod +x ./entrypointdeploy.sh && ./entrypointdeploy.sh"
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+      - ebms_db
+
+volumes:
+  static_volume:

@@ -1,0 +1,48 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: GITHUB_WORKSPACE
+        run: echo "$GITHUB_WORKSPACE"
+      - name: Create .env
+        uses: DeveloperRic/action-create-env@v1.0.2
+        with:
+          full_text: |
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DEBUG=${{ secrets.DEBUG }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            EBMS_DB_NAME=${{ secrets.EBMS_DB_NAME }}
+            EBMS_DB_USER=${{ secrets.EBMS_DB_USER }}
+            EBMS_DB_HOST=${{ secrets.EBMS_DB_HOST }}
+            MSSQL_SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}
+            EBMS_DB_PORT=${{ secrets.EBMS_DB_PORT }}
+            ACCEPT_EULA=${{ secrets.ACCEPT_EULA }}
+            RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          directory: ${{ github.workspace }}
+      - name: Stop containers
+        run: docker-compose stop
+      - name: Build the Docker image
+        run: docker-compose -f docker-compose-prod.yaml build
+      - name: Run containers
+        run: docker-compose -f docker-compose-prod.yaml up -d
+      - name: Run exist containers
+        if: ${{ failure() }}
+        run: docker-compose -f docker-compose-prod.yaml up -d
+      - name: Remove not used images and volumes (clean up file system in AWS)
+        if: ${{ success() }}
+        run: docker system prune -f -a --volumes
