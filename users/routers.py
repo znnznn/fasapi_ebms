@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Body
 from fastapi_users import exceptions, BaseUserManager, models, schemas
@@ -13,7 +11,7 @@ from starlette.responses import Response
 
 from database import get_async_session, get_user_db
 from users.manager import get_user_manager
-from users.mixins import is_admin_user, is_owner_profile, get_user_or_404_by_admin, active_user_with_permission
+from users.mixins import is_owner_profile_or_admin, active_user_with_permission, is_owner_profile
 from users.schemas import (
     UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, UserPasswordChangeSchema
 )
@@ -48,7 +46,9 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
 
 
 @router.get("/", response_model=UsersPaginatedSchema, tags=["users"])
-async def get_users(limit=10, offset=0, user_service: UserService = Depends(get_user_db)):
+async def get_users(
+        limit=10, offset=0, user_service: UserService = Depends(get_user_db), user=Depends(active_user_with_permission)
+):
     return await user_service.paginated_list(limit=limit, offset=offset)
 
 
@@ -190,14 +190,14 @@ async def get_user_or_404(
             "description": "Missing token or inactive user.",
         },
         status.HTTP_403_FORBIDDEN: {
-            "description": "Not a superuser.",
+            "description": "Not a owner profile or not admin.",
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "The user does not exist.",
         },
     },
 )
-async def get_user(user=Depends(get_user_or_404)):
+async def get_user(user=Depends(is_owner_profile_or_admin)):
     return schemas.model_validate(UserReadShortSchema, user)
 
 
@@ -211,7 +211,7 @@ async def get_user(user=Depends(get_user_or_404)):
             "description": "Missing token or inactive user.",
         },
         status.HTTP_403_FORBIDDEN: {
-            "description": "Not a superuser.",
+            "description": "Not a owner profile or not admin.",
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "The user does not exist.",
@@ -246,7 +246,7 @@ async def get_user(user=Depends(get_user_or_404)):
 async def update_user(
         user_update: UserUpdate,  # type: ignore
         request: Request,
-        user=Depends(is_owner_profile),
+        user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ):
     try:
@@ -280,7 +280,7 @@ async def update_user(
             "description": "Missing token or inactive user.",
         },
         status.HTTP_403_FORBIDDEN: {
-            "description": "Not a superuser.",
+            "description": "Not a owner profile or not admin.",
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "The user does not exist.",
@@ -289,7 +289,7 @@ async def update_user(
 )
 async def delete_user(
         request: Request,
-        user=Depends(get_user_or_404_by_admin),
+        user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ):
     await user_manager.delete(user, request=request)

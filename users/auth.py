@@ -10,7 +10,7 @@ from users.schemas import UserRead
 
 
 class BearerResponseRefresh(BaseModel):
-    access: str
+    access_token: str
     refresh: str
     user: UserRead
 
@@ -20,14 +20,14 @@ class RefreshTokenResponse(BaseModel):
 
 
 class AccessTokenRefreshResponse(BaseModel):
-    access: str
+    access_token: str
     refresh: str
 
 
 class BearerTransportRefresh(BearerTransport):
     async def get_login_response(self, token: str, refresh_token: str, user: models.UP) -> Response:
         bearer_response = BearerResponseRefresh(
-            access=token,
+            access_token=token,
             refresh=refresh_token,
             token_type="bearer",
             user=user,
@@ -59,7 +59,7 @@ class AuthenticationBackendRefresh(AuthenticationBackend):
         return await self.transport.get_login_response(token=token, refresh_token=refresh_token, user=user)
 
 
-bearer_transport = BearerTransportRefresh(tokenUrl="token/jwt/login")
+bearer_transport = BearerTransportRefresh(tokenUrl="token/")
 
 
 def get_jwt_strategy() -> JWTStrategy:
