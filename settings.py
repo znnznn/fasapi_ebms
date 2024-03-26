@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 SECRET_KEY = config("SECRET_KEY", cast=str)
 
+TOKEN_CREDENTIAL = config("TOKEN_CREDENTIAL", cast=str)
+
 FILTERING_DATA_STARTING_YEAR = config('FILTERING_DATA_STARTING_YEAR', default='2023', cast=str)
 LIST_EXCLUDED_PROD_TYPES = ("", "Vents")
 

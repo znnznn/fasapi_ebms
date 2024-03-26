@@ -35,6 +35,7 @@ app = FastAPI(
         404: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
+    swagger_ui_parameters={"deepLinking": False}
 )
 
 origins = [
