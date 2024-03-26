@@ -9,6 +9,7 @@ from fastapi_users.jwt import generate_jwt, decode_jwt
 from passlib.handlers.django import django_pbkdf2_sha256
 from starlette.responses import Response
 
+from common.constants import Role
 from database import get_user_db
 from settings import SECRET_KEY
 from .models import User
@@ -68,6 +69,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         )
         password = user_dict.pop("password")
         user_dict["password"] = self.password_helper.hash(password)
+        if not safe:
+            user_dict["role"] = Role.ADMIN
+        else:
+            user_role = user_dict.get("role", Role.WORKER)
+            if user_role == Role.ADMIN:
+                user_dict["role"] = Role.WORKER
 
         created_user = await self.user_db.create(user_dict)
 

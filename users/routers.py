@@ -10,7 +10,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from database import get_async_session, get_user_db
-from settings import TOKEN_CREDENTIALS
+from settings import TOKEN_CREDENTIAL
 from users.manager import get_user_manager
 from users.mixins import is_owner_profile_or_admin, active_user_with_permission, is_owner_profile
 from users.schemas import (
@@ -319,15 +319,34 @@ async def password_change(
 
 
 @router.post('/create-admin/{token}/', name="users:admin")
-def create_user(
+async def create_user(
         token: str,
         user_create: UserCreate,
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ):
-    if token != TOKEN_CREDENTIALS:
+    if token != TOKEN_CREDENTIAL:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not admin."
         )
-    user = user_manager.create(user_create, safe=True)
+    try:
+        user = await user_manager.create(user_create, safe=False)
+    except exceptions.UserAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.REGISTER_USER_ALREADY_EXISTS,
+        )
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": ErrorCode.REGISTER_INVALID_PASSWORD,
+                "reason": e.reason,
+            },
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e,
+        )
     return schemas.model_validate(UserReadShortSchema, user)

@@ -27,13 +27,16 @@ class UserRead(schemas.BaseUser[int]):
         from_attributes = True
 
 
-class UserCreate(schemas.BaseUserCreate):
+class UserCreate(schemas.CreateUpdateDictModel):
     email: str
     password: str
     first_name: str
     last_name: str
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
+
+    class Config:
+        orm_mode = True
 
 
 class UserUpdate(schemas.BaseUserUpdate):
