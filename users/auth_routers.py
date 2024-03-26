@@ -58,7 +58,7 @@ async def login(
     return response
 
 
-@router.post("/refresh", name=f"auth:{auth_backend_refresh.name}.logout", response_model=AccessTokenRefreshResponse)
+@router.post("/refresh/", name=f"auth:{auth_backend_refresh.name}.logout", response_model=AccessTokenRefreshResponse)
 async def refresh(
         response: Response, refresh_token: RefreshTokenResponse, refresh_strategy=Depends(auth_backend_refresh.get_refresh_strategy),
         user_manager=Depends(get_user_manager)
