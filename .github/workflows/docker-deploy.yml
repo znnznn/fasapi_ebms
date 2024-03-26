@@ -33,6 +33,7 @@ jobs:
             ACCEPT_EULA=${{ secrets.ACCEPT_EULA }}
             RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            TOKEN_CREDENTIAL=${{ secrets.TOKEN_CREDENTIAL }}
           directory: ${{ github.workspace }}
       - name: Stop containers
         run: docker compose stop

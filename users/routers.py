@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from database import get_async_session, get_user_db
+from settings import TOKEN_CREDENTIALS
 from users.manager import get_user_manager
 from users.mixins import is_owner_profile_or_admin, active_user_with_permission, is_owner_profile
 from users.schemas import (
@@ -52,7 +53,7 @@ async def get_users(
     return await user_service.paginated_list(limit=limit, offset=offset)
 
 
-@router.post("/password-reset", status_code=status.HTTP_202_ACCEPTED, name="reset:forgot_password", )
+@router.post("/password-reset/", status_code=status.HTTP_202_ACCEPTED, name="reset:forgot_password", )
 async def forgot_password(
         request: Request,
         email: EmailStr = Body(..., embed=True),
@@ -181,7 +182,7 @@ async def get_user_or_404(
 
 
 @router.get(
-    "/{id}",
+    "/{id}/",
     response_model=UserReadShortSchema,
     # dependencies=[Depends(get_current_superuser)],
     name="users:user",
@@ -202,7 +203,7 @@ async def get_user(user=Depends(is_owner_profile_or_admin)):
 
 
 @router.patch(
-    "/{id}",
+    "/{id}/",
     response_model=UserUpdate,
     # dependencies=[Depends(get_current_superuser)],
     name="users:patch_user",
@@ -296,7 +297,7 @@ async def delete_user(
     return None
 
 
-@router.post('/{id}/password-change', name="users:password_change")
+@router.post('/{id}/password-change/', name="users:password_change")
 async def password_change(
         user_update: UserPasswordChangeSchema,
         user=Depends(is_owner_profile),
@@ -315,3 +316,18 @@ async def password_change(
         )
     updated_user = await user_manager._update(user, {"password": user_update.new_password1})
     return schemas.model_validate(UserReadShortSchema, updated_user)
+
+
+@router.post('/create-admin/{token}/', name="users:admin")
+def create_user(
+        token: str,
+        user_create: UserCreate,
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+):
+    if token != TOKEN_CREDENTIALS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not admin."
+        )
+    user = user_manager.create(user_create, safe=True)
+    return schemas.model_validate(UserReadShortSchema, user)
