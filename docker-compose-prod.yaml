@@ -13,7 +13,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: db
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: DockerfileDeploy
     env_file:
       - .env
     command: sh -c "chmod +x ./entrypointdeploy.sh && ./entrypointdeploy.sh"
