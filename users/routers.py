@@ -350,3 +350,8 @@ async def create_user(
             detail=e,
         )
     return schemas.model_validate(UserReadShortSchema, user)
+
+
+@router.get('/all/', name="users:all")
+async def get_users_all(user_service: UserService = Depends(get_user_db), user=Depends(active_user_with_permission)):
+    return await user_service.list()
