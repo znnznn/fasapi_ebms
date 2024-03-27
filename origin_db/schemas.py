@@ -8,13 +8,10 @@ from stages.schemas import ItemSchema, SalesOrderSchema
 
 class CategorySchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
-    guid: str = Field(default=None, alias="inprodtype_guid", serialization_alias="guid")
     capacity: int | None = Field(default=None, alias="capacity", serialization_alias="capacity")
     capacity_id: int | None = Field(default=None, alias="capacity_id", serialization_alias="capacity_id")
     total_capacity: int | None = Field(default=None, alias="total_capacity", serialization_alias="total_capacity")
-    prod_type: str = Field(default=None)
-    ar_aid: str = Field(default=None)
-    autoid: str = Field(default=None)
+    name: str = Field(default=None, alias="prod_type", serialization_alias="name")
     flow_count: int | None = Field(default=None, alias="flow_count", serialization_alias="flow_count")
 
     class Config:
