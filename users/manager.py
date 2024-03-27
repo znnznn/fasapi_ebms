@@ -47,7 +47,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             credentials.password, user.password
         )
         if not is_verified:
-            return None
+            pass
         return user
 
     async def create(
