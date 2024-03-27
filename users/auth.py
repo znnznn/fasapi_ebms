@@ -20,15 +20,15 @@ class RefreshTokenResponse(BaseModel):
 
 
 class AccessTokenRefreshResponse(BaseModel):
-    access_token: str
+    access: str
     refresh: str
 
 
 class BearerTransportRefresh(BearerTransport):
-    async def get_login_response(self, token: str, refresh_token: str, user: models.UP) -> Response:
+    async def get_login_response(self, token: str, refresh: str, user: models.UP) -> Response:
         bearer_response = BearerResponseRefresh(
-            access_token=token,
-            refresh=refresh_token,
+            access=token,
+            refresh=refresh,
             token_type="bearer",
             user=user,
         )
@@ -56,7 +56,7 @@ class AuthenticationBackendRefresh(AuthenticationBackend):
         token = await strategy.write_token(user)
         refresh_strategy = self.get_refresh_strategy()
         refresh_token = await refresh_strategy.write_token(user)
-        return await self.transport.get_login_response(token=token, refresh_token=refresh_token, user=user)
+        return await self.transport.get_login_response(token=token, refresh=refresh_token, user=user)
 
 
 bearer_transport = BearerTransportRefresh(tokenUrl="token/")
