@@ -10,9 +10,9 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from users.auth import auth_backend_refresh, RefreshTokenResponse, AccessTokenRefreshResponse
-from users.manager import get_user_manager
+from users.manager import get_user_manager, UserManager
 from users.mixins import active_user_with_permission
-
+from users.schemas import UserLoginSchema
 
 router = APIRouter()
 
@@ -42,10 +42,11 @@ login_responses: OpenAPIResponseType = {
 @router.post("/", name=f"auth:{auth_backend_refresh.name}.login", responses=login_responses)
 async def login(
         request: Request,
-        credentials: OAuth2PasswordRequestForm = Depends(),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        credentials: UserLoginSchema,
+        user_manager: UserManager = Depends(get_user_manager),
         strategy: Strategy[models.UP, models.ID] = Depends(auth_backend_refresh.get_strategy),
 ):
+    credentials = OAuth2PasswordRequestForm(username=credentials.email, password=credentials.password)
     user = await user_manager.authenticate(credentials)
 
     if user is None or not user.is_active:
