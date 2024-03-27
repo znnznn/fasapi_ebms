@@ -70,3 +70,8 @@ class UserPasswordChangeSchema(BaseModel):
     old_password: str
     new_password1: str
     new_password2: str
+
+
+class UserLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
