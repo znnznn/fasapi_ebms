@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, root_validator, model_validator, field_va
 class CapacitySchema(BaseModel):
     id: int = Field(default=None)
     per_day: int = Field(default=None)
-    category_autoid: str = Field(default=None)
+    category: str = Field(default=None, alias="category_autoid", serialization_alias="category")
 
 
 class CapacityPaginatedSchema(BaseModel):
@@ -17,7 +17,7 @@ class CapacityPaginatedSchema(BaseModel):
 
 class CapacitySchemaIn(BaseModel):
     per_day: Optional[int] = Field(default=None)
-    category_autoid: Optional[str] = Field(default=None)
+    category_autoid: Optional[str] = Field(default=None, alias="category")
 
 
 class CommentSchema(BaseModel):
