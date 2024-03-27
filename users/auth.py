@@ -10,7 +10,7 @@ from users.schemas import UserRead
 
 
 class BearerResponseRefresh(BaseModel):
-    access_token: str
+    access: str
     refresh: str
     user: UserRead
 
