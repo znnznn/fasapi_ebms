@@ -18,6 +18,7 @@ class CommentFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Comment
+        default_ordering = ['id']
         related_fields = {
             'has_comments': 'user_id__isnull',
         }
@@ -30,6 +31,7 @@ class FlowFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Flow
+        default_ordering = ['id']
         related_fields = {
             'flow': 'name',
         }
@@ -41,6 +43,7 @@ class StageFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Stage
+        default_ordering = ['id']
         related_fields = {
             'status': 'name',
             'status_not_in': 'name__not_in',
@@ -65,6 +68,7 @@ class ItemFilter(RenameFieldFilter):
         model = Item
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status',)
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
+        default_ordering = ['production_date']
         related_fields = {
             'is_scheduled': 'production_date__isnull',
         }
@@ -141,6 +145,7 @@ class SalesOrderFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = SalesOrder
+        default_ordering = ['id']
         related_fields = {
             'start_date': 'production_date',
             'end_date': 'production_date',

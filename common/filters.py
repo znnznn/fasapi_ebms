@@ -110,11 +110,15 @@ class RenameFieldFilter(Filter):
             return related_fields.get(filter_field, filter_field)
         return filter_field
 
+    def order_by_related_field(self, order_by_field) -> str:
+        if order_by_related_fields := getattr(self.Constants, "order_by_related_fields", None):
+            return order_by_related_fields.get(order_by_field, order_by_field)
+        return order_by_field
+
     def filter(self, query: Union[Query, Select], **kwargs: Optional[dict]):
         join_table = None
         count_join = 0
         for field_name, value in self.filtering_fields:
-            print(field_name, value)
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
@@ -159,7 +163,8 @@ class RenameFieldFilter(Filter):
             if field_name.startswith("-"):
                 direction = Filter.Direction.desc
             field_name = field_name.replace("-", "").replace("+", "")
-            order_by_field = getattr(self.Constants.model, self.related_field(field_name))
+            field_name = self.order_by_related_field(field_name)
+            order_by_field = getattr(self.Constants.model, field_name)
             query = query.order_by(getattr(order_by_field, direction)())
         return query
 
