@@ -61,6 +61,13 @@ class OriginItemFilter(RenameFieldFilter):
             'quantity': 'quan',
             'order': 'invoice__like',
         }
+        order_by_related_fields = {
+            'bends': 'demd',
+            'length': 'heightd',
+            'width': 'widthd',
+            'quantity': 'quan',
+            'order': 'doc_aid',
+        }
         ordering_fields = (
             'quan', 'weight', 'width', 'widthd', 'height', 'heightd', 'ship_date', "category", 'bends', 'length', 'width', 'quantity',
             'id_inven', 'order',
