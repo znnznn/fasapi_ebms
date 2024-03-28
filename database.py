@@ -1,25 +1,12 @@
-from datetime import datetime
-from typing import AsyncGenerator, Optional, Any, Union
+from typing import AsyncGenerator
 
 from fastapi import Depends
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
-from sqlalchemy import Integer, String, Boolean, func, TIMESTAMP, inspect, create_engine, ClauseElement, Engine, Connection
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
-from sqlalchemy.orm._typing import _O
-from sqlalchemy.orm.session import _EntityBindKey, _SessionBind
-from sqlalchemy_utils import EmailType, ChoiceType
 
-from common.constants import Role
 from common.models import EBMSBase, DefaultBase
 from settings import EBMS_DB, Default_DB
 from users.models import User
 from users.services import UserService
-
-# EBMS_DATABASE_URL = 'mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
-#     DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
-# )
 
 engines = {
     EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
