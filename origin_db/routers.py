@@ -233,7 +233,7 @@ async def get_items(
     return result
 
 
-@router.get("/capacities/{year}/{month}/", name="capacities_by_month", response_model=dict[str, dict])
+@router.get("/calendar/{year}/{month}/", name="capacities_by_month", response_model=dict[str, dict])
 async def get_capacities_calendar(
         year: int, month: int,
         session: AsyncSession = Depends(get_async_session), category_filter: CategoryFilter = FilterDepends(CategoryFilter),

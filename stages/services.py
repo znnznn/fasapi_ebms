@@ -25,6 +25,7 @@ from stages.schemas import (
     FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, CommentSchemaIn, ItemSchemaIn, SalesOrderSchemaIn, MultiUpdateItemSchema,
     MultiUpdateSalesOrderSchema
 )
+from websockets_connection.managers import connection_manager
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
@@ -128,6 +129,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             await self.db_session.refresh(stmt)
         except (IntegrityError, AttributeError) as e:
             raise HTTPException(status_code=400, detail=f"{self.model.__name__} not created {e}")
+        else:
+            await connection_manager.broadcast("orders", session=self.db_session)
         return stmt
 
     async def update(self, id: int, obj: InputSchemaType) -> Optional[ModelType]:
