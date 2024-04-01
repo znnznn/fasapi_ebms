@@ -21,7 +21,7 @@ current_user = fastapi_users.current_user(optional=True)
 async def active_user_with_permission(user=Depends(current_user)):
     # At this point, you are sure you have an active user at hand. Otherwise, the `current_active_user` would already have thrown an error
     if not user:
-        raise HTTPException(detail="Authentication credentials were not provided.", status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(detail="Authentication credentials were not provided.", status_code=status.HTTP_401_UNAUTHORIZED)
     return user
 
 

@@ -5,6 +5,7 @@ from sqlalchemy import select, Select, ScalarResult
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Query
+from starlette.responses import JSONResponse
 
 from common.constants import ModelType, InputSchemaType
 from database import get_async_session
@@ -54,3 +55,12 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
                 return await self.update(setting.id, obj)
         obj = UserProfileCreateSchema(creator=user_id, **obj.model_dump())
         return await super().create(obj)
+
+    async def delete(self, id: int) -> None | JSONResponse:
+        stmt = self.get_query(user_id=id)
+        instance = await self.db_session.scalars(stmt)
+        if not instance:
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
+        await self.db_session.delete(instance)
+        await self.db_session.commit()
+        return JSONResponse(status_code=204, content={"message": f"{self.model.__name__} with id {id} deleted"})
