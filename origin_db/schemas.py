@@ -17,6 +17,7 @@ class CategorySchema(BaseModel):
     class Config:
         orm_mode = True
         populate_by_name = True
+        from_attributes = True
 
 
 class CategoryPaginateSchema(BaseModel):

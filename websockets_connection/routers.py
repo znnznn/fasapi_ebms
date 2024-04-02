@@ -1,12 +1,15 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, Depends, WebSocketException
 
+from users.mixins import active_user_with_permission
+from users.models import User
+from websockets_connection.auth import get_auth_user_by_websocket
 from websockets_connection.managers import connection_manager
 
-router = APIRouter(prefix="/ws", tags=["websockets_connection"])
+router = APIRouter()
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@router.websocket("/orders/")
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(get_auth_user_by_websocket)):
     await connection_manager.connect(websocket, "orders")
     while True:
         data = await websocket.receive_text()
