@@ -19,6 +19,7 @@ from stages.filters import ItemFilter, SalesOrderFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
 from users.mixins import active_user_with_permission
 from users.models import User
+from websockets_connection.managers import connection_manager
 
 router = APIRouter(prefix="/ebms", tags=["ebms"])
 
@@ -102,6 +103,7 @@ async def orders(
             else:
                 completed.append(False)
         i.completed = all(completed)
+    await connection_manager.broadcast("orders")
     return result
 
 
@@ -159,6 +161,7 @@ async def get_categories(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
+    print(result)
     return result
 
 
