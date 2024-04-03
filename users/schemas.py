@@ -29,7 +29,7 @@ class UserRead(schemas.BaseUser[int]):
 
 class UserCreate(schemas.CreateUpdateDictModel):
     email: str
-    password: str
+    password: Optional[str]
     first_name: str
     last_name: str
     is_active: Optional[bool] = True

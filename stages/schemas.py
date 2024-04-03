@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, time as datetime_time
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, root_validator, model_validator, field_validator
@@ -82,7 +82,7 @@ class FlowSchemaIn(BaseModel):
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
     position: Optional[int] = Field(default=None)
-    category_autoid: Optional[str] = Field(default=None)
+    category_autoid: Optional[str] = Field(default=None, alias="category")
 
 
 class FlowSchemaOut(FlowSchemaIn):
@@ -101,6 +101,7 @@ class ItemSchema(BaseModel):
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
     production_date: date | None = Field(default=None)
+    time: datetime_time | None = Field(default=None)
     packages: int | None = Field(default=None)
     location: int | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
@@ -129,6 +130,7 @@ class ItemSchemaIn(BaseModel):
     flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
     production_date: Optional[date] = Field(default=None)
+    time: Optional[datetime_time] = Field(default=None)
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
     stage_id: Optional[int] = Field(default=None, alias="stage")
@@ -184,6 +186,7 @@ class MultiUpdateItemSchema(BaseModel):
     storage: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
     production_date: Optional[date] = Field(default=None)
+    time: Optional[datetime_time] = Field(default=None, format="%H:%M:%S")
 
 
 class MultiUpdateSalesOrderSchema(BaseModel):

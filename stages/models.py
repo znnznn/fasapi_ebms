@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckConstraint, DATE
+from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, CheckConstraint, DATE, TIME
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,6 +43,7 @@ class Item(DefaultBase):
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
     production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)
+    time = mapped_column(TIME, nullable=True, default="00:00:00")
     packages: Mapped[POSITIVE_INT_OR_ZERO]
     location: Mapped[POSITIVE_INT_OR_ZERO]
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
