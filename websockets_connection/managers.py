@@ -18,22 +18,24 @@ class ConnectionManager:
         self.active_connections: dict[str, List[WebSocket]] = defaultdict(list)
 
     async def connect(self, websocket: WebSocket, subscribe: str):
+        print("connect")
         await websocket.accept(subprotocol=websocket.headers.get("sec-websocket-protocol"))
         self.active_connections[subscribe].append(websocket)
 
     async def disconnect(self, websocket: WebSocket, subscribe: str):
+        print("disconnect")
         self.active_connections[subscribe].remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
     async def broadcast(self, subscribe: str):
+        print("broadcast")
         async with async_session_maker() as session:
             objects = await CategoryService(db_session=session).paginated_list(limit=100)
         data = CategoryPaginateSchema(**objects).model_dump()
         for connection in self.active_connections[subscribe]:
-            if connection.application_state == 1:
-                await connection.send_json(data)
+            await connection.send_json(data)
 
 
 connection_manager = ConnectionManager()
