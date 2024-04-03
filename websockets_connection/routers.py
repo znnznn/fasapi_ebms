@@ -15,6 +15,7 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(get_auth
     try:
         while True:
             data = await websocket.receive_text()
+            await websocket.send_text(f"Message text was: {data}")
     except (WebSocketException, WebSocketDisconnect):
         await connection_manager.disconnect(websocket, "orders")
         return
