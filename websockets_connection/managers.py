@@ -21,7 +21,7 @@ class ConnectionManager:
         await websocket.accept(subprotocol=websocket.headers.get("sec-websocket-protocol"))
         self.active_connections[subscribe].append(websocket)
 
-    def disconnect(self, websocket: WebSocket, subscribe: str):
+    async def disconnect(self, websocket: WebSocket, subscribe: str):
         self.active_connections[subscribe].remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
@@ -32,7 +32,8 @@ class ConnectionManager:
             objects = await CategoryService(db_session=session).paginated_list(limit=100)
         data = CategoryPaginateSchema(**objects).model_dump()
         for connection in self.active_connections[subscribe]:
-            await connection.send_json(data)
+            if connection.application_state == 1:
+                await connection.send_json(data)
 
 
 connection_manager = ConnectionManager()

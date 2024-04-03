@@ -67,7 +67,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             if safe
             else user_create.create_update_dict_superuser()
         )
-        password = user_dict.pop("password")
+        password = user_dict.pop("password", "")
         user_dict["password"] = self.password_helper.hash(password)
         if not safe:
             user_dict["role"] = Role.ADMIN
