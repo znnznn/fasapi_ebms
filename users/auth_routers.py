@@ -59,6 +59,25 @@ async def login(
     return response
 
 
+@router.post("/jwt/", name=f"auth:{auth_backend_refresh.name}.login", responses=login_responses)
+async def login_jwt(
+        request: Request,
+        credentials: OAuth2PasswordRequestForm = Depends(),
+        user_manager: UserManager = Depends(get_user_manager),
+        strategy: Strategy[models.UP, models.ID] = Depends(auth_backend_refresh.get_strategy),
+):
+    user = await user_manager.authenticate(credentials)
+
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
+        )
+    response = await auth_backend_refresh.login_jwt(strategy, user)
+    await user_manager.on_after_login(user, request, response)
+    return response
+
+
 @router.post("/refresh/", name=f"auth:{auth_backend_refresh.name}.logout", response_model=AccessTokenRefreshResponse)
 async def refresh(
         response: Response, refresh_token: RefreshTokenResponse, refresh_strategy=Depends(auth_backend_refresh.get_refresh_strategy),

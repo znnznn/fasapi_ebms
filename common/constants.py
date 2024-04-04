@@ -26,7 +26,7 @@ class Role:
     ]
 
 
-class RoleModel(ChoiceType):
-    admin: str
-    manager: str
-    worker: str
+class RoleModel(str, Enum):
+    admin: str = "admin"
+    manager: str = "manager"
+    worker: str = "worker"

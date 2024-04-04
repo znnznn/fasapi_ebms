@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Body
 from fastapi_users import exceptions, BaseUserManager, models, schemas
@@ -9,10 +11,11 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
+from common.constants import Role
 from database import get_async_session, get_user_db
 from settings import TOKEN_CREDENTIAL
 from users.manager import get_user_manager
-from users.mixins import is_owner_profile_or_admin, active_user_with_permission, is_owner_profile
+from users.mixins import is_owner_profile_or_admin, active_user_with_permission, is_owner_profile, IsAuthenticatedAs
 from users.schemas import (
     UserRead, UsersPaginatedSchema, PasswordResetConfirmationSchema, UserCreate, UserReadShortSchema, UserUpdate, UserPasswordChangeSchema
 )
@@ -44,6 +47,11 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
         },
     },
 }
+
+
+@router.get('/all/', name="users:all", response_model=List[UserRead], tags=["users"])
+async def get_users_all(user_service: UserService = Depends(get_user_db), user=Depends(active_user_with_permission)):
+    return await user_service.list()
 
 
 @router.get("/", response_model=UsersPaginatedSchema, tags=["users"])
@@ -140,10 +148,11 @@ async def register(
         request: Request,
         user_create: UserCreate,  # type: ignore
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user=Depends(IsAuthenticatedAs(Role.ADMIN)),
 ):
     try:
         created_user = await user_manager.create(
-            user_create, safe=True, request=request
+            user_create, safe=False, request=request
         )
     except exceptions.UserAlreadyExists:
         raise HTTPException(
@@ -171,7 +180,7 @@ async def register(
 
 
 async def get_user_or_404(
-        id: str,
+        id: int,
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ) -> models.UP:
     try:
@@ -198,13 +207,14 @@ async def get_user_or_404(
         },
     },
 )
-async def get_user(user=Depends(is_owner_profile_or_admin)):
-    return schemas.model_validate(UserReadShortSchema, user)
+async def get_user(id: int, user=Depends(is_owner_profile_or_admin)):
+    instance = await get_user_or_404(id)
+    return schemas.model_validate(UserReadShortSchema, instance)
 
 
 @router.patch(
     "/{id}/",
-    response_model=UserUpdate,
+    response_model=UserReadShortSchema,
     # dependencies=[Depends(get_current_superuser)],
     name="users:patch_user",
     responses={
@@ -245,16 +255,21 @@ async def get_user(user=Depends(is_owner_profile_or_admin)):
     },
 )
 async def update_user(
+        id: int,
         user_update: UserUpdate,  # type: ignore
         request: Request,
         user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ):
+    instance = await get_user_or_404(id, user_manager)
+    safe = True
+    if user.role_name == Role.ADMIN:
+        safe = False
     try:
         user = await user_manager.update(
-            user_update, user, safe=False, request=request
+            user_update, instance, safe=safe, request=request
         )
-        return schemas.model_validate(UserUpdate, user)
+        return schemas.model_validate(UserReadShortSchema, user)
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -289,10 +304,12 @@ async def update_user(
     },
 )
 async def delete_user(
+        id: int,
         request: Request,
         user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
 ):
+    user = await get_user_or_404(id, user_manager)
     await user_manager.delete(user, request=request)
     return None
 
@@ -350,8 +367,3 @@ async def create_user(
             detail=e,
         )
     return schemas.model_validate(UserReadShortSchema, user)
-
-
-@router.get('/all/', name="users:all")
-async def get_users_all(user_service: UserService = Depends(get_user_db), user=Depends(active_user_with_permission)):
-    return await user_service.list()
