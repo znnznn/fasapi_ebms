@@ -1,6 +1,7 @@
 from typing import Optional, List
 from fastapi_users import schemas, models
-from pydantic import EmailStr, BaseModel, Field, root_validator, model_validator
+from fastapi_users.schemas import model_dump
+from pydantic import EmailStr, BaseModel, Field, root_validator, model_validator, field_validator
 
 from common.constants import RoleModel, Role
 from profiles.schemas import UserProfileSchema
@@ -19,7 +20,7 @@ class UserRead(schemas.BaseUser[int]):
     email: EmailStr
     first_name: str
     last_name: str
-    role: str = Field(alias="role_name")
+    role_name: str = Field(serialization_alias="role")
     category: Optional[List[CategoryAccessSchema]]
     user_profiles: Optional[List[UserProfileSchema]]
 
@@ -28,8 +29,9 @@ class UserRead(schemas.BaseUser[int]):
 
 
 class UserCreate(schemas.CreateUpdateDictModel):
-    email: str
-    password: Optional[str]
+    email: EmailStr
+    password: Optional[str] = None
+    role: Optional[RoleModel] = Field(default=RoleModel.worker)
     first_name: str
     last_name: str
     is_active: Optional[bool] = True
@@ -37,10 +39,32 @@ class UserCreate(schemas.CreateUpdateDictModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    role: Optional[RoleModel] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+    def create_update_dict(self):
+        return model_dump(
+            self,
+            exclude_unset=True,
+            exclude={
+                "id",
+                "is_superuser",
+                "is_active",
+                "is_verified",
+                "oauth_accounts",
+                "role",
+            },
+        )
+
+    def create_update_dict_superuser(self):
+        return model_dump(self, exclude_unset=True, exclude={"id"})
 
 
 class UsersPaginatedSchema(BaseModel):
@@ -60,7 +84,8 @@ class UserReadShortSchema(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    role: str = Field(alias="role_name")
+    is_active: bool
+    role_name: str = Field(serialization_alias="role")
 
     class Config:
         from_attributes = True

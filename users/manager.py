@@ -1,4 +1,6 @@
 import re
+import secrets
+import string
 from typing import Optional, Union
 
 import jwt
@@ -56,6 +58,11 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             safe: bool = False,
             request: Optional[Request] = None,
     ) -> models.UP:
+        if not user_create.password:
+            user_create.password = str(
+                str(secrets.token_hex(8)) + str(secrets.choice(string.digits))
+                + str(secrets.choice(string.punctuation) + str(secrets.choice(string.ascii_uppercase))),
+            )
         await self.validate_password(user_create.password, user_create)
 
         existing_user = await self.user_db.get_by_email(user_create.email)

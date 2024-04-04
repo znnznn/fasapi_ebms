@@ -15,6 +15,11 @@ class BearerResponseRefresh(BaseModel):
     user: UserRead
 
 
+class BearerResponseJWT(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
 class RefreshTokenResponse(BaseModel):
     refresh: str
 
@@ -31,6 +36,15 @@ class BearerTransportRefresh(BearerTransport):
             refresh=refresh,
             token_type="bearer",
             user=user,
+        )
+        return JSONResponse(bearer_response.model_dump())
+
+    async def get_login_response_jwt(self, token: str, refresh: str) -> Response:
+        """ Login response for Docs. """
+        bearer_response = BearerResponseJWT(
+            access_token=token,
+            refresh_token=refresh,
+            token_type="bearer",
         )
         return JSONResponse(bearer_response.model_dump())
 
@@ -58,8 +72,18 @@ class AuthenticationBackendRefresh(AuthenticationBackend):
         refresh_token = await refresh_strategy.write_token(user)
         return await self.transport.get_login_response(token=token, refresh=refresh_token, user=user)
 
+    async def login_jwt(
+            self,
+            strategy: Strategy[models.UP, models.ID],
+            user: models.UP,
+    ) -> Response:
+        token = await strategy.write_token(user)
+        refresh_strategy = self.get_refresh_strategy()
+        refresh_token = await refresh_strategy.write_token(user)
+        return await self.transport.get_login_response_jwt(token=token, refresh=refresh_token)
 
-bearer_transport = BearerTransportRefresh(tokenUrl="token/")
+
+bearer_transport = BearerTransportRefresh(tokenUrl="token/jwt/")
 
 
 def get_jwt_strategy() -> JWTStrategy:
