@@ -17,6 +17,10 @@ RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='')
 
 FRONTEND_HOST = config('FRONTEND_HOST', default='dev-embs.com', cast=str)
 
+EBMS_API_PASSWORD = config("EBMS_API_PASSWORD", cast=str)
+EBMS_API_LOGIN = config("EBMS_API_LOGIN", cast=str)
+EBMS_API_URL = config("EBMS_API_URL", cast=str)
+
 
 class EBMSDatabase(BaseSettings):
     env_file: str = ".env"

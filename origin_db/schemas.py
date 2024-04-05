@@ -99,3 +99,12 @@ class InventrySchema(BaseModel):
 
 class CapacitiesCalendarSchema(BaseModel):
     capacity: int
+
+
+class ChangeShipDateSchema(BaseModel):
+    ship_date: date
+
+    @field_validator('ship_date')
+    @classmethod
+    def validate_ship_date(cls, v: date):
+        return v.strftime("%Y-%m-%d")
