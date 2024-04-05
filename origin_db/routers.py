@@ -161,7 +161,6 @@ async def get_categories(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
-    print(result)
     return result
 
 
@@ -199,10 +198,14 @@ async def get_items(
         user: User = Depends(active_user_with_permission),
 ):
     if ordering:
-        item_filter = ItemFilter(order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True))
-        origin_item_filter = OriginItemFilter(
-            order_by=ordering, **origin_item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
-        )
+        if ItemFilter.remove_invalid_fields(ordering):
+            item_filter = ItemFilter(
+                order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
+            )
+        if OriginItemFilter.remove_invalid_fields(ordering):
+            origin_item_filter = OriginItemFilter(
+                order_by=ordering, **origin_item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
+            )
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
     extra_ordering = None
     if filtering_items:

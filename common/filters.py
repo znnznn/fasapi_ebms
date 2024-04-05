@@ -164,6 +164,7 @@ class RenameFieldFilter(Filter):
                 direction = Filter.Direction.desc
             field_name = field_name.replace("-", "").replace("+", "")
             field_name = self.order_by_related_field(field_name)
+            print(field_name)
             order_by_field = getattr(self.Constants.model, field_name)
             query = query.order_by(getattr(order_by_field, direction)())
         return query

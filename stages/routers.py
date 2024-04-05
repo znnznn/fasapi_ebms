@@ -14,6 +14,7 @@ from stages.schemas import (
 )
 from users.mixins import IsAuthenticatedAs, active_user_with_permission
 from users.models import User
+from websockets_connection.managers import connection_manager
 
 router = APIRouter()
 
@@ -21,6 +22,7 @@ router = APIRouter()
 @router.post("/capacities/", response_model=CapacitySchema, tags=["capacity"])
 async def create_capacity(
         store: CapacitySchemaIn, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
+    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).create(store)
 
 
@@ -43,6 +45,7 @@ async def update_capacity(
         id: int, capacity: CapacitySchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
+    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).update(id, capacity)
 
 
@@ -52,6 +55,7 @@ async def partial_update_capacity(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     capacity = capacity.model_dump(exclude_unset=True)
+    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).partial_update(id, capacity)
 
 
@@ -59,6 +63,7 @@ async def partial_update_capacity(
 async def delete_capacity(
         id: int, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
+    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).delete(id)
 
 
@@ -89,6 +94,7 @@ async def update_stage(
         id: int, stage: StageSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
+    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).update(id, stage)
 
 
@@ -98,11 +104,13 @@ async def partial_update_stage(
         session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     stage = data.model_dump(exclude_unset=True)
+    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).partial_update(id, stage)
 
 
 @router.delete("/stages/{id}/", tags=["stage"])
 async def delete_stage(id: int, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
+    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).delete(id)
 
 
@@ -130,6 +138,7 @@ async def create_comment(
         comment: CommentSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await CommentsService(db_session=session).create(comment)
 
 
@@ -139,6 +148,7 @@ async def update_comment(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await CommentsService(db_session=session).update(id, comment)
 
 
@@ -149,6 +159,7 @@ async def partial_update_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
     comment = comment.model_dump(exclude_unset=True)
+    await connection_manager.broadcast("items")
     return await CommentsService(db_session=session).partial_update(id, comment)
 
 
@@ -157,6 +168,7 @@ async def delete_comment(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await CommentsService(db_session=session).delete(id)
 
 
@@ -185,6 +197,7 @@ async def create_item(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await ItemsService(db_session=session).create(item)
 
 
@@ -197,6 +210,7 @@ async def update_item(
     if hasattr(item, "flow_id"):
         if not getattr(item, "stage_id", None):
             item.stage_id = None
+    await connection_manager.broadcast("items")
     return await ItemsService(db_session=session).update(id, item)
 
 
@@ -210,6 +224,7 @@ async def partial_update_item(
         if not getattr(item, "stage_id", None):
             item.stage_id = None
     item = item.model_dump(exclude_unset=True)
+    await connection_manager.broadcast("items")
     return await ItemsService(db_session=session).partial_update(id, item)
 
 
@@ -218,6 +233,7 @@ async def delete_item(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await ItemsService(db_session=session).delete(id)
 
 
@@ -244,6 +260,7 @@ async def create_salesorder(
         salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).create(salesorder)
 
 
@@ -252,6 +269,7 @@ async def update_salesorder(
         id: int, salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).update(id, salesorder)
 
 
@@ -262,6 +280,7 @@ async def partial_update_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
     salesorder = salesorder.model_dump(exclude_unset=True)
+    await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).partial_update(id, salesorder)
 
 
@@ -270,6 +289,7 @@ async def delete_salesorder(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).delete(id)
 
 
@@ -320,6 +340,7 @@ async def delete_flow(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
+    await connection_manager.broadcast("items")
     return await FlowsService(db_session=session).delete(id)
 
 
@@ -328,6 +349,7 @@ async def multiupdate_items(
         items: MultiUpdateItemSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    await connection_manager.broadcast("items")
     return await ItemsService(db_session=session).multiupdate(items)
 
 
@@ -336,6 +358,7 @@ async def multiupdate_salesorders(
         salesorders: MultiUpdateSalesOrderSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).multiupdate(salesorders)
 
 
