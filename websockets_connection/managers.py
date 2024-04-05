@@ -1,16 +1,7 @@
 from collections import defaultdict
 from typing import List
 
-from fastapi import WebSocket, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from common.constants import InputSchemaType
-from database import async_session_maker, get_async_session
-from origin_db.schemas import CategorySchema, CategoryPaginateSchema
-from origin_db.services import CategoryService
-from users.auth import get_jwt_strategy, auth_backend_refresh
-from users.manager import get_user_manager
-from websockets_connection.auth import get_auth_user_by_websocket
+from fastapi import WebSocket
 
 
 class ConnectionManager:
