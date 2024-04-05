@@ -1,6 +1,7 @@
+import json
 from collections import defaultdict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_filter import FilterDepends
 from sqlalchemy import case
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,11 +9,12 @@ from starlette.responses import JSONResponse
 
 from common.utils import DateValidator
 from database import get_async_session
+from ebms_api.client import ArinvdetClient
 from origin_db.filters import CategoryFilter, OriginItemFilter, OrderFilter
 from origin_db.models import Arinvdet, Arinv
 from origin_db.schemas import (
     ArinvRelatedArinvDetSchema, ArinPaginateSchema, ArinvDetPaginateSchema, CategoryPaginateSchema,
-    CategorySchema, CapacitiesCalendarSchema
+    CategorySchema, CapacitiesCalendarSchema, ChangeShipDateSchema
 )
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter, SalesOrderFilter
@@ -262,4 +264,18 @@ async def get_capacities_calendar(
         }
     context['capacity_data'] = {categories_data.get(capacity.category_autoid): capacity.per_day for capacity in capacities}
     return JSONResponse(content=context)
+
+
+@router.patch("/items/{autoid}/", tags=["items"], response_model=dict)
+async def partial_update_item(
+        autoid: str, origin_item: ChangeShipDateSchema,
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(active_user_with_permission),
+):
+    instance = await OriginItemService(db_session=session).get_object_or_404(autoid=autoid)
+    ebms_api_client = ArinvdetClient()
+    response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.json())
+    return {"message": "updated"}
 

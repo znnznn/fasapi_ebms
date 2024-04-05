@@ -41,6 +41,10 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
             query = query.offset(offset)
         return query
 
+    async def get_object_or_404(self, autoid: str) -> OriginModelType:
+        obj = await self.get(autoid)
+        return obj
+
     async def count_query_objs(self, query) -> int:
         return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
 
@@ -52,7 +56,7 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
             "results": objs.all(),
         }
 
-    async def get(self, autoid: int) -> Optional[OriginModelType]:
+    async def get(self, autoid: str) -> Optional[OriginModelType]:
         stmt = select(self.model).where(self.model.autoid == autoid)
         result = await self.db_session.scalars(stmt)
         try:
