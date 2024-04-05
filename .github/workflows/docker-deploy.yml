@@ -34,6 +34,9 @@ jobs:
             RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             TOKEN_CREDENTIAL=${{ secrets.TOKEN_CREDENTIAL }}
+            EBMS_API_URL=${{ secrets.EBMS_API_URL }}
+            EBMS_API_LOGIN=${{ secrets.EBMS_API_LOGIN }}
+            EBMS_API_PASSWORD=${{ secrets.EBMS_API_PASSWORD }}
           directory: ${{ github.workspace }}
       - name: Stop containers
         run: docker compose stop
