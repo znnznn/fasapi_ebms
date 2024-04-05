@@ -207,15 +207,13 @@ async def get_user_or_404(
         },
     },
 )
-async def get_user(id: int, user=Depends(is_owner_profile_or_admin)):
-    instance = await get_user_or_404(id)
+async def get_user(id: int, user=Depends(is_owner_profile_or_admin), instance: models.UP = Depends(get_user_or_404)):
     return schemas.model_validate(UserReadShortSchema, instance)
 
 
 @router.patch(
     "/{id}/",
     response_model=UserReadShortSchema,
-    # dependencies=[Depends(get_current_superuser)],
     name="users:patch_user",
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -256,7 +254,7 @@ async def get_user(id: int, user=Depends(is_owner_profile_or_admin)):
 )
 async def update_user(
         id: int,
-        user_update: UserUpdate,  # type: ignore
+        user_update: UserUpdate,
         request: Request,
         user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
@@ -289,7 +287,6 @@ async def update_user(
     "/{id}/",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
-    # dependencies=[Depends(get_current_superuser)],
     name="users:delete_user",
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -308,9 +305,9 @@ async def delete_user(
         request: Request,
         user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        instance: models.UP = Depends(get_user_or_404),
 ):
-    user = await get_user_or_404(id, user_manager)
-    await user_manager.delete(user, request=request)
+    await user_manager.delete(instance, request=request)
     return None
 
 
@@ -325,7 +322,7 @@ async def password_change(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.UPDATE_USER_INVALID_PASSWORD
         )
-    user = await user_manager.authenticate(**{'email':  user.email, 'password':user_update.old_password})
+    user = await user_manager.authenticate(**{'email': user.email, 'password': user_update.old_password})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
