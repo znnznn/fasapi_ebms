@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_restful.cbv import cbv
 from pydantic import BaseModel
-from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_, Result
+from sqlalchemy import select, ScalarResult, func, Integer, case, or_, and_, Result, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, Query
@@ -129,8 +129,6 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             await self.db_session.refresh(stmt)
         except (IntegrityError, AttributeError) as e:
             raise HTTPException(status_code=400, detail=f"{self.model.__name__} not created {e}")
-        else:
-            await connection_manager.broadcast("orders", session=self.db_session)
         return stmt
 
     async def update(self, id: int, obj: InputSchemaType) -> Optional[ModelType]:
@@ -202,6 +200,9 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         return query
 
     async def create(self, obj: InputSchemaType) -> Optional[ModelType]:
+        if getattr(obj, "position", None):
+            stmt = update(Flow).where(Flow.position >= obj.position).values(position=Flow.position + 1)
+            await self.db_session.execute(stmt)
         new_flow = await super().create(obj)
         stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None))
         default_stages = await self.db_session.scalars(stmt)

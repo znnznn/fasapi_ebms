@@ -31,9 +31,7 @@ class ConnectionManager:
 
     async def broadcast(self, subscribe: str):
         print("broadcast")
-        async with async_session_maker() as session:
-            objects = await CategoryService(db_session=session).paginated_list(limit=100)
-        data = CategoryPaginateSchema(**objects).model_dump()
+        data = {"subscribe": subscribe}
         for connection in self.active_connections[subscribe]:
             await connection.send_json(data)
 

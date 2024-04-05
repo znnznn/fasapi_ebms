@@ -19,3 +19,15 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(get_auth
     except (WebSocketException, WebSocketDisconnect):
         await connection_manager.disconnect(websocket, "orders")
         return
+
+
+@router.websocket("/items/")
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(get_auth_user_by_websocket)):
+    await connection_manager.connect(websocket, "items")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"Message text was: {data}")
+    except (WebSocketException, WebSocketDisconnect):
+        await connection_manager.disconnect(websocket, "items")
+        return

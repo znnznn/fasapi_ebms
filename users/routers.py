@@ -258,8 +258,8 @@ async def update_user(
         request: Request,
         user=Depends(is_owner_profile_or_admin),
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        instance: models.UP = Depends(get_user_or_404),
 ):
-    instance = await get_user_or_404(id, user_manager)
     safe = True
     if user.role_name == Role.ADMIN:
         safe = False

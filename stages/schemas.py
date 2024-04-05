@@ -73,7 +73,7 @@ class FlowSchema(BaseModel):
     name: str | None = Field(default=None)
     description: str | None = Field(default=None)
     position: int = Field(default=None)
-    category_autoid: str = Field(default=None)
+    category_autoid: str = Field(default=None, serialization_alias="category")
     stages: List[StageSchema] | None
     created_at: datetime = Field(default=None)
 
@@ -82,11 +82,15 @@ class FlowSchemaIn(BaseModel):
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
     position: Optional[int] = Field(default=None)
-    category_autoid: Optional[str] = Field(default=None, alias="category")
+    category_autoid: Optional[str] = Field(default=None, alias="category", serialization_alias="category")
 
 
-class FlowSchemaOut(FlowSchemaIn):
+class FlowSchemaOut(BaseModel):
     id: int
+    name: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)
+    position: Optional[int] = Field(default=None)
+    category_autoid: Optional[str] = Field(default=None, serialization_alias="category")
 
 
 class FlowPaginatedSchema(BaseModel):
