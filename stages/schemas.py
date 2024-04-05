@@ -179,6 +179,7 @@ class SalesOrderSchemaIn(BaseModel):
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
+    production_date: Optional[date] = Field(default=None)
     created_at: Optional[date] = Field(default=datetime.now().date())
 
 
