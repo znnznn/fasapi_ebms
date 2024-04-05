@@ -103,7 +103,6 @@ async def orders(
             else:
                 completed.append(False)
         i.completed = all(completed)
-    await connection_manager.broadcast("orders")
     return result
 
 

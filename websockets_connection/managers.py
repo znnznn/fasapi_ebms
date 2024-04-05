@@ -1,16 +1,7 @@
 from collections import defaultdict
 from typing import List
 
-from fastapi import WebSocket, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from common.constants import InputSchemaType
-from database import async_session_maker, get_async_session
-from origin_db.schemas import CategorySchema, CategoryPaginateSchema
-from origin_db.services import CategoryService
-from users.auth import get_jwt_strategy, auth_backend_refresh
-from users.manager import get_user_manager
-from websockets_connection.auth import get_auth_user_by_websocket
+from fastapi import WebSocket
 
 
 class ConnectionManager:
@@ -22,9 +13,18 @@ class ConnectionManager:
         await websocket.accept(subprotocol=websocket.headers.get("sec-websocket-protocol"))
         self.active_connections[subscribe].append(websocket)
 
+    async def disconnect_all(self, subscribe: str):
+        self.active_connections[subscribe] = []
+
+    async def get_active_connections(self, subscribe: str) -> List[WebSocket]:
+        if connections := self.active_connections.get(subscribe):
+            return connections
+        return []
+
     async def disconnect(self, websocket: WebSocket, subscribe: str):
-        print("disconnect")
-        self.active_connections[subscribe].remove(websocket)
+        connections = self.active_connections[subscribe]
+        if connections:
+            self.active_connections[subscribe].remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -32,7 +32,8 @@ class ConnectionManager:
     async def broadcast(self, subscribe: str):
         print("broadcast")
         data = {"subscribe": subscribe}
-        for connection in self.active_connections[subscribe]:
+        connections = await self.get_active_connections(subscribe)
+        for connection in connections:
             await connection.send_json(data)
 
 
