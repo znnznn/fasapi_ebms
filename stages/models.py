@@ -43,7 +43,7 @@ class Item(DefaultBase):
     flow_id: Mapped[int] = mapped_column(Integer, ForeignKey('flow.id', ondelete="SET NULL"), nullable=True)
     priority: Mapped[POSITIVE_INT]
     production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)
-    time = mapped_column(TIME, nullable=True, default="00:00:00")
+    time = mapped_column(TIME, nullable=True)
     packages: Mapped[POSITIVE_INT_OR_ZERO]
     location: Mapped[POSITIVE_INT_OR_ZERO]
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)

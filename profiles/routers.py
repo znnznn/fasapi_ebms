@@ -41,7 +41,6 @@ async def get_user_profile(
         user: User = Depends(active_user_with_permission),
         session: AsyncSession = Depends(get_async_session)
 ):
-    user_profile = await UserProfileService(db_session=session).create(obj=user_profile, user_id=user.id)
     return await UserProfileService(db_session=session).create(obj=user_profile, user_id=user.id)
 
 

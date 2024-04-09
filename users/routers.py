@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Body
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import exceptions, BaseUserManager, models, schemas
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router import ErrorCode
@@ -322,7 +323,8 @@ async def password_change(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.UPDATE_USER_INVALID_PASSWORD
         )
-    user = await user_manager.authenticate(**{'email': user.email, 'password': user_update.old_password})
+    credentials = OAuth2PasswordRequestForm(username=user.email, password=user_update.old_password)
+    user = await user_manager.authenticate(credentials)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

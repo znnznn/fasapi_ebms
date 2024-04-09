@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import Depends, APIRouter
 from fastapi_filter import FilterDepends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -291,6 +293,15 @@ async def delete_salesorder(
 ):
     await connection_manager.broadcast("orders")
     return await SalesOrdersService(db_session=session).delete(id)
+
+
+@router.get("/flows/all/", tags=["flows"], response_model=List[FlowSchemaOut])
+async def get_all_flows(
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(active_user_with_permission),
+):
+    result = await FlowsService(db_session=session).list()
+    return result
 
 
 @router.get("/flows/", tags=["flows"], response_model=FlowPaginatedSchema)
