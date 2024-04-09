@@ -174,9 +174,9 @@ async def get_categories_all(
 ):
     result = await CategoryService(db_session=session, list_filter=category_filter).list()
     flows_data = await FlowsService(db_session=session).group_by_category()
-    print(flows_data)
-    print(33333333)
-    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
+    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(
+        production_date=item_filter.production_date
+    )
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService(db_session=session).list()
     total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
