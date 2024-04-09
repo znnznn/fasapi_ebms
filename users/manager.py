@@ -1,7 +1,7 @@
 import re
 import secrets
 import string
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any
 
 import jwt
 from fastapi import Depends, Request
@@ -24,6 +24,25 @@ SECRET = SECRET_KEY
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+    async def _update(self, user: models.UP, update_dict: Dict[str, Any]) -> models.UP:
+        validated_update_dict = {}
+        for field, value in update_dict.items():
+            if field == "email" and value != user.email:
+                try:
+                    await self.get_by_email(value)
+                    raise exceptions.UserAlreadyExists()
+                except exceptions.UserNotExists:
+                    validated_update_dict["email"] = value
+            elif field == "password" and value is not None:
+                await self.validate_password(value, user)
+                validated_update_dict["password"] = self.password_helper.hash(
+                    value
+                )
+            else:
+                validated_update_dict[field] = value
+        return await self.user_db.update(user, validated_update_dict)
+
 
     async def get_forgot_password_token(self, user):
         token_data = {

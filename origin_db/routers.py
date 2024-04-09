@@ -174,6 +174,8 @@ async def get_categories_all(
 ):
     result = await CategoryService(db_session=session, list_filter=category_filter).list()
     flows_data = await FlowsService(db_session=session).group_by_category()
+    print(flows_data)
+    print(33333333)
     item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService(db_session=session).list()
@@ -266,7 +268,7 @@ async def get_capacities_calendar(
     return JSONResponse(content=context)
 
 
-@router.patch("/items/{autoid}/", tags=["items"], response_model=dict)
+@router.patch("/items/{autoid}/", response_model=dict)
 async def partial_update_item(
         autoid: str, origin_item: ChangeShipDateSchema,
         session: AsyncSession = Depends(get_async_session),
