@@ -56,7 +56,6 @@ async def orders(
             filtering_fields["autoid__not_in"] = filtering_sales_orders
         else:
             filtering_fields["autoid__in"] = filtering_sales_orders
-        print(filtering_fields)
         origin_order_filter = OrderFilter(**filtering_fields)
 
     if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
