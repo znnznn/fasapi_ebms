@@ -390,12 +390,11 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 Stage.name == "Done",
             )
         ).join(Stage)
-        # print('sffwefwwefwwefwwefwwef')
         stmt = select(
             Item.order, func.min(Item.production_date).label("min_date"), func.max(Item.production_date).label("max_date"),
             case((subq.exists(), 1), else_=0).label("completed"),
         ).where(self.model.order.in_(autoids)).group_by(Item.order)
-        # print('sffwefwwefwwefwwefwwef')
+
         # objs = await self.db_session.execute(stmt)
         # subq = case((and_(
         #     self.model.production_date != None,
