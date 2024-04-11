@@ -10,9 +10,13 @@ from users.services import UserService
 
 engines = {
     EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
-        EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME), pool_size=30),
+        EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME),
+        pool_size=30, max_overflow=40
+    ),
     DefaultBase: create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
-        Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME), pool_size=30),
+        Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME),
+        pool_size=30, max_overflow=40
+    ),
 }
 
 async_session_maker = async_sessionmaker(binds=engines, expire_on_commit=False)
