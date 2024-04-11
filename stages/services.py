@@ -504,8 +504,10 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         #     )
         # ).join(Stage)
         if self.filter and self.filter.is_filtering_values:
+            print(self.filter.model_dump(exclude_defaults=True, exclude_unset=True))
             query = self.filter.filter(select(self.model.order))
             query = self.filter.sort(query)
+            print(query.compile(compile_kwargs={"literal_binds": True}))
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
         if do_ordering:

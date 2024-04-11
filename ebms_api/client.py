@@ -51,10 +51,10 @@ class BasicAUTHRequest:
             return session.patch(url, data=json.dumps(data), headers=self.add_default_headers(headers))
 
 
-class ArinvdetClient(BasicAUTHRequest):
-    ebms_model: str = "ARINVDET"
-    select: str = "AUTOID"
+class ArinvClient(BasicAUTHRequest):
+    ebms_model: str = "ARINV"
+    select: str = "AUTOID,SHIP_DATE"
 
     def retrieve_url(self, autoid):
         print(f"{self.ebms_host}/{self.ebms_model}('{autoid}')?$select='{self.select}'")
-        return f"{self.ebms_host}/{self.ebms_model}('{autoid}')?$select={'AUTOID'}"
+        return f"{self.ebms_host}/{self.ebms_model}('{autoid}')?$select={self.select}"

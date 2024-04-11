@@ -50,6 +50,8 @@ class Item(DefaultBase):
     flow = relationship("Flow", back_populates="items")
     comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id')
     stage = relationship("Stage", back_populates="items")
+    sales_order = relationship(
+        'SalesOrder', back_populates="items", primaryjoin='Item.order == SalesOrder.order', foreign_keys=order)
 
     @hybrid_property
     def stage_name(self):
@@ -72,3 +74,7 @@ class SalesOrder(DefaultBase):
     priority: Mapped[POSITIVE_INT]
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
     production_date: Mapped[DATE] = mapped_column(DATE, nullable=True)
+    items = relationship(
+        'Item', back_populates='sales_order', primaryjoin='SalesOrder.order==Item.order', foreign_keys='Item.order',
+        innerjoin=True
+    )

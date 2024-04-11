@@ -5,7 +5,7 @@ from fastapi_filter.contrib.sqlalchemy.filter import _backward_compatible_value_
 from pydantic import field_validator
 from pydantic_core.core_schema import ValidationInfo
 from sqlalchemy import Select, or_, select
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import Query, relationship, DeclarativeBase
 
 from common.constants import ModelType, OriginModelType
 
@@ -99,7 +99,11 @@ class RenameFieldFilter(Filter):
         fields.pop(self.Constants.ordering_field_name, None)
         values = []
         for field_name, value in self.filtering_fields:
-            if value or isinstance(value, bool):
+            if isinstance(value, dict):
+                for key, nested_value in value.items():
+                    if nested_value or isinstance(nested_value, bool):
+                        values.append(nested_value)
+            elif value or isinstance(value, bool):
                 values.append(value)
         if values:
             return True
@@ -118,16 +122,14 @@ class RenameFieldFilter(Filter):
     def filter(self, query: Union[Query, Select], **kwargs: Optional[dict]):
         join_table = None
         count_join = 0
+        joins = set()
         for field_name, value in self.filtering_fields:
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
-                if join_table != need_join_table:
-                    count_join = 0
-                join_table = need_join_table
-                if join_table and not count_join and value:
-                    query = query.join(join_table)
-                    count_join += 1
+                if need_join_table and not need_join_table in joins and value:
+                    query = query.join(need_join_table)
+                    joins.add(need_join_table)
                 query = field_value.filter(query)
             else:
                 field_name = self.related_field(field_name)
@@ -146,7 +148,7 @@ class RenameFieldFilter(Filter):
                 else:
                     model_field = getattr(self.Constants.model, field_name)
                     query = query.filter(getattr(model_field, operator)(value))
-        # print(query.compile(compile_kwargs={"literal_binds": True})
+        # print(query.compile(compile_kwargs={"literal_binds": True}))
         extra_ordering = kwargs.get("extra_ordering")
         if extra_ordering is not None:
             query = query.order_by(extra_ordering)
@@ -164,7 +166,6 @@ class RenameFieldFilter(Filter):
                 direction = Filter.Direction.desc
             field_name = field_name.replace("-", "").replace("+", "")
             field_name = self.order_by_related_field(field_name)
-            print(field_name)
             order_by_field = getattr(self.Constants.model, field_name)
             query = query.order_by(getattr(order_by_field, direction)())
         return query

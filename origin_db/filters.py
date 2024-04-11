@@ -96,3 +96,4 @@ class OrderFilter(RenameFieldFilter):
         search_fields_by_models = {
             Arinv: ('invoice', 'name'),
         }
+        ordering_fields = ('order', 'invoice')

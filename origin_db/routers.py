@@ -9,12 +9,12 @@ from starlette.responses import JSONResponse
 
 from common.utils import DateValidator
 from database import get_async_session
-from ebms_api.client import ArinvdetClient
+from ebms_api.client import ArinvClient
 from origin_db.filters import CategoryFilter, OriginItemFilter, OrderFilter
 from origin_db.models import Arinvdet, Arinv
 from origin_db.schemas import (
     ArinvRelatedArinvDetSchema, ArinPaginateSchema, ArinvDetPaginateSchema, CategoryPaginateSchema,
-    CategorySchema, CapacitiesCalendarSchema, ChangeShipDateSchema
+    CategorySchema, CapacitiesCalendarSchema, ChangeShipDateSchema, ArinvDetSchema, ArinvSchema
 )
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter, SalesOrderFilter
@@ -38,8 +38,9 @@ async def orders(
 
 ):
     if ordering:
+        filtter = sales_order_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
         sales_order_filter = SalesOrderFilter(
-            order_by=ordering, **sales_order_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
+            order_by=ordering, **filtter
         )
         origin_order_filter = OrderFilter(
             order_by=ordering, **origin_order_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
@@ -47,17 +48,17 @@ async def orders(
     filtering_sales_orders = await SalesOrdersService(
         db_session=session, list_filter=sales_order_filter
     ).get_filtering_origin_orders_autoids()
-    # filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_orders_autoids()
     extra_ordering = None
     # filtering_fields = None
     if filtering_sales_orders:
-        print(filtering_sales_orders)
         filtering_fields = origin_order_filter.model_dump(exclude_unset=True, exclude_none=True)
         if sales_order_filter.is_exclude:
             filtering_fields["autoid__not_in"] = filtering_sales_orders
         else:
             filtering_fields["autoid__in"] = filtering_sales_orders
+        print(filtering_fields)
         origin_order_filter = OrderFilter(**filtering_fields)
+
     if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
         filtering_sales_orders = await SalesOrdersService(
             db_session=session, list_filter=sales_order_filter
@@ -66,13 +67,6 @@ async def orders(
         default_position = len(filtering_sales_orders) + 2
         data_for_ordering = {v: i for i, v in enumerate(filtering_sales_orders, 1)}
         extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
-    # if filtering_items:
-    #     if filtering_fields is None:
-    #         filtering_fields = origin_order_filter.model_dump(exclude_unset=True, exclude_none=True)
-    #     if sales_order_filter.is_exclude:
-    #         filtering_fields["autoid__not_in"] = filtering_sales_orders
-    #     else:
-    #         filtering_fields["autoid__in"] = filtering_sales_orders
     result = await OriginOrderService(
         db_session=session, list_filter=origin_order_filter
     ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
@@ -274,10 +268,18 @@ async def partial_update_item(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(active_user_with_permission),
 ):
-    instance = await OriginItemService(db_session=session).get_object_or_404(autoid=autoid)
-    ebms_api_client = ArinvdetClient()
+    instance = await OriginOrderService(db_session=session).get_object_or_404(autoid=autoid)
+    ebms_api_client = ArinvClient()
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
-    return {"message": "updated"}
+    else:
+        print(response.text)
+    return {"message": response.json()}
 
+
+@router.get("/orderss-api/{autoid}/", response_model=dict)
+async def get_item_by_ebms_api (autoid: str, session: AsyncSession = Depends(get_async_session)):
+    ebms_api_client = ArinvClient()
+    response = ebms_api_client.get(ebms_api_client.retrieve_url(autoid))
+    return {"data": response.json()}
