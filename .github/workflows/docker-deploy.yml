@@ -37,7 +37,7 @@ jobs:
             EBMS_API_URL=${{ secrets.EBMS_API_URL }}
             EBMS_API_LOGIN=${{ secrets.EBMS_API_LOGIN }}
             EBMS_API_PASSWORD=${{ secrets.EBMS_API_PASSWORD }}
-          directory: ${{ github.workspace }}
+          directory: ${{ github.workspace }}/backend
       - name: Stop containers
         run: docker compose stop
       - name: Build the Docker image
