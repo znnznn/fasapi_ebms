@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+fasapi_ebms/backend/.env
 .venv
 env/
 venv/
@@ -167,5 +167,5 @@ cython_debug/
 
 # macOS
 .DS_Store!/.env
-!/.env
-/.env
+!/backend/.env
+/backend/.env
