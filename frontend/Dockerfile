@@ -1,6 +1,6 @@
 FROM node:20.3.0
 
-WORKDIR /app/
+WORKDIR /app/frontend
 
 ENV PATH /app/node_modules/.bin:$PATH
 
