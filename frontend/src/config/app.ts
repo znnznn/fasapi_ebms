@@ -1,6 +1,6 @@
 export const appName = 'Wiseline'
 
-export const baseUrl = 'http://localhost:8000/'
+export const baseUrl = 'https://api.dev-ebms.fun/'
 
 export const datesFormat = {
     dots: 'dd.MM.yyyy',
