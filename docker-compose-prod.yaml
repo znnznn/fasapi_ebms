@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - backend/.env
-    command: sh -c "chmod +x ./backend/entrypoint.sh && ./backend/entrypoint.sh"
+    command: sh -c "chmod +x ./entrypoint.sh && ./entrypoint.sh"
     volumes:
       - .:/app
     ports:
