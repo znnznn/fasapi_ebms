@@ -5,7 +5,7 @@ WORKDIR /app/backend/
 
 ENV ACCEPT_EULA=Y
 
-COPY ../.. .
+COPY . .
 
 EXPOSE 8000
 
