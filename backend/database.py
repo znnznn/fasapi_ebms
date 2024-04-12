@@ -9,7 +9,7 @@ from users.models import User
 from users.services import UserService
 
 engines = {
-    EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+18+for+SQL+Server'.format(
+    EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
         EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME),
         pool_size=30, max_overflow=40
     ),
