@@ -3,7 +3,7 @@ from typing import Optional, List
 from fastapi import FastAPI
 from fastapi_pagination.utils import disable_installed_extensions_check
 from pydantic import BaseModel
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from origin_db.routers import router as origin_router
 from stages.routers import router as stages_router
@@ -26,15 +26,19 @@ app = FastAPI(
         404: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
-    swagger_ui_parameters={"deepLinking": False}
+    docs_url='/docs',
+    redoc_url='/redoc',
+    openapi_url='/openapi.json',
+    swagger_ui_parameters={"deepLinking": False},
 )
 
 origins = [
+    "*",
     "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:8080",
+    "http://localhost:3000/",
+    "http://localhost:8000",
     "https://dev-ebms.fun",
-    "dev-ebms.com"
+    "https://dev-ebms.fun/",
 ]
 
 app.add_middleware(
