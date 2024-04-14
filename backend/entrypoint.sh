@@ -29,6 +29,5 @@ done
 
 echo "Postgres is ready, running the migrations..."
 
-cd ./backend
 alembic upgrade head
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
