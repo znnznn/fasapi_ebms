@@ -5,7 +5,7 @@ import type { CompanyProfileData, UsersProfileData } from './profiles.types'
 export const users = api.injectEndpoints({
     endpoints: (build) => ({
         getCompanyProfiles: build.query<CompanyProfileData, void>({
-            query: () => 'profiles/company',
+            query: () => 'profiles/company/',
             providesTags: ['CompanyProfile']
         }),
         addCompanyProfiles: build.mutation<any, CompanyProfileData>({
@@ -17,7 +17,7 @@ export const users = api.injectEndpoints({
             invalidatesTags: ['CompanyProfile']
         }),
         getUsersProfiles: build.query<UsersProfileData[], void>({
-            query: () => 'profiles/users',
+            query: () => 'profiles/users/',
 
             providesTags: ['UsersProfile']
         }),
