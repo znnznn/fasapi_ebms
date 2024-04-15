@@ -23,7 +23,7 @@ export const OrderTablePage = () => {
 
     const dispatch = useAppDispatch()
 
-    const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
+    // const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
 
     const {
         category,
@@ -47,7 +47,7 @@ export const OrderTablePage = () => {
         limit,
         is_scheduled: scheduled,
         completed: isOrderCompleted,
-        ordering: currentSortingTerm,
+        // ordering: currentSortingTerm,
         over_due: overdue,
         search: searchTerm
     }
