@@ -78,10 +78,7 @@ export const ItemsTablePage = () => {
         localStorage.getItem('token') || sessionStorage.getItem('token') || 'null'
     ) as AccessToken
 
-    const websocket = new WebSocket(
-        'ws://ec2-35-183-142-252.ca-central-1.compute.amazonaws.com/ws/items/',
-        token.access
-    )
+    const websocket = new WebSocket('wss://dev-ebms.fun/ws/items/', token.access)
 
     websocket.addEventListener('message', (event) => {
         console.log(event.data)
