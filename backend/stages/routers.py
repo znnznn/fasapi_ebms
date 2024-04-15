@@ -227,6 +227,7 @@ async def partial_update_item(
             item.stage_id = None
     item = item.model_dump(exclude_unset=True)
     await connection_manager.broadcast("items")
+    await connection_manager.broadcast("orders")
     return await ItemsService(db_session=session).partial_update(id, item)
 
 
@@ -361,6 +362,7 @@ async def multiupdate_items(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
     await connection_manager.broadcast("items")
+    await connection_manager.broadcast("orders")
     return await ItemsService(db_session=session).multiupdate(items)
 
 
