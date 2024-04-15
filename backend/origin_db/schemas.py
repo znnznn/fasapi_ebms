@@ -1,5 +1,6 @@
 from datetime import date
-from typing import List
+from decimal import Decimal
+from typing import List, Optional, Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,7 +11,7 @@ class CategorySchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     capacity: int | None = Field(default=None, alias="capacity", serialization_alias="capacity")
     capacity_id: int | None = Field(default=None, alias="capacity_id", serialization_alias="capacity_id")
-    total_capacity: int | None = Field(default=None, alias="total_capacity", serialization_alias="total_capacity")
+    total_capacity: Annotated[Decimal, Field()] | None = None
     name: str = Field(default=None, alias="prod_type", serialization_alias="name")
     flow_count: int | None = Field(default=None, alias="flow_count", serialization_alias="flow_count")
 
@@ -18,6 +19,11 @@ class CategorySchema(BaseModel):
         orm_mode = True
         populate_by_name = True
         from_attributes = True
+
+    @field_validator('total_capacity')
+    @classmethod
+    def validate_total_capacity(cls, v: Decimal):
+        return round(v, 0)
 
 
 class CategoryPaginateSchema(BaseModel):
