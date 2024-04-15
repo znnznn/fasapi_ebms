@@ -333,8 +333,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             await self.add_all(created_items)
         return obj
 
-    async def get_autoid_by_production_date(self, production_date: str | None):
-        production_date = datetime.strptime(production_date, "%Y-%m-%d") if production_date else date.today()
+    async def get_autoid_by_production_date(self, production_date: date | None):
         stmt = select(self.model.origin_item).where(and_(func.date(self.model.production_date) == production_date))
         objs = await self.db_session.scalars(stmt)
         return objs.all()
