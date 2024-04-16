@@ -2,6 +2,7 @@ from datetime import datetime, date
 from typing import Optional, List
 
 from fastapi_filter import FilterDepends
+from pydantic import Field
 
 from common.filters import RenameFieldFilter
 from origin_db.models import Inprodtype, Arinvdet, Inventry, Arinv
@@ -9,6 +10,7 @@ from origin_db.nested_filters import NestedOriginItemFilter
 
 
 class InventryFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
     category: Optional[str] = None
     categories: Optional[str] = None
 
@@ -21,6 +23,7 @@ class InventryFilter(RenameFieldFilter):
 
 
 class CategoryFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
     name: Optional[str] = None
     categories: Optional[str] = None
 
@@ -34,7 +37,7 @@ class CategoryFilter(RenameFieldFilter):
 
 class OriginItemFilter(RenameFieldFilter):
     search: Optional[str] = None
-    order_by: Optional[List[str]] = None
+    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
     ship_date: Optional[datetime] = None
     weight: Optional[float] = None
     order: Optional[str] = None
@@ -74,7 +77,7 @@ class OriginItemFilter(RenameFieldFilter):
 
 class OrderFilter(RenameFieldFilter):
     search: Optional[str] = None
-    order_by: Optional[List[str]] = None
+    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
     order: Optional[str] = None
     invoice: Optional[str] = None
     name: Optional[str] = None

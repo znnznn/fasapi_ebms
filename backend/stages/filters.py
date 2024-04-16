@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
-from typing import Optional, Any
+from typing import Optional, Any, List
 
+from pydantic import Field
 from typing_extensions import Literal
 
 from fastapi_filter import FilterDepends
@@ -11,6 +12,7 @@ from stages.models import Item, Stage, Flow, Comment, SalesOrder
 
 
 class CommentFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["id"], description="")
     has_comments: Optional[bool] = None
 
     class Constants(RenameFieldFilter.Constants):
@@ -24,6 +26,7 @@ class CommentFilter(RenameFieldFilter):
 
 
 class FlowFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["id"], description="")
     flow: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
@@ -35,6 +38,7 @@ class FlowFilter(RenameFieldFilter):
 
 
 class StageFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["id"], description="")
     status: Optional[str] = None
     status_not_in: Optional[str] = None
 
@@ -48,6 +52,7 @@ class StageFilter(RenameFieldFilter):
 
 
 class ItemFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
     status: Optional[StageFilter] = FilterDepends(StageFilter)
     status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
@@ -222,6 +227,7 @@ class NestedItemFilter(RenameFieldFilter):
 
 
 class SalesOrderFilter(RenameFieldFilter):
+    order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
     priority: Optional[int] = None
     is_scheduled: Optional[bool] = None
