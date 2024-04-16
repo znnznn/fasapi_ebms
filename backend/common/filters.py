@@ -41,6 +41,7 @@ class RenameFieldFilter(Filter):
         excluded_fields = ()  # exclude from query by fields
         join_tables = {}  # auto join tables
         default_ordering = ['recno5']
+        joins = set()
 
     @property
     def ordered(self):
@@ -127,9 +128,9 @@ class RenameFieldFilter(Filter):
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
-                if need_join_table and not need_join_table in joins and value:
+                if need_join_table and not need_join_table in self.Constants.joins and value:
                     query = query.join(need_join_table)
-                    joins.add(need_join_table)
+                    self.Constants.joins.add(need_join_table)
                 query = field_value.filter(query)
             else:
                 field_name = self.related_field(field_name)

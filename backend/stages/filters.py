@@ -170,12 +170,6 @@ class NestedItemFilter(RenameFieldFilter):
             'flow': Flow,
         }
 
-    def get_value(self, field_name, value):
-        if field_name == 'production_date__isnull' and value is False:
-            value = True
-            self.Constants.exclude = True
-        return super().get_value(field_name, value)
-
     def model_dump(
             self,
             *,
@@ -211,9 +205,12 @@ class NestedItemFilter(RenameFieldFilter):
             today = datetime.now().date()
             fields['production_date__gte'] = today
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
-        if completed := fields.pop('completed', None):
+        completed = fields.pop('completed', None)
+        if isinstance(completed, bool):
             fields['status'] = 'Done'
             fields['production_date__isnull'] = False
+            if not completed:
+                self.Constants.exclude = True
         over_due = fields.pop('over_due', None)
         if isinstance(over_due, bool):
             if over_due:
@@ -229,6 +226,7 @@ class NestedItemFilter(RenameFieldFilter):
 class SalesOrderFilter(RenameFieldFilter):
     order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
+    production_date__isnull: Optional[bool] = None
     priority: Optional[int] = None
     is_scheduled: Optional[bool] = None
     over_due: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
@@ -249,56 +247,9 @@ class SalesOrderFilter(RenameFieldFilter):
         ordering_fields = ('production_date',)
         join_tables = {
             'over_due': SalesOrder.items,
-            'completed': SalesOrder.items
+            'status': SalesOrder.items,
+            'status_not_in': SalesOrder.items,
+            'completed': SalesOrder.items,
+            'production_date__isnull': SalesOrder.items
         }
-        excluded_fields = ('production_date__isnull', 'status' )
-
-    def get_value(self, field_name, value):
-        if field_name == 'production_date__isnull' and value is False:
-            value = True
-            self.Constants.exclude = True
-        return super().get_value(field_name, value)
-
-    def model_dump(
-        self,
-        *,
-        mode: Literal['json', 'python'] | str = 'python',
-        include: IncEx = None,
-        exclude: IncEx = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool = True,
-    ) -> dict[str, Any]:
-        fields = super().model_dump(
-            mode=mode,
-            include=include,
-            exclude=exclude,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-        )
-        completed = fields.get('completed', None)
-        if isinstance(completed, dict):
-            completed = completed.pop('completed', None)
-            if isinstance(completed, bool):
-                fields['status'] = 'Done'
-                fields['stage_id__isnull'] = False
-                fields['is_scheduled'] = True
-                if completed is False:
-                    self.Constants.exclude = True
-        over_due = fields.pop('over_due', None)
-        if isinstance(over_due, dict):
-            over_due = over_due.pop('over_due', None)
-            if isinstance(over_due, bool):
-                fields['production_date__lt'] = datetime.now().date()
-                fields['status_not_in'] = 'Done,'
-                fields['stage_id__isnull'] = False
-                if not over_due:
-                    self.Constants.exclude = True
-        return fields
+        excluded_fields = ('production_date__isnull', 'status')
