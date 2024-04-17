@@ -3,7 +3,7 @@ import type { Flow, Stage } from '../items/items.types'
 import type { SalesOrdersData } from '../sales-orders/sales-orders.types'
 import type { UserComment } from '../users/users.types'
 
-import type { BaseQueryParams, Response } from '@/types/api'
+import type { BaseQueryParams, PatchData, Response } from '@/types/api'
 
 export interface CalendarQueryParams {
     year: number
@@ -22,6 +22,11 @@ interface DailyDataEntry {
     Trim: DailyDataCategory | null
     Accessories: DailyDataCategory | null
 }
+
+export interface EBMSItemData {
+    ship_date: string
+}
+export type EBMSItemPatchData = PatchData<EBMSItemData>
 
 interface DailyData {
     [date: string]: DailyDataEntry
@@ -43,7 +48,7 @@ export interface Capacity {
 export interface CategoriesData extends Capacity {
     id: number
     guid: string
-    prod_type: string
+    name: string
     ar_aid: string
     autoid: string
     flow_count: number

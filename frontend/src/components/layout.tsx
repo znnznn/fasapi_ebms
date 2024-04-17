@@ -10,7 +10,7 @@ const ErrorPage = lazy(() => import('@/pages/error-page'))
 export const Layout = () => (
     <>
         <Head />
-        <main>
+        <main className='px-3'>
             <ErrorBoundary fallback={<ErrorPage message='Something went wrong' />}>
                 <Outlet />
             </ErrorBoundary>

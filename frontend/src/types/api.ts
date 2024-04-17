@@ -6,7 +6,7 @@ export interface Response<T> {
 }
 
 export interface PatchData<T> {
-    id: number
+    id: number | string
     data: Partial<T>
 }
 

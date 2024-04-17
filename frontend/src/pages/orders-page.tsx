@@ -18,7 +18,7 @@ const OrdersPage = () => {
     }, [])
 
     return (
-        <div className='px-3'>
+        <div>
             <Header />
             {category ? <ItemsTablePage /> : <OrderTablePage />}
         </div>

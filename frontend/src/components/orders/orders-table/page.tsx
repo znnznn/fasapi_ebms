@@ -71,10 +71,11 @@ export const OrderTablePage = () => {
         localStorage.getItem('token') || sessionStorage.getItem('token') || 'null'
     ) as AccessToken
 
-    const websocket = new WebSocket('wss://dev-ebms.fun/ws/items/', token.access)
+    const websocket = new WebSocket('wss://api.dev-ebms.fun/ws/orders/', token.access)
 
-    websocket.addEventListener('message', (event) => {
-        console.log(event.data)
+    websocket.addEventListener('message', () => {
+        console.log('something happened')
+
         refetch()
         api.util.invalidateTags(['Orders'])
     })

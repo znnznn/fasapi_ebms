@@ -37,7 +37,9 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
 
     return (
         <div className='rounded-md'>
-            <Filters />
+            <div className='mb-3'>
+                <Filters />
+            </div>
 
             <WeekFilters />
             <Statuses table={table} page='orders' />

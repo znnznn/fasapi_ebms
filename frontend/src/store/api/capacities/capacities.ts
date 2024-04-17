@@ -14,7 +14,7 @@ export const capacities = api.injectEndpoints({
         getCapacities: build.query<CapacitiesResponse, BaseQueryParams>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `capacities?${queryString}`
+                return `capacities/?${queryString}`
             },
             providesTags: ['Capacities']
         }),

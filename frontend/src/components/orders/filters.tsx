@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 
-import { setOverDue } from './store/orders'
+import { setOrderCompleted, setOverDue } from './store/orders'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -33,6 +33,9 @@ export const Filters = () => {
 
         if (done) {
             newFilters.push('done')
+            dispatch(setOrderCompleted(true))
+        } else {
+            dispatch(setOrderCompleted(false))
         }
 
         setFilters(newFilters)
@@ -49,7 +52,9 @@ export const Filters = () => {
         <div className='flex gap-5 items-center'>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant='outline'>Filters</Button>
+                    <Button className='h-[43px]' variant='outline'>
+                        Filters
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end'>
                     <DropdownMenuCheckboxItem
@@ -63,7 +68,7 @@ export const Filters = () => {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <div className='flex gap-2 mt-5'>
+            <div className='flex items-center gap-2'>
                 {filters?.map((filter) => (
                     <Badge
                         variant='outline'

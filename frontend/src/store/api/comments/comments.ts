@@ -24,7 +24,7 @@ export const comments = api.injectEndpoints({
         getComments: build.query<CommentsResponse, Partial<BaseQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `comments?${queryString}`
+                return `comments/?${queryString}`
             },
             providesTags: ['Comments']
         }),

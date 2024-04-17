@@ -33,19 +33,18 @@ export const ProductionCategories = () => {
                         )
 
                         const isCapacity =
-                            category?.prod_type === 'Trim' ||
-                            category?.prod_type === 'Rollforming'
+                            category?.name === 'Trim' || category?.name === 'Rollforming'
 
                         return (
                             <AccordionItem
                                 className='mt-4 border bg-card px-4 rounded-md'
-                                value={category.prod_type}
+                                value={category.name}
                                 key={category.id}>
                                 <AccordionTrigger className='min-h-20 items-center flex'>
                                     <div className='flex flex-col gap-y-2 items-start'>
                                         <div className='flex gap-x-2'>
                                             <span className='text-sm font-semibold'>
-                                                {category.prod_type}
+                                                {category.name}
                                             </span>
                                             <Badge variant='outline'>
                                                 {category.flow_count} flows

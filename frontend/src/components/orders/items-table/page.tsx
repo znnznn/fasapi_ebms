@@ -29,8 +29,8 @@ export const ItemsTablePage = () => {
         date,
         dateRange,
         searchTerm,
-        isOrderCompleted
-        // overdue
+        isOrderCompleted,
+        overdue
     } = useAppSelector(selectOrders)
 
     useEffect(() => {
@@ -49,7 +49,7 @@ export const ItemsTablePage = () => {
         ordering: currentSortingTerm,
         search: searchTerm,
         production_date: date,
-        // over_due: overdue,
+        over_due: overdue,
         completed: isOrderCompleted,
         date_range: dateRangeToQuery,
         is_scheduled: scheduled,
@@ -80,8 +80,7 @@ export const ItemsTablePage = () => {
 
     const websocket = new WebSocket('wss://dev-ebms.fun/ws/items/', token.access)
 
-    websocket.addEventListener('message', (event) => {
-        console.log(event.data)
+    websocket.addEventListener('message', () => {
         refetch()
         api.util.invalidateTags(['EBMSItems'])
     })
