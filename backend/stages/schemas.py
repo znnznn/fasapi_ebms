@@ -27,6 +27,17 @@ class CommentSchema(BaseModel):
     text: str = Field(default=None)
     created_at: datetime = Field(default=None)
 
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    @field_validator('created_at')
+    @classmethod
+    def validate_created_at(cls, v: datetime):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d %H:%M:%S")
+
 
 class CommentPaginatedSchema(BaseModel):
     count: int
