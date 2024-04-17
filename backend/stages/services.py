@@ -77,6 +77,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         result = await self.db_session.scalar(smt)
         if not result:
             raise HTTPException(status_code=404, detail=f"{model.__name__} with autoid {autoid} not found")
+        return result
 
     async def count_query_objs(self, query) -> int:
         return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
@@ -242,6 +243,29 @@ class CommentsService(BaseService[Comment, CommentSchemaIn]):
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+
+    async def create(self, obj: CommentSchemaIn) -> ModelType:
+        obj = await self.root_validator(obj)
+        obj_data = obj.model_dump(exclude_none=True, exclude_unset=True)
+        origin_item = await self.validate_autoid(obj.item_id, Arinvdet)
+        item = await ItemsService(db_session=self.db_session).get_related_items_by_origin_items([origin_item.autoid])
+        if not item:
+            item = await ItemsService(
+                db_session=self.db_session
+            ).create(
+                ItemSchemaIn(origin_item=origin_item.autoid, order=origin_item.doc_aid)
+            )
+            obj_data["item_id"] = item.id
+        else:
+            obj_data["item_id"] = item[0].id
+        try:
+            stmt = self.model(**obj_data)
+            self.db_session.add(stmt)
+            await self.db_session.commit()
+            await self.db_session.refresh(stmt)
+        except (IntegrityError, AttributeError) as e:
+            raise HTTPException(status_code=400, detail=f"{self.model.__name__} not created {e}")
+        return stmt
 
 
 class ItemsService(BaseService[Item, ItemSchemaIn]):
