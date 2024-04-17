@@ -33,8 +33,8 @@ class CategoryPaginateSchema(BaseModel):
 
 class ArinvDetSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
-    category: str = Field(default=None)
-    description: str = Field(default=None, serialization_alias="description", alias="descr")
+    category: str | None = Field(default=None)
+    description: str | None = Field(default=None, serialization_alias="description", alias="descr")
     quantity: float = Field(default=0, serialization_alias='quantity', alias="quan")
     shipped: float = Field(default=0, serialization_alias="shipped", alias="ship")
     ship_date: date | None | str = Field(default=None, serialization_alias="ship_date")
