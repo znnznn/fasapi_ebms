@@ -14,6 +14,7 @@ from stages.schemas import (
     PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema, MultiUpdateItemSchema,
     MultiUpdateSalesOrderSchema
 )
+from stages.utils import GetDataForSending
 from users.mixins import IsAuthenticatedAs, active_user_with_permission
 from users.models import User
 from websockets_connection.managers import connection_manager
@@ -24,7 +25,6 @@ router = APIRouter()
 @router.post("/capacities/", response_model=CapacitySchema, tags=["capacity"])
 async def create_capacity(
         store: CapacitySchemaIn, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).create(store)
 
 
@@ -47,7 +47,6 @@ async def update_capacity(
         id: int, capacity: CapacitySchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).update(id, capacity)
 
 
@@ -57,7 +56,6 @@ async def partial_update_capacity(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     capacity = capacity.model_dump(exclude_unset=True)
-    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).partial_update(id, capacity)
 
 
@@ -65,7 +63,6 @@ async def partial_update_capacity(
 async def delete_capacity(
         id: int, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    await connection_manager.broadcast("items")
     return await CapacitiesService(db_session=session).delete(id)
 
 
@@ -96,7 +93,6 @@ async def update_stage(
         id: int, stage: StageSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).update(id, stage)
 
 
@@ -106,13 +102,11 @@ async def partial_update_stage(
         session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     stage = data.model_dump(exclude_unset=True)
-    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).partial_update(id, stage)
 
 
 @router.delete("/stages/{id}/", tags=["stage"])
 async def delete_stage(id: int, session: AsyncSession = Depends(get_async_session), user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    await connection_manager.broadcast("items")
     return await StagesService(db_session=session).delete(id)
 
 
@@ -140,8 +134,10 @@ async def create_comment(
         comment: CommentSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
-    return await CommentsService(db_session=session).create(comment)
+    instance = await CommentsService(db_session=session).create(comment)
+    item = await ItemsService(db_session=session).get(instance.item_id)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    return instance
 
 
 @router.put("/comments/{id}/", tags=["comments"], response_model=CommentSchema)
@@ -150,8 +146,10 @@ async def update_comment(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
-    return await CommentsService(db_session=session).update(id, comment)
+    instance = await CommentsService(db_session=session).update(id, comment)
+    item = await ItemsService(db_session=session).get(instance.item_id)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    return instance
 
 
 @router.patch("/comments/{id}/", tags=["comments"], response_model=CommentSchema)
@@ -161,8 +159,10 @@ async def partial_update_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
     comment = comment.model_dump(exclude_unset=True)
-    await connection_manager.broadcast("items")
-    return await CommentsService(db_session=session).partial_update(id, comment)
+    instance = await CommentsService(db_session=session).partial_update(id, comment)
+    item = await ItemsService(db_session=session).get(instance.item_id)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    return instance
 
 
 @router.delete("/comments/{id}/", tags=["comments"])
@@ -170,7 +170,9 @@ async def delete_comment(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
+    instance = await CommentsService(db_session=session).get(id)
+    item = await ItemsService(db_session=session).get(instance.item_id)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
     return await CommentsService(db_session=session).delete(id)
 
 
@@ -199,8 +201,10 @@ async def create_item(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
-    return await ItemsService(db_session=session).create(item)
+    instance = await ItemsService(db_session=session).create(item)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    return instance
 
 
 @router.put("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
@@ -212,8 +216,10 @@ async def update_item(
     if hasattr(item, "flow_id"):
         if not getattr(item, "stage_id", None):
             item.stage_id = None
-    await connection_manager.broadcast("items")
-    return await ItemsService(db_session=session).update(id, item)
+    instance = await ItemsService(db_session=session).update(id, item)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    return instance
 
 
 @router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
@@ -225,10 +231,15 @@ async def partial_update_item(
     if hasattr(item, "flow_id"):
         if not getattr(item, "stage_id", None):
             item.stage_id = None
+
     item = item.model_dump(exclude_unset=True)
-    await connection_manager.broadcast("items")
-    await connection_manager.broadcast("orders")
-    return await ItemsService(db_session=session).partial_update(id, item)
+
+    instance = await ItemsService(db_session=session).partial_update(id, item)
+    item_data = await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item)
+    order_data = await GetDataForSending(db_session=session).one_origin_order_object(instance.order)
+    await connection_manager.broadcast("items", item_data)
+    await connection_manager.broadcast("orders", order_data)
+    return instance
 
 
 @router.delete("/items/{id}/", tags=["items"])
@@ -236,7 +247,9 @@ async def delete_item(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
+    instance = await ItemsService(db_session=session).get(id)
+    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
     return await ItemsService(db_session=session).delete(id)
 
 
@@ -263,8 +276,9 @@ async def create_salesorder(
         salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    await connection_manager.broadcast("orders")
-    return await SalesOrdersService(db_session=session).create(salesorder)
+    instance = await SalesOrdersService(db_session=session).create(salesorder)
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    return instance
 
 
 @router.put("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
@@ -272,8 +286,9 @@ async def update_salesorder(
         id: int, salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    await connection_manager.broadcast("orders")
-    return await SalesOrdersService(db_session=session).update(id, salesorder)
+    instance = await SalesOrdersService(db_session=session).update(id, salesorder)
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    return instance
 
 
 @router.patch("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
@@ -283,8 +298,9 @@ async def partial_update_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
     salesorder = salesorder.model_dump(exclude_unset=True)
-    await connection_manager.broadcast("orders")
-    return await SalesOrdersService(db_session=session).partial_update(id, salesorder)
+    instance = await SalesOrdersService(db_session=session).partial_update(id, salesorder)
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    return instance
 
 
 @router.delete("/sales-orders/{id}/", tags=["sales-orders"])
@@ -292,7 +308,8 @@ async def delete_salesorder(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    await connection_manager.broadcast("orders")
+    instance = await SalesOrdersService(db_session=session).get(id)
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
     return await SalesOrdersService(db_session=session).delete(id)
 
 
@@ -361,8 +378,13 @@ async def multiupdate_items(
         items: MultiUpdateItemSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    await connection_manager.broadcast("items")
-    await connection_manager.broadcast("orders")
+    items_data_to_send = await GetDataForSending(db_session=session).get_items_by_autoids(items.origin_items)
+    orders_autoids = await ItemsService(db_session=session).get_orders_autoids_by_origin_items(items.origin_items)
+    orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(orders_autoids)
+    for item in items_data_to_send:
+        await connection_manager.broadcast("items", item)
+    for order in orders_data_to_send:
+        await connection_manager.broadcast("orders", order)
     return await ItemsService(db_session=session).multiupdate(items)
 
 
@@ -371,7 +393,9 @@ async def multiupdate_salesorders(
         salesorders: MultiUpdateSalesOrderSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    await connection_manager.broadcast("orders")
+    orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(salesorders.origin_orders)
+    for order in orders_data_to_send:
+        await connection_manager.broadcast("orders", order)
     return await SalesOrdersService(db_session=session).multiupdate(salesorders)
 
 

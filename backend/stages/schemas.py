@@ -75,7 +75,18 @@ class FlowSchema(BaseModel):
     position: int = Field(default=None)
     category_autoid: str = Field(default=None, serialization_alias="category")
     stages: List[StageSchema] | None
-    created_at: datetime = Field(default=None)
+    created_at: datetime | str = Field(default=None)
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    @field_validator('created_at')
+    @classmethod
+    def validate_created_at(cls, v: datetime):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
 
 
 class FlowSchemaIn(BaseModel):
@@ -104,8 +115,8 @@ class ItemSchema(BaseModel):
     origin_item: str = Field(default=None)
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
-    production_date: date | None = Field(default=None)
-    time: datetime_time | None = Field(default=None)
+    production_date: date | None | str = Field(default=None)
+    time: datetime_time | None | str = Field(default=None)
     packages: int | None = Field(default=None)
     location: int | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
@@ -114,6 +125,7 @@ class ItemSchema(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True
         allow_population_by_field_name = True
 
     @field_validator('packages', 'location')
@@ -121,6 +133,20 @@ class ItemSchema(BaseModel):
         if v is not None and v < 0:
             raise ValueError('Value must be greater than or equal to 0.')
         return v or 0
+
+    @field_validator('production_date')
+    @classmethod
+    def validate_production_date(cls, v: date):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
+
+    @field_validator('time')
+    @classmethod
+    def validate_time(cls, v: datetime_time):
+        if not v:
+            return v
+        return v.strftime("%H:%M:%S")
 
 
 class PaginatedItemSchema(BaseModel):
@@ -133,7 +159,7 @@ class ItemSchemaIn(BaseModel):
     origin_item: Optional[str] = Field(default=None)
     flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
-    production_date: Optional[date] = Field(default=None)
+    production_date: Optional[date | str] = Field(default=None)
     time: Optional[datetime_time] = Field(default=None)
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
@@ -165,8 +191,26 @@ class SalesOrderSchema(BaseModel):
     packages: int = Field(default=None)
     location: int = Field(default=None)
     priority: int = Field(default=None)
-    production_date: date | None = Field(default=None)
-    created_at: datetime | None = Field(default=None)
+    production_date: date | None | str = Field(default=None)
+    created_at: datetime | None | str = Field(default=None,)
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    @field_validator('production_date')
+    @classmethod
+    def validate_production_date(cls, v: date):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
+
+    @field_validator('created_at')
+    @classmethod
+    def validate_created_at(cls, v: datetime):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
 
 
 class SalesPaginatedSchema(BaseModel):

@@ -55,7 +55,7 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         }
 
     async def get(self, autoid: str) -> Optional[OriginModelType]:
-        stmt = select(self.model).where(self.model.autoid == autoid)
+        stmt = self.get_query().where(self.model.autoid == autoid)
         result = await self.db_session.scalars(stmt)
         try:
             return result.one()
@@ -64,6 +64,10 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
 
     async def list(self, kwargs: Optional[dict] = None) -> Sequence[OriginModelType]:
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query())
+        return objs.all()
+
+    async def get_listy_by_autoids(self, autoids: List[str]) -> Sequence[OriginModelType]:
+        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query().where(self.model.autoid.in_(autoids)))
         return objs.all()
 
     async def create(self, obj: InputSchemaType) -> OriginModelType:
@@ -153,6 +157,9 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         stmt = self.get_query().where(self.model.doc_aid.in_(autoids))
         objs = await self.db_session.scalars(stmt)
         return objs.all()
+
+    async def get_origin_item_with_item(self, autoid: str):
+        return await self.get(autoid)
 
 
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
@@ -250,6 +257,9 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             return result.one()
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
+
+    async def get_origin_order_with_sales_order(self, autoid: str) -> Optional[OriginModelType]:
+        return await self.get(autoid)
 
 
 class InventryService(BaseService[Inventry, InventrySchema]):

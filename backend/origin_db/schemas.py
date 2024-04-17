@@ -37,7 +37,7 @@ class ArinvDetSchema(BaseModel):
     description: str = Field(default=None, serialization_alias="description", alias="descr")
     quantity: float = Field(default=0, serialization_alias='quantity', alias="quan")
     shipped: float = Field(default=0, serialization_alias="shipped", alias="ship")
-    ship_date: date | None = Field(default=None, serialization_alias="ship_date")
+    ship_date: date | None | str = Field(default=None, serialization_alias="ship_date")
     width: float = Field(default=0, serialization_alias="width", alias="widthd")
     weight: float = Field(default=0, serialization_alias="weight")
     length: float = Field(default=0, serialization_alias="length", alias="heightd")
@@ -53,6 +53,7 @@ class ArinvDetSchema(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True
         # populate_by_name = True
 
     @field_validator('order')
@@ -60,21 +61,35 @@ class ArinvDetSchema(BaseModel):
     def validate_order(cls, v: str):
         return v.strip()
 
+    @field_validator('ship_date')
+    @classmethod
+    def validate_ship_date(cls, v: date):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
+
 
 class ArinvSchema(BaseModel):
     id: str = Field(default=None, alias="autoid", serialization_alias="id")
     customer: str = Field(default=None, serialization_alias="customer", alias="name")
     invoice: str = Field(default=None)
-    ship_date: date | None = Field(default=None, serialization_alias="ship_date")
+    ship_date: date | None | str = Field(default=None, serialization_alias="ship_date")
     c_name: str = Field(default=None, serialization_alias="c_name")
     c_city: str = Field(default=None, serialization_alias="c_city")
-    start_date: date | None = Field(default=None, serialization_alias="start_date")
-    end_date: date | None = Field(default=None, serialization_alias="end_date")
+    start_date: date | None | str = Field(default=None, serialization_alias="start_date")
+    end_date: date | None | str = Field(default=None, serialization_alias="end_date")
 
     @field_validator('invoice')
     @classmethod
     def validate_invoice(cls, v: str):
         return v.strip()
+
+    @field_validator('start_date', 'end_date', 'ship_date')
+    @classmethod
+    def validate_production_date(cls, v: date):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d")
 
 
 class ArinvRelatedArinvDetSchema(ArinvSchema):
@@ -85,6 +100,7 @@ class ArinvRelatedArinvDetSchema(ArinvSchema):
 
     class Config:
         orm_mode = True
+        from_attributes = True
         # populate_by_name = True
 
 
