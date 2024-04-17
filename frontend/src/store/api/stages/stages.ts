@@ -15,14 +15,14 @@ export const stage = api.injectEndpoints({
         getStages: build.query<StagesResponse, Partial<StagesQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `stages?${queryString}`
+                return `stages/?${queryString}`
             },
             providesTags: ['Stage']
         }),
         getAllStages: build.query<StagesData[], Partial<BaseQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `stages/all?${queryString}`
+                return `stages/all/?${queryString}`
             },
             providesTags: ['Stage']
         }),

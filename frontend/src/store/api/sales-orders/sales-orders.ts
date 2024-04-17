@@ -18,7 +18,7 @@ export const salesOrders = api.injectEndpoints({
         getSalesOrders: build.query<SalesOrdersResponse, Partial<BaseQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `sales-orders?${queryString}`
+                return `sales-orders/?${queryString}`
             },
             providesTags: ['SalesOrders']
         }),
@@ -42,7 +42,6 @@ export const salesOrders = api.injectEndpoints({
             }),
             async onQueryStarted({ data: { ...data } }, { dispatch, queryFulfilled }) {
                 const queryKeyParams = store.getState().orders.currentQueryParams
-
 
                 const patchResult = dispatch(
                     embs.util.updateQueryData(

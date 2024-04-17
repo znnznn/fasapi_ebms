@@ -6,6 +6,7 @@ import type {
     CalendarResponse,
     CategoriesQueryParams,
     CategoriesResponse,
+    EBMSItemPatchData,
     EBMSItemsQueryParams,
     EBMSItemsResponse,
     OrderItemsQueryParams,
@@ -26,7 +27,7 @@ export const embs = api.injectEndpoints({
         getCategories: build.query<CategoriesResponse, Partial<CategoriesQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `ebms/categories?${queryString}/`
+                return `ebms/categories/?${queryString}`
             },
             providesTags: ['Categories']
         }),
@@ -47,15 +48,23 @@ export const embs = api.injectEndpoints({
             query: (params) => {
                 const queryString = getQueryParamString(params)
 
-                return `ebms/items?${queryString}/`
+                return `ebms/items/?${queryString}`
             },
             providesTags: ['EBMSItems']
         }),
         getOrdersItems: build.query<OrdersItemsResponse, Partial<OrderItemsQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `ebms/orders-items?${queryString}/`
+                return `ebms/orders-items?${queryString}`
             }
+        }),
+        patchEBMSItem: build.mutation<void, EBMSItemPatchData>({
+            query: ({ data, id }) => ({
+                url: `ebms/items/${id}/`,
+                method: 'PATCH',
+                body: data
+            }),
+            invalidatesTags: ['Comments']
         })
     })
 })
@@ -68,5 +77,6 @@ export const {
     useGetAllCategoriesQuery,
     useGetOrdersQuery,
     useGetItemsQuery,
-    useGetOrdersItemsQuery
+    useGetOrdersItemsQuery,
+    usePatchEBMSItemMutation
 } = embs

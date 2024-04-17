@@ -49,7 +49,7 @@ export const WeekFilters = () => {
     }, [scheduled])
 
     return (
-        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 p-3'>
+        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1'>
             <ToggleGroup
                 key={defaultDate}
                 defaultValue={defaultDate}
@@ -80,7 +80,7 @@ const WeekFilter: React.FC<FormattedDate> = ({ date, dateToDisplay }) => {
     })
 
     const currentCategory = data?.results?.find(
-        (dataCategory) => dataCategory.prod_type === category
+        (dataCategory) => dataCategory.name === category
     )
 
     const { capacity, total_capacity } = currentCategory || {}

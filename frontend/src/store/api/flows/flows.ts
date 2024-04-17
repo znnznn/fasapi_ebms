@@ -14,7 +14,7 @@ export const flows = api.injectEndpoints({
         getFlows: build.query<FlowsResponse, Partial<FlowsQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `flows?${queryString}`
+                return `flows/?${queryString}`
             },
 
             providesTags: ['Flows']
@@ -22,7 +22,7 @@ export const flows = api.injectEndpoints({
         getAllFlows: build.query<FlowsData[], Partial<FlowsQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `flows/all?${queryString}`
+                return `flows/all/?${queryString}`
             },
             providesTags: ['Flows']
         }),

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CollapsibleTrigger } from '@/components/ui/collapsible'
 import { OrderDatePicker } from '@/components/ui/order-date-picker'
+import { OrderShipDatePicker } from '@/components/ui/order-shipdate-picker'
 import type { OrdersData } from '@/store/api/ebms/ebms.types'
 import { cn } from '@/utils/cn'
 import { getValidValue } from '@/utils/get-valid-value'
@@ -119,6 +120,30 @@ export const columns: ColumnDef<OrdersData>[] = [
                     date={date}
                     setDate={setDate}
                     itemId={row.original?.sales_order?.id}
+                    orderId={row.original.id}
+                />
+            )
+        }
+    },
+    {
+        accessorKey: 'ship_date',
+        header: ({ column }) => createHeader('Ship date', column, 'w-40'),
+        cell: ({ row }) => {
+            const shipDate = row.original?.ship_date
+            const [date, setDate] = useState<Date | undefined>(
+                shipDate ? new Date(shipDate) : undefined
+            )
+
+            useEffect(() => {
+                setDate(shipDate ? new Date(shipDate) : undefined)
+            }, [shipDate, row.original?.id])
+
+            return (
+                <OrderShipDatePicker
+                    disabled={row.original.completed}
+                    key={row.original?.id}
+                    date={date}
+                    setDate={setDate}
                     orderId={row.original.id}
                 />
             )

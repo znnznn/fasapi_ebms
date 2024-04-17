@@ -11,8 +11,9 @@ export const Categories: React.FC<Props> = ({ onValueChange }) => {
     const { data: categoriesData, isLoading } = useGetCategoriesQuery({})
 
     const filteredCategories = categoriesData?.results?.filter(
-        (category) => category.prod_type == 'Rollforming' || category.prod_type === 'Trim'
+        (category) => category.name == 'Rollforming' || category.name === 'Trim'
     )
+
     return (
         <Tabs onValueChange={onValueChange} defaultValue={'Rollforming'}>
             {isLoading ? (
@@ -20,11 +21,8 @@ export const Categories: React.FC<Props> = ({ onValueChange }) => {
             ) : (
                 <TabsList className='bg-secondary'>
                     {filteredCategories?.map((tab) => (
-                        <TabsTrigger
-                            className='flex-1'
-                            value={tab.prod_type}
-                            key={tab.prod_type}>
-                            {tab.prod_type}
+                        <TabsTrigger className='flex-1' value={tab.name} key={tab.name}>
+                            {tab.name}
                         </TabsTrigger>
                     ))}
                 </TabsList>

@@ -24,7 +24,7 @@ export const items = api.injectEndpoints({
         getItems: build.query<ItemsResponse, Partial<BaseQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `items${queryString}`
+                return `items/?${queryString}`
             },
 
             providesTags: ['Items']

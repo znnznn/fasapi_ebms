@@ -15,14 +15,14 @@ export const users = api.injectEndpoints({
         getUsers: build.query<UsersResponse, Partial<BaseQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `users?${queryString}`
+                return `users/?${queryString}`
             },
             providesTags: ['Users']
         }),
         getAllUsers: build.query<UsersData[], Partial<UserAllQueryParams>>({
             query: (params) => {
                 const queryString = getQueryParamString(params)
-                return `users/all?${queryString}`
+                return `users/all/?${queryString}`
             },
             providesTags: ['Users']
         }),

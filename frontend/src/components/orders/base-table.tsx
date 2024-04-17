@@ -12,6 +12,7 @@ import {
     TableRow
 } from '../ui/table'
 
+import { Filters } from './filters'
 import { columns } from './items-table/columns'
 import { WeekFilters } from './items-table/week-filters'
 import { Statuses } from './statuses'
@@ -38,7 +39,10 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
 
     return (
         <div className='rounded-md'>
-            <WeekFilters />
+            <div className='flex items-center justify-between gap-4 mb-3'>
+                <Filters />
+                <WeekFilters />
+            </div>
             <Statuses table={table} page='items' />
 
             <Table>
