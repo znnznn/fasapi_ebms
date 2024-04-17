@@ -46,7 +46,7 @@ class CommentPaginatedSchema(BaseModel):
 
 class CommentSchemaIn(BaseModel):
     user_id: Optional[int] = Field(default=None, alias="user")
-    item_id: Optional[int] = Field(default=None, alias="item")
+    item_id: Optional[str] = Field(default=None, alias="item")  # origin item autoid
     text: Optional[str] = Field(default=None)
 
     class Config:
@@ -71,6 +71,7 @@ class StageSchema(StageSchemaIn):
 
     class Config:
         orm_mode = True
+        from_attributes = True
         allow_population_by_field_name = True
 
 
