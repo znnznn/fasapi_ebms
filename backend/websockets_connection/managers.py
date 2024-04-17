@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from typing import List
 
@@ -29,9 +30,11 @@ class ConnectionManager:
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
-    async def broadcast(self, subscribe: str):
+    async def broadcast(self, subscribe: str, data_send: dict = None):
         print("broadcast")
         data = {"subscribe": subscribe}
+        if data_send:
+            data = data_send
         connections = await self.get_active_connections(subscribe)
         for connection in connections:
             await connection.send_json(data)

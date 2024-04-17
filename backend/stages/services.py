@@ -401,6 +401,11 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         objs = await self.db_session.execute(stmt)
         return objs.all()
 
+    async def get_orders_autoids_by_origin_items(self, autoids: list[str]):
+        stmt = select(self.model.order).where(self.model.origin_item.in_(autoids))
+        objs = await self.db_session.scalars(stmt)
+        return objs.all()
+
     async def get_related_items_by_order(self, autoids: list[str]):
         stmt = select(self.model).where(self.model.order.in_(autoids)).options(
             selectinload(self.model.stage),
