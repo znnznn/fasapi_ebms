@@ -72,7 +72,7 @@ export const OrderTablePage = () => {
         isOrderCompleted
     ])
 
-    const { currentData, isLoading, isFetching } = useGetOrdersQuery(queryParams)
+    const { currentData, isLoading, isFetching, refetch } = useGetOrdersQuery(queryParams)
 
     const [dataToRender, setDataToRender] = useState(currentData?.results || [])
 
@@ -90,6 +90,7 @@ export const OrderTablePage = () => {
         websocket.addEventListener('message', (event) => {
             const dataToPatch = JSON.parse(event.data) as OrdersData
 
+            refetch()
             setDataToRender((prevData) => {
                 const newData = prevData.map((item) => {
                     if (item.id === dataToPatch.id) {

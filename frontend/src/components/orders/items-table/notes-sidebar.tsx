@@ -110,7 +110,7 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
                                             <Avatar>
                                                 <AvatarFallback>
                                                     {getUserAvatarPlaceholder(
-                                                        note.user.email
+                                                        note?.user?.email ?? ''
                                                     )}
                                                 </AvatarFallback>
                                             </Avatar>

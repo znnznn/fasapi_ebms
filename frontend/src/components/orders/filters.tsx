@@ -63,7 +63,7 @@ export const Filters = () => {
                         Overdue
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem checked={done} onCheckedChange={setDone}>
-                        Done
+                        Completed
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
