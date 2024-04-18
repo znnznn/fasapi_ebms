@@ -28,12 +28,14 @@ class CommentFilter(RenameFieldFilter):
 class FlowFilter(RenameFieldFilter):
     order_by: Optional[List[str]] = Field(default=["id"], description="")
     flow: Optional[str] = None
+    category__prod_type: Optional[str] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Flow
         default_ordering = ['id']
         related_fields = {
             'flow': 'name',
+            'category__prod_type': 'category_autoid',
         }
 
 
@@ -41,6 +43,7 @@ class StageFilter(RenameFieldFilter):
     order_by: Optional[List[str]] = Field(default=["id"], description="")
     status: Optional[str] = None
     status_not_in: Optional[str] = None
+    flow: Optional[int] = None
 
     class Constants(RenameFieldFilter.Constants):
         model = Stage
@@ -48,6 +51,7 @@ class StageFilter(RenameFieldFilter):
         related_fields = {
             'status': 'name',
             'status_not_in': 'name__not_in',
+            'flow': 'id',
         }
 
 

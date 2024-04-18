@@ -109,6 +109,14 @@ class CategoryService(BaseService[Inprodtype, CategorySchema]):
             query = query.offset(offset)
         return query
 
+    async def get_category_autoid_by_name(self, name: str) -> Inprodtype:
+        smtp = self.get_query().where(self.model.prod_type == name)
+        result = await self.db_session.scalars(smtp)
+        try:
+            return result.one()
+        except NoResultFound:
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {name} not found")
+
 
 class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def __init__(

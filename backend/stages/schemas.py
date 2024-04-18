@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, root_validator, model_validator, field_validator
 
+from users.schemas import UserReadShortSchema
+
 
 class CapacitySchema(BaseModel):
     id: int = Field(default=None)
@@ -26,6 +28,25 @@ class CommentSchema(BaseModel):
     item_id: int = Field(default=None, serialization_alias="item")
     text: str = Field(default=None)
     created_at: datetime = Field(default=None)
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    @field_validator('created_at')
+    @classmethod
+    def validate_created_at(cls, v: datetime):
+        if not v:
+            return v
+        return v.strftime("%Y-%m-%d %H:%M:%S")
+
+
+class CommentSchemaOut(BaseModel):
+    id: int = Field(default=None)
+    item_id: int = Field(default=None, serialization_alias="item")
+    text: str = Field(default=None)
+    created_at: datetime = Field(default=None)
+    user: UserReadShortSchema = Field(default=None)
 
     class Config:
         orm_mode = True
@@ -132,7 +153,7 @@ class ItemSchema(BaseModel):
     packages: int | None = Field(default=None)
     location: int | None = Field(default=None)
     stage: StageSchema | None = Field(default=None)
-    comments: List[CommentSchema] | None
+    comments: List[CommentSchemaOut] | None
     completed: bool = Field(default=False)
 
     class Config:
