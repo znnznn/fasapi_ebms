@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.constants import Role
 from database import get_async_session
-from stages.filters import ItemFilter
+from origin_db.services import CategoryService
+from stages.filters import ItemFilter, StageFilter, FlowFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
@@ -70,9 +71,10 @@ async def delete_capacity(
 async def get_stages(
         limit: int = 10, offset: int = 0,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(active_user_with_permission)
+        user: User = Depends(active_user_with_permission),
+        stage_filter: StageFilter = FilterDepends(StageFilter),
 ):
-    result = await StagesService(db_session=session).paginated_list(limit=limit, offset=offset)
+    result = await StagesService(db_session=session, list_filter=stage_filter).paginated_list(limit=limit, offset=offset)
     return result
 
 
@@ -317,17 +319,25 @@ async def delete_salesorder(
 async def get_all_flows(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(active_user_with_permission),
+        flow_filter: FlowFilter = FilterDepends(FlowFilter),
 ):
-    result = await FlowsService(db_session=session).list()
+    if flow_filter.category__prod_type:
+        category = await CategoryService(db_session=session).get_category_autoid_by_name(flow_filter.category__prod_type)
+        flow_filter.category__prod_type = category.autoid or ''
+    result = await FlowsService(db_session=session, list_filter=flow_filter).list()
     return result
 
 
 @router.get("/flows/", tags=["flows"], response_model=FlowPaginatedSchema)
 async def get_flows(
         limit: int = 10, offset: int = 0, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(active_user_with_permission)
+        user: User = Depends(active_user_with_permission),
+        flow_filter: FlowFilter = FilterDepends(FlowFilter),
 ):
-    result = await FlowsService(db_session=session).paginated_list(limit=limit, offset=offset)
+    if flow_filter.category__prod_type:
+        category = await CategoryService(db_session=session).get_category_autoid_by_name(flow_filter.category__prod_type)
+        flow_filter.category__prod_type = category.autoid or ''
+    result = await FlowsService(db_session=session, list_filter=flow_filter).paginated_list(limit=limit, offset=offset)
     return result
 
 
