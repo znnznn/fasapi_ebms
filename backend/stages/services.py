@@ -57,6 +57,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         company_working_weekend = await self.db_session.scalars(select(CompanyProfile))
         company_working_weekend = company_working_weekend.first()
         company_working_weekend = company_working_weekend.working_weekend if company_working_weekend else False
+        if isinstance(production_date, str):
+            production_date = datetime.strptime(production_date, "%Y-%m-%d").date()
         if not company_working_weekend and production_date.isoweekday() > 5:
             raise HTTPException(status_code=400, detail="Production date cannot be on a weekend")
         return production_date
