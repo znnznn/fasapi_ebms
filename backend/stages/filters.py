@@ -54,6 +54,7 @@ class StageFilter(RenameFieldFilter):
 class ItemFilter(RenameFieldFilter):
     order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
+    production_date__lt: Optional[date] = None
     status: Optional[StageFilter] = FilterDepends(StageFilter)
     status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
     is_scheduled: Optional[bool] = None
@@ -81,6 +82,10 @@ class ItemFilter(RenameFieldFilter):
         join_tables = {
             'status': Stage,
             'flow': Flow,
+        }
+        order_by_related_fields = {
+            'flow': 'name',
+            'comments': 'count_comments',
         }
         excluded_fields = ('status', )
 
@@ -123,21 +128,21 @@ class ItemFilter(RenameFieldFilter):
                 pass
         if shift_date := fields.pop('timedelta', 0):
             today = datetime.now().date()
-            fields['production_date__gte'] = today
+            time_shift = today + timedelta(days=int(shift_date))
+            fields['production_date__gte'] = today.strftime('%Y-%m-%d')
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
         completed = fields.pop('completed', None)
         if isinstance(completed, bool):
-            fields['status'] = 'Done'
+            fields['status'] = {'status': 'Done'}
             fields['is_scheduled'] = True
             if not completed:
                 self.Constants.exclude = True
         over_due = fields.pop('over_due', None)
         if isinstance(over_due, bool):
             fields['production_date__lt'] = datetime.now().date()
-            fields['status_not_in'] = 'Done,'
+            fields['status_not_in'] = {'status_not_in':'Done'}
             if not over_due:
                 self.Constants.exclude = True
-
         return fields
 
 

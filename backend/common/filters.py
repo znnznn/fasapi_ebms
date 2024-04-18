@@ -29,6 +29,7 @@ class RenameFieldFilter(Filter):
     order_by: Optional[List[str]] = None
 
     class Constants(Filter.Constants):
+        extra = 'allow'
         model = None
         ordering_field_name = 'order_by'
         search_field_name = 'search'
@@ -121,9 +122,6 @@ class RenameFieldFilter(Filter):
         return order_by_field
 
     def filter(self, query: Union[Query, Select], **kwargs: Optional[dict]):
-        join_table = None
-        count_join = 0
-        joins = set()
         for field_name, value in self.filtering_fields:
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
@@ -156,7 +154,11 @@ class RenameFieldFilter(Filter):
         return query
 
     def sort(self, query: Union[Query, Select]):
+        print('query')
+        print(self.ordering_values)
+        print(self.__str__())
         if not self.ordering_values:
+            print('no ordering')
             return query
         else:
             self.Constants.do_ordering = True
@@ -166,8 +168,15 @@ class RenameFieldFilter(Filter):
             if field_name.startswith("-"):
                 direction = Filter.Direction.desc
             field_name = field_name.replace("-", "").replace("+", "")
-            field_name = self.order_by_related_field(field_name)
-            order_by_field = getattr(self.Constants.model, field_name)
+            need_join_table = self.get_join_table(field_name)
+            ordering_field_name = self.order_by_related_field(field_name)
+            if not need_join_table:
+                order_by_field = getattr(self.Constants.model, ordering_field_name)
+            else:
+                if need_join_table and not need_join_table in self.Constants.joins:
+                    query = query.join(need_join_table)
+                    self.Constants.joins.add(need_join_table)
+                order_by_field = getattr(need_join_table, ordering_field_name)
             query = query.order_by(getattr(order_by_field, direction)())
         return query
 
@@ -201,7 +210,6 @@ class RenameFieldFilter(Filter):
                 f"Field names can appear at most once for {cls.Constants.ordering_field_name}. "
                 f"The following was ambiguous: {ambiguous_field_names}."
             )
-
         return value
 
     @classmethod
@@ -221,5 +229,4 @@ class RenameFieldFilter(Filter):
                 field = field[1:]
                 symbol = '-'
             return symbol + field
-
         return [get_field(term) for term in fields if term_valid(term)]

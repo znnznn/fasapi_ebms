@@ -31,30 +31,21 @@ async def orders(
         session: AsyncSession = Depends(get_async_session),
         origin_order_filter: OrderFilter = FilterDepends(OrderFilter),
         sales_order_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter),
-        # item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(active_user_with_permission),
 
 ):
     if ordering:
-        filtter = sales_order_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
-        sales_order_filter = SalesOrderFilter(
-            order_by=ordering, **filtter
-        )
-        origin_order_filter = OrderFilter(
-            order_by=ordering, **origin_order_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
-        )
+        sales_order_filter.order_by = sales_order_filter.remove_invalid_fields(ordering)
+        origin_order_filter.order_by = origin_order_filter.remove_invalid_fields(ordering)
     filtering_sales_orders = await SalesOrdersService(
         db_session=session, list_filter=sales_order_filter
     ).get_filtering_origin_orders_autoids()
     extra_ordering = None
-    # filtering_fields = None
     if filtering_sales_orders:
-        filtering_fields = origin_order_filter.model_dump(exclude_unset=True, exclude_none=True)
         if sales_order_filter.is_exclude:
-            filtering_fields["autoid__not_in"] = filtering_sales_orders
+            origin_order_filter.autoid__not_in = filtering_sales_orders
         else:
-            filtering_fields["autoid__in"] = filtering_sales_orders
-        origin_order_filter = OrderFilter(**filtering_fields)
+            origin_order_filter.autoid__in = filtering_sales_orders
 
     if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
         filtering_sales_orders = await SalesOrdersService(
@@ -96,6 +87,12 @@ async def orders(
             else:
                 completed.append(False)
         i.completed = all(completed)
+    origin_order_filter.Constants.do_ordering = None
+    origin_order_filter.Constants.exclude = None
+    origin_order_filter.Constants.joins = set()
+    sales_order_filter.Constants.do_ordering = None
+    sales_order_filter.Constants.exclude = None
+    sales_order_filter.Constants.joins = set()
     return result
 
 
@@ -153,6 +150,12 @@ async def get_categories(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
+    category_filter.Constants.do_ordering = None
+    category_filter.Constants.exclude = None
+    category_filter.Constants.joins = set()
+    item_filter.Constants.do_ordering = None
+    item_filter.Constants.exclude = None
+    item_filter.Constants.joins = set()
     return result
 
 
@@ -180,6 +183,12 @@ async def get_categories_all(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
+    category_filter.Constants.do_ordering = None
+    category_filter.Constants.exclude = None
+    category_filter.Constants.joins = set()
+    item_filter.Constants.do_ordering = None
+    item_filter.Constants.exclude = None
+    item_filter.Constants.joins = set()
     return result
 
 
@@ -192,23 +201,15 @@ async def get_items(
         user: User = Depends(active_user_with_permission),
 ):
     if ordering:
-        if ItemFilter.remove_invalid_fields(ordering):
-            item_filter = ItemFilter(
-                order_by=ordering, **item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
-            )
-        if OriginItemFilter.remove_invalid_fields(ordering):
-            origin_item_filter = OriginItemFilter(
-                order_by=ordering, **origin_item_filter.model_dump(exclude_unset=True, exclude_none=True, exclude_defaults=True)
-            )
+        item_filter.order_by = ItemFilter.remove_invalid_fields(ordering)
+        origin_item_filter.order_by = OriginItemFilter.remove_invalid_fields(ordering)
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
     extra_ordering = None
     if filtering_items:
-        filtering_fields = origin_item_filter.model_dump(exclude_unset=True, exclude_none=True)
         if item_filter.is_exclude:
-            filtering_fields["autoid__not_in"] = filtering_items
+            origin_item_filter.autoid__not_in = filtering_items
         else:
-            filtering_fields["autoid__in"] = filtering_items
-        origin_item_filter = OriginItemFilter(**filtering_fields)
+            origin_item_filter.autoid__in = filtering_items
     if not item_filter.is_filtering_values and item_filter.order_by:
         filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
     if item_filter.order_by:
@@ -230,6 +231,12 @@ async def get_items(
             origin_item.completed = item.completed
         if item := items_data.get(origin_item.autoid):
             origin_item.item = item
+    origin_item_filter.Constants.do_ordering = None
+    origin_item_filter.Constants.exclude = None
+    origin_item_filter.Constants.joins = set()
+    item_filter.Constants.do_ordering = None
+    item_filter.Constants.exclude = None
+    item_filter.Constants.joins = set()
     return result
 
 
@@ -270,8 +277,6 @@ async def partial_update_item(
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
-    else:
-        print(response.text)
     return {"message": response.json()}
 
 
