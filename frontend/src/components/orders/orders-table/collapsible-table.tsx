@@ -56,11 +56,7 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                         table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header, i) =>
-                                    i === 1 ? (
-                                        <TableHead className='!w-2' key={header.id}>
-                                            {''}
-                                        </TableHead>
-                                    ) : i === 0 ? (
+                                    i === 0 ? (
                                         <TableHead className='w-10' key={header.id}>
                                             {header.isPlaceholder
                                                 ? null

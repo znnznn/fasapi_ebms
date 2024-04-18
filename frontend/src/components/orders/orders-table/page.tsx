@@ -6,9 +6,8 @@ import { selectOrders, setCurrentQueryParams } from '../store/orders'
 import { columns } from './columns'
 import { OrdersTable } from './table'
 import { usePagination } from '@/hooks/use-pagination'
-import { api } from '@/store/api'
 import { useGetOrdersQuery } from '@/store/api/ebms/ebms'
-import type { OrdersQueryParams } from '@/store/api/ebms/ebms.types'
+import type { OrdersData, OrdersQueryParams } from '@/store/api/ebms/ebms.types'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/hooks'
 import { AccessToken } from '@/types/auth'
 
@@ -23,7 +22,7 @@ export const OrderTablePage = () => {
 
     const dispatch = useAppDispatch()
 
-    // const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
+    const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
 
     const {
         category,
@@ -47,7 +46,7 @@ export const OrderTablePage = () => {
         limit,
         is_scheduled: scheduled,
         completed: isOrderCompleted,
-        // ordering: currentSortingTerm,
+        ordering: currentSortingTerm,
         over_due: overdue,
         search: searchTerm
     }
@@ -65,20 +64,40 @@ export const OrderTablePage = () => {
         isOrderCompleted
     ])
 
-    const { currentData, isLoading, isFetching, refetch } = useGetOrdersQuery(queryParams)
+    const { currentData, isLoading, isFetching } = useGetOrdersQuery(queryParams)
+
+    const [dataToRender, setDataToRender] = useState(currentData?.results || [])
+
+    useEffect(() => {
+        setDataToRender(currentData?.results || [])
+    }, [currentData])
 
     const token = JSON.parse(
         localStorage.getItem('token') || sessionStorage.getItem('token') || 'null'
     ) as AccessToken
 
-    const websocket = new WebSocket('wss://api.dev-ebms.fun/ws/orders/', token.access)
+    useEffect(() => {
+        const websocket = new WebSocket('wss://api.dev-ebms.fun/ws/orders/', token.access)
 
-    websocket.addEventListener('message', () => {
-        console.log('something happened')
+        websocket.addEventListener('message', (event) => {
+            const dataToPatch = JSON.parse(event.data) as OrdersData
 
-        refetch()
-        api.util.invalidateTags(['Orders'])
-    })
+            setDataToRender((prevData) => {
+                const newData = prevData.map((item) => {
+                    if (item.id === dataToPatch.id) {
+                        return dataToPatch
+                    } else {
+                        return item
+                    }
+                })
+                return newData
+            })
+        })
+
+        return () => {
+            websocket.close()
+        }
+    }, [])
 
     const pageCount = Math.ceil(currentData?.count! / limit)
 
@@ -89,7 +108,7 @@ export const OrderTablePage = () => {
                 limit={limit}
                 offset={offset}
                 columns={columns}
-                data={currentData?.results! || []}
+                data={dataToRender}
                 pageCount={pageCount}
                 setSorting={setSorting}
                 sorting={sorting}
