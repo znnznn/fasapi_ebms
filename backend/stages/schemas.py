@@ -124,7 +124,7 @@ class FlowPaginatedSchema(BaseModel):
 class ItemSchema(BaseModel):
     id: int = Field(default=None)
     order: str | None = Field(default=None)
-    origin_item: str = Field(default=None)
+    origin_item: str | None = Field(default=None)
     flow: FlowSchema | None = Field(default=None)
     priority: int = Field(default=None)
     production_date: date | None | str = Field(default=None)
@@ -171,7 +171,7 @@ class ItemSchemaIn(BaseModel):
     origin_item: Optional[str] = Field(default=None)
     flow_id: Optional[int] = Field(default=None, alias="flow")
     priority: Optional[int] = Field(default=None)
-    production_date: Optional[date | str] = Field(default=None)
+    production_date: Optional[date] = Field(default=None)
     time: Optional[datetime_time] = Field(default=None)
     packages: Optional[int] = Field(default=None)
     location: Optional[int] = Field(default=None)
