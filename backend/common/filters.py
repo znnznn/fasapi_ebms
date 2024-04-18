@@ -154,9 +154,6 @@ class RenameFieldFilter(Filter):
         return query
 
     def sort(self, query: Union[Query, Select]):
-        print('query')
-        print(self.ordering_values)
-        print(self.__str__())
         if not self.ordering_values:
             print('no ordering')
             return query
