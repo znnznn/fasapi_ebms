@@ -170,7 +170,7 @@ class Arinvdet(Base):
     costs: Mapped[float] = mapped_column('COSTS', DECIMAL)
     tax_group: Mapped[str] = mapped_column('TAX_GROUP', String)
     exm_overid: Mapped[str] = mapped_column('EXM_OVERID', String)
-    ship_date: Mapped[DATE] = mapped_column('SHIP_DATE', TIMESTAMP)
+    ship_date: Mapped[DATE] = mapped_column('SHIP_DATE', Date)
     weight: Mapped[float] = mapped_column('WEIGHT', DECIMAL)
     print: Mapped[bool] = mapped_column('PRINT', Boolean)
     ap_partime: Mapped[str] = mapped_column('AP_PARTIME', String)

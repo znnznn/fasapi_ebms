@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME
+from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME, select, func, case
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -56,6 +56,20 @@ class Item(DefaultBase):
     @hybrid_property
     def stage_name(self):
         return self.stage.name
+
+    @hybrid_property
+    def count_comments(self):
+        return len(self.comments)
+
+    @count_comments.expression
+    def count_comments(self):
+        return select(
+            func.count(Comment.id)
+        ).where(
+            Comment.item_id == self.id
+        ).correlate_except(
+            Comment
+        ).scalar_subquery()
 
 
 class Comment(DefaultBase):
