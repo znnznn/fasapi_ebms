@@ -82,7 +82,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'production_date',
-        header: ({ column }) => createHeader('Prod. date', column, '!w-[144px]'),
+        header: ({ column }) => createHeader('Prod. date', column, '!w-40'),
         cell: ({ row }) => {
             const [date, setDate] = useState<Date | undefined>(
                 row.original.item?.production_date!

@@ -21,7 +21,7 @@ export function Statuses<TData>({ table, page }: Props<TData>) {
 
     return (
         <div className='flex items-start justify-between flex-wrap gap-5 w-full py-2 border-t border-t-input'>
-            <div className='flex items-center flex-wrap  justify-between gap-6'>
+            <div className='flex items-center flex-wrap justify-between gap-6 max-sm:w-full'>
                 <Tabs
                     key={category}
                     onValueChange={onValueChange}

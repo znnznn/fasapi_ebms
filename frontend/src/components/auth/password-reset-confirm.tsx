@@ -35,9 +35,9 @@ export const PasswordResetConfirm = () => {
     })
 
     const successToast = () =>
-        toast.success('Password reset confimation', {
+        toast.success('Password reset confirmation', {
             description:
-                'Password reset confimation successfull! You can now login with your new password!'
+                'Password reset confirmation successful! You can now login with your new password!'
         })
 
     const errorToast = (message: string) =>

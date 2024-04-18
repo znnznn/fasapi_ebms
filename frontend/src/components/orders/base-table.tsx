@@ -39,7 +39,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
 
     return (
         <div className='rounded-md'>
-            <div className='flex items-center justify-between gap-4 mb-3'>
+            <div className='flex flex-wrap items-center justify-between gap-4 mb-3'>
                 <Filters />
                 <WeekFilters />
             </div>
@@ -56,17 +56,8 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                     ) : (
                         table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header, i) => {
-                                    return i === 0 ? (
-                                        <TableHead className='w-10' key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef.header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    ) : (
+                                {headerGroup.headers.map((header) => {
+                                    return (
                                         <TableHead
                                             draggable={
                                                 !table.getState().columnSizingInfo

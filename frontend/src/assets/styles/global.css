@@ -83,6 +83,21 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
+    *::-webkit-scrollbar {
+        height: 0px;
+        width: 0px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    /* Handle */
+    *::-webkit-scrollbar-thumb {
+        background: #afafaf;
+        border-radius: 5px;
+    }
 }
 
 @layer utilities {

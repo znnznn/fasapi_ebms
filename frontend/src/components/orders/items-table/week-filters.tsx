@@ -48,28 +48,19 @@ export const WeekFilters = () => {
         }
     }, [scheduled])
 
-    return (
-        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1'>
+    return (category === 'Rollforming' || category === 'Trim') && scheduled ? (
+        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 overflow-x-scroll'>
             <ToggleGroup
                 key={defaultDate}
                 defaultValue={defaultDate}
                 onValueChange={onValueChange}
                 type='single'>
-                {/* <ToggleGroupItem
-                    variant='outline'
-                    value='overdue'
-                    className='border transition-all hover:border-orange-500 hover:text-orange-500 data-[state=on]:bg-transparent hover:bg-transparent  text-[13px] h-[43px]  data-[state=on]:text-orange-500 data-[state=on]:border-orange-500'
-                    aria-label='Toggle overdue'>
-                    Overdue
-                </ToggleGroupItem> */}
-                {(category === 'Rollforming' || category === 'Trim') && scheduled
-                    ? currentWeeksDates.map((date) => (
-                          <WeekFilter key={date.date} {...date} />
-                      ))
-                    : null}
+                {currentWeeksDates.map((date) => (
+                    <WeekFilter key={date.date} {...date} />
+                ))}
             </ToggleGroup>
         </div>
-    )
+    ) : null
 }
 
 const WeekFilter: React.FC<FormattedDate> = ({ date, dateToDisplay }) => {

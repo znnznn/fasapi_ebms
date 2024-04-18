@@ -49,13 +49,17 @@ export const columns: ColumnDef<OrdersData>[] = [
         enableHiding: false
     },
     {
-        header: '',
+        header: () => (
+            <Button variant='ghost' className='w-full'>
+                <div className='h-4 w-4 flex-shrink-0' />
+            </Button>
+        ),
         id: 'arrow',
         enableHiding: false,
         cell: ({ row }) => (
             <CollapsibleTrigger
                 asChild
-                className='data-[state=open]:-rotate-90 transition-transform duration-15'
+                className='data-[state=open]:-rotate-90 transition-transform duration-15 '
                 disabled={!row.original?.origin_items?.length}>
                 <Button variant='ghost' size='icon'>
                     <ChevronDown
