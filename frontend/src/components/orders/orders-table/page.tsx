@@ -45,10 +45,18 @@ export const OrderTablePage = () => {
         offset,
         limit,
         is_scheduled: scheduled,
-        completed: isOrderCompleted,
+        // completed: isOrderCompleted,
         ordering: currentSortingTerm,
-        over_due: overdue,
+        // over_due: overdue,
         search: searchTerm
+    }
+
+    if (scheduled) {
+        queryParams.is_scheduled = scheduled
+    }
+
+    if (overdue) {
+        queryParams.over_due = overdue
     }
 
     useEffect(() => {

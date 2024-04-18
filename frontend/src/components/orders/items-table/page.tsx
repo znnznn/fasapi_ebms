@@ -48,11 +48,19 @@ export const ItemsTablePage = () => {
         ordering: currentSortingTerm,
         search: searchTerm,
         production_date: date,
-        over_due: overdue,
-        completed: isOrderCompleted,
+        // over_due: overdue,
+        // completed: isOrderCompleted,
         date_range: dateRangeToQuery,
         is_scheduled: scheduled,
         category: category!
+    }
+
+    if (scheduled) {
+        queryParams.is_scheduled = scheduled
+    }
+
+    if (overdue) {
+        queryParams.over_due = overdue
     }
 
     const dispatch = useAppDispatch()
