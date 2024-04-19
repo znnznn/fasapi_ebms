@@ -51,7 +51,7 @@ class StageFilter(RenameFieldFilter):
         related_fields = {
             'status': 'name',
             'status_not_in': 'name__not_in',
-            'flow': 'id',
+            'flow': 'flow_id',
         }
 
 

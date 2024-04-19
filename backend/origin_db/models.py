@@ -1,12 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Integer, String, TIMESTAMP, Boolean, BINARY, DECIMAL, ForeignKey, Date, DATE
+    Integer, String, TIMESTAMP, Boolean, BINARY, DECIMAL, ForeignKey, Date, DATE, select, func
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from common.models import EBMSBase as Base
+from settings import FILTERING_DATA_STARTING_YEAR, LIST_EXCLUDED_PROD_TYPES
 
 
 class Arinv(Base):
@@ -125,12 +126,30 @@ class Arinv(Base):
     man_usetax: Mapped[bool] = mapped_column("MAN_USETAX", Boolean)
     externalid: Mapped[str] = mapped_column("EXTERNALID", String)
     p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL)
-    details = relationship('Arinvdet', back_populates="order", innerjoin=True, primaryjoin='Arinv.autoid == Arinvdet.doc_aid')
+    details = relationship('Arinvdet', back_populates="order", innerjoin=True, primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
     _sales_order = None
 
     @hybrid_property
     def count_items(self):
         return len(self.details)
+
+    @count_items.expression
+    def count_items(self):
+        return select(
+            func.count(Arinvdet.doc_aid).label('count_items')
+        ).where(
+            Arinvdet.doc_aid == self.autoid,
+            Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+            # Arinvdet.category != None,
+            Arinvdet.category != '',
+            Arinvdet.category != 'Vents',
+            # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+            Arinvdet.par_time == '',
+            Arinvdet.inven != None,
+            Arinvdet.inven != '',
+        ).correlate_except(
+            Arinvdet
+        ).scalar_subquery()
 
     @hybrid_property
     def sales_order(self):
@@ -230,6 +249,10 @@ class Arinvdet(Base):
     @hybrid_property
     def category(self):
         return self.rel_inventry.prod_type
+
+    @category.expression
+    def category(cls):
+        return select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
     @hybrid_property
     def profile(self):

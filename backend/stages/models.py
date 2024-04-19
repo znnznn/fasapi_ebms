@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME, select, func, case
+from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME, select, func, case, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -54,8 +54,35 @@ class Item(DefaultBase):
         'SalesOrder', back_populates="items", primaryjoin='Item.order == SalesOrder.order', foreign_keys=order)
 
     @hybrid_property
+    def over_due(self):
+        return self.production_date < datetime.now().date()
+
+    @over_due.expression
+    def over_due(cls):
+        return case(
+            (and_(
+                func.current_date() > Item.production_date, Item.stage.name != "Done"), True),
+            else_=False
+        ).label('over_due')
+
+    @hybrid_property
     def stage_name(self):
         return self.stage.name
+
+    @stage_name.expression
+    def stage_name(cls):
+        return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery()
+
+    @hybrid_property
+    def completed(self):
+        return False
+
+    @completed.expression
+    def completed(cls):
+        return case(
+            (Item.stage.name == "Done", True),
+            else_=False
+        ).label('completed')
 
     @hybrid_property
     def count_comments(self):
