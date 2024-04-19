@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,6 +35,8 @@ async def orders(
         user: User = Depends(active_user_with_permission),
 
 ):
+    print('orders')
+    time_start = time.time()
     if ordering:
         sales_order_filter.order_by = sales_order_filter.remove_invalid_fields(ordering)
         origin_order_filter.order_by = origin_order_filter.remove_invalid_fields(ordering)
@@ -58,11 +61,8 @@ async def orders(
     result = await OriginOrderService(
         db_session=session, list_filter=origin_order_filter
     ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
+    print('connected to ebms', time.time() - time_start)
     autoids = [i.autoid for i in result["results"]]
-    origin_items = await OriginItemService(db_session=session).list_by_orders(autoids=autoids)
-    origin_items_data = defaultdict(list)
-    for i in origin_items:
-        origin_items_data[i.doc_aid].append(i)
     items_dates = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
     sales_orders = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
     items_dates = {i.order: i for i in items_dates}
@@ -77,8 +77,6 @@ async def orders(
             i.completed = order.completed
         if order := sales_order_data.get(i.autoid):
             i.sales_order = order
-        if joined_items := origin_items_data.get(i.autoid):
-            i.details = joined_items
         for detail in i.details:
             if item := items.get(detail.autoid):
                 detail.completed = True if item.production_date and item.stage and item.stage.name == 'Done' else False
@@ -93,6 +91,7 @@ async def orders(
     sales_order_filter.Constants.do_ordering = None
     sales_order_filter.Constants.exclude = None
     sales_order_filter.Constants.joins = set()
+    print(time.time() - time_start)
     return result
 
 
@@ -200,6 +199,8 @@ async def get_items(
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(active_user_with_permission),
 ):
+    print('items')
+    time_start = time.time()
     if ordering:
         item_filter.order_by = ItemFilter.remove_invalid_fields(ordering)
         origin_item_filter.order_by = OriginItemFilter.remove_invalid_fields(ordering)
@@ -221,6 +222,7 @@ async def get_items(
     ).list(
         limit=limit, offset=offset, extra_ordering=extra_ordering
     )
+    print('connected to ebms', time.time() - time_start)
     autoids = [i.autoid for i in result["results"]]
     items_statistic = await ItemsService(db_session=session).group_by_item_statistics(autoids=autoids)
     related_items = await ItemsService(db_session=session).get_related_items_by_origin_items(autoids=autoids)
@@ -237,6 +239,7 @@ async def get_items(
     item_filter.Constants.do_ordering = None
     item_filter.Constants.exclude = None
     item_filter.Constants.joins = set()
+    print(time.time() - time_start)
     return result
 
 

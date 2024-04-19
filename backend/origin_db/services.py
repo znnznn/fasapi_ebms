@@ -6,7 +6,7 @@ from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, Query
+from sqlalchemy.orm import selectinload, Query, contains_eager
 
 from common.constants import InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
@@ -136,8 +136,10 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 self.model.par_time == '',
+                self.model.category != '',
+                self.model.category != 'Vents',
                 self.model.inven != None,
                 self.model.inven != '',
             ),
@@ -184,29 +186,6 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     #     return {"count": count, "results": objs.all()}
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
-        # det = select(
-        #     Arinvdet, Inventry.prod_type
-        # ).join(
-        #     Arinvdet.rel_inventry
-        # ).join(
-        #     Arinvdet.order
-        # ).where(
-        #     and_(
-        #         Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-        #         Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-        #         Inventry.prod_type.isnot(None),
-        #         Arinvdet.par_time == '',
-        #         Arinvdet.inven != None,
-        #         Arinvdet.inven != '',
-        #     ),
-        # ).options(
-        #     selectinload(Arinvdet.rel_inventry),
-        #     selectinload(Arinvdet.order),
-        # ).group_by(
-        #     Arinvdet
-        # ).subquery()
-        # sbq = aliased(Arinvdet, det, name="details")
-        # ).scalar_subquery().correlate(Inventry)
         query = select(
             self.model,
         ).where(
@@ -216,19 +195,11 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             self.model.details,
         ).join(
             Inventry
-        ).where(
-            and_(
-                Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                # Arinvdet.autoid.in_(det),
-                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-                Inventry.prod_type.isnot(None),
-                Arinvdet.par_time == '',
-            ),
         ).options(
             # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
-            self.model
+            self.model,
         )
         # print(query.compile(compile_kwargs={"literal_binds": True}))
         if self.filter:
