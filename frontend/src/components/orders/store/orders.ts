@@ -7,7 +7,7 @@ import type {
 } from '@/store/api/ebms/ebms.types'
 import type { FlowsData } from '@/store/api/flows/flows.types'
 
-type QueryKeyParams = Partial<OrdersQueryParams | EBMSItemsQueryParams>
+type QueryKeyParams = Partial<OrdersQueryParams | EBMSItemsQueryParams> | {}
 
 interface State {
     isOrderCompleted: boolean
@@ -15,9 +15,8 @@ interface State {
     scheduled: boolean
     overdue: boolean
     date: string
-    dateRange: [string, string]
     searchTerm: string
-    currentQueryParams: QueryKeyParams | {}
+    currentQueryParams: QueryKeyParams
     currentCapacity: Capacity
     flowsData: FlowsData[]
 }
@@ -27,7 +26,6 @@ const initialState: State = {
     category: '',
     overdue: false,
     scheduled: false,
-    dateRange: ['', ''],
     date: '',
     searchTerm: '',
     flowsData: [],
@@ -63,14 +61,8 @@ export const ordersSlice = createSlice({
         },
         setDate(state, action: PayloadAction<string>) {
             state.date = action.payload
-
-            state.dateRange = ['', '']
         },
-        setDateRange(state, action: PayloadAction<[string, string]>) {
-            state.dateRange = action.payload
 
-            state.date = ''
-        },
         setOverDue(state, action: PayloadAction<boolean>) {
             state.overdue = action.payload
         },
@@ -97,7 +89,6 @@ export const {
     resetAllOrders,
     setScheduled,
     setDate,
-    setDateRange,
     setSearch,
     setFlowsData,
     setCurrentCapacity

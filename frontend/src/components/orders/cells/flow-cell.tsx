@@ -78,7 +78,10 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
     }
 
     return (
-        <Select key={flowId} defaultValue={defalueValue} onValueChange={onValueChange}>
+        <Select
+            key={defalueValue}
+            defaultValue={defalueValue}
+            onValueChange={onValueChange}>
             <SelectTrigger className='w-40 text-left'>
                 <SelectValue placeholder='Select flow' />
             </SelectTrigger>

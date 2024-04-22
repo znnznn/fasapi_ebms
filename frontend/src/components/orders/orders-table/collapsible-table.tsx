@@ -9,7 +9,6 @@ import {
     TableHeader,
     TableRow
 } from '../../ui/table'
-import { Filters } from '../filters'
 import { columns } from '../items-table/columns'
 import { WeekFilters } from '../items-table/week-filters'
 import { Statuses } from '../statuses'
@@ -37,10 +36,6 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
 
     return (
         <div className='rounded-md'>
-            <div className='mb-3'>
-                <Filters />
-            </div>
-
             <WeekFilters />
             <Statuses table={table} page='orders' />
 

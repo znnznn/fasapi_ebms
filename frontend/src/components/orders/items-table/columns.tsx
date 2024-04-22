@@ -74,7 +74,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         header: ({ column }) => createHeader('Status', column, '!w-40'),
         cell: ({ row }) => (
             <StatusCell
-                key={row?.original?.id}
+                key={row?.original?.id + row?.original?.item?.stage?.name}
                 item={row.original.item}
                 originOrderId={row.original.origin_order}
             />
@@ -116,8 +116,9 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         cell: ({ row }) => {
             return (
                 <TimePicker
-                    // isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    isDisabled={!row.original.item?.flow?.id || row.original.completed}
                     item={row?.original?.item}
+                    key={row?.original?.item?.id + row?.original?.item?.time!}
                     originItemId={row.original?.id}
                     orderId={row.original.origin_order}
                 />

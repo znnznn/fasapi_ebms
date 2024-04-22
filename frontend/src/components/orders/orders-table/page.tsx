@@ -24,15 +24,8 @@ export const OrderTablePage = () => {
 
     const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
 
-    const {
-        category,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted,
-        overdue
-    } = useAppSelector(selectOrders)
+    const { category, scheduled, date, searchTerm, isOrderCompleted, overdue } =
+        useAppSelector(selectOrders)
 
     useEffect(() => {
         setPagination({
@@ -45,14 +38,12 @@ export const OrderTablePage = () => {
         offset,
         limit,
         is_scheduled: scheduled,
-        // completed: isOrderCompleted,
         ordering: currentSortingTerm,
-        // over_due: overdue,
         search: searchTerm
     }
 
-    if (scheduled) {
-        queryParams.is_scheduled = scheduled
+    if (isOrderCompleted) {
+        queryParams.completed = isOrderCompleted
     }
 
     if (overdue) {
@@ -61,18 +52,9 @@ export const OrderTablePage = () => {
 
     useEffect(() => {
         dispatch(setCurrentQueryParams(queryParams as OrdersQueryParams))
-    }, [
-        category,
-        limit,
-        offset,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted
-    ])
+    }, [category, limit, offset, scheduled, date, searchTerm, isOrderCompleted])
 
-    const { currentData, isLoading, isFetching } = useGetOrdersQuery(queryParams)
+    const { currentData, isLoading, isFetching, refetch } = useGetOrdersQuery(queryParams)
 
     const [dataToRender, setDataToRender] = useState(currentData?.results || [])
 
@@ -90,6 +72,7 @@ export const OrderTablePage = () => {
         websocket.addEventListener('message', (event) => {
             const dataToPatch = JSON.parse(event.data) as OrdersData
 
+            refetch()
             setDataToRender((prevData) => {
                 const newData = prevData.map((item) => {
                     if (item.id === dataToPatch.id) {

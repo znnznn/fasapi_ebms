@@ -26,10 +26,9 @@ export const ItemsTablePage = () => {
         category,
         scheduled,
         date,
-        dateRange,
         searchTerm,
-        isOrderCompleted,
-        overdue
+        isOrderCompleted
+        // overdue
     } = useAppSelector(selectOrders)
 
     useEffect(() => {
@@ -39,9 +38,6 @@ export const ItemsTablePage = () => {
         })
     }, [category])
 
-    const [fromDate, toDate] = dateRange
-    const dateRangeToQuery = fromDate && toDate ? `${fromDate},${toDate}` : ''
-
     const queryParams: Partial<EBMSItemsQueryParams> = {
         offset,
         limit,
@@ -49,36 +45,26 @@ export const ItemsTablePage = () => {
         search: searchTerm,
         production_date: date,
         // over_due: overdue,
-        // completed: isOrderCompleted,
-        date_range: dateRangeToQuery,
+        completed: isOrderCompleted,
         is_scheduled: scheduled,
         category: category!
     }
 
-    if (scheduled) {
-        queryParams.is_scheduled = scheduled
-    }
+    // if (scheduled) {
+    //     queryParams.is_scheduled = scheduled
+    // }
 
-    if (overdue) {
-        queryParams.over_due = overdue
-    }
+    // if (overdue) {
+    //     queryParams.over_due = overdue
+    // }
 
     const dispatch = useAppDispatch()
 
     useEffect(() => {
         dispatch(setCurrentQueryParams(queryParams as EBMSItemsQueryParams))
-    }, [
-        category,
-        limit,
-        offset,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted
-    ])
+    }, [category, limit, offset, scheduled, date, searchTerm, isOrderCompleted])
 
-    const { currentData, isLoading, isFetching } = useGetItemsQuery(queryParams)
+    const { currentData, isLoading, isFetching, refetch } = useGetItemsQuery(queryParams)
     const pageCount = Math.ceil(currentData?.count! / limit)
 
     const [dataToRender, setDataToRender] = useState(currentData?.results || [])
@@ -96,6 +82,7 @@ export const ItemsTablePage = () => {
 
         websocket.addEventListener('message', (event) => {
             const dataToPatch = JSON.parse(event.data) as EBMSItemsData
+            refetch()
 
             setDataToRender((prevData) => {
                 const newData = prevData.map((item) => {

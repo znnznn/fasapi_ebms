@@ -1,5 +1,5 @@
 import { Skeleton } from '@radix-ui/themes'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Progress } from '../../ui/progress'
 import { ToggleGroup, ToggleGroupItem } from '../../ui/toggle-group'
@@ -24,7 +24,7 @@ export const WeekFilters = () => {
     const dispatch = useAppDispatch()
 
     const onValueChange = (value: string) => {
-        if (value === 'overdue') {
+        if (overdue) {
             dispatch(setOverDue(overdue ? false : true))
             dispatch(setDate(''))
         } else {
@@ -34,7 +34,15 @@ export const WeekFilters = () => {
         }
     }
 
-    const defaultDate = currentWeeksDates?.[0].date
+    const [defaultDate, setDefaultDate] = useState(currentWeeksDates?.[0].date)
+
+    useEffect(() => {
+        if (scheduled && !overdue) {
+            setDefaultDate(currentWeeksDates?.[0].date)
+        } else {
+            setDefaultDate('')
+        }
+    }, [currentWeeksDates, overdue, scheduled])
 
     useEffect(() => {
         return () => {
@@ -45,8 +53,10 @@ export const WeekFilters = () => {
     useEffect(() => {
         if (!scheduled) {
             dispatch(setDate(''))
+        } else {
+            dispatch(setDate(defaultDate))
         }
-    }, [scheduled])
+    }, [scheduled, defaultDate])
 
     return (category === 'Rollforming' || category === 'Trim') && scheduled ? (
         <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 overflow-x-scroll'>

@@ -12,7 +12,7 @@ export const multiupdate = api.injectEndpoints({
         multiPatchItems: build.mutation<MultiPatchItemsData, MultiPatchItemsData>({
             query: (data) => ({
                 url: `multiupdate/items/`,
-                method: 'PATCH',
+                method: 'POST',
                 body: data
             }),
             async onQueryStarted({ ...data }, { dispatch, queryFulfilled }) {
@@ -61,7 +61,7 @@ export const multiupdate = api.injectEndpoints({
         multiPatchOrders: build.mutation<MultiPatchOrdersData, MultiPatchOrdersData>({
             query: (data) => ({
                 url: `multiupdate/orders/`,
-                method: 'PATCH',
+                method: 'POST',
                 body: data
             }),
             async onQueryStarted({ ...data }, { dispatch, queryFulfilled }) {
