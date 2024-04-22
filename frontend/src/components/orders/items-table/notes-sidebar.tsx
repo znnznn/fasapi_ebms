@@ -62,6 +62,8 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
         shouldFocusError: true
     })
 
+    const inputValue = form.watch('text')
+
     const userId = useAppSelector((state) => state.auth?.user?.id)
 
     const handleAddComments = async (text: string) => {
@@ -162,11 +164,7 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
                                 )}
                             />
                             <Button
-                                disabled={
-                                    isItemLoading ||
-                                    isOrderLoading ||
-                                    !form.formState.isValid
-                                }
+                                disabled={isItemLoading || isOrderLoading || !inputValue}
                                 size='icon'
                                 className='h-[calc(100%-10px)] transition-all absolute top-1/2  right-1.5 -translate-y-1/2'
                                 type='submit'>

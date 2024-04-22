@@ -15,6 +15,6 @@ export const Layout = () => (
                 <Outlet />
             </ErrorBoundary>
         </main>
-        <Toaster duration={5000} />
+        <Toaster richColors duration={5000} />
     </>
 )

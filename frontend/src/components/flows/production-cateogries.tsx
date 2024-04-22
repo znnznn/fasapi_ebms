@@ -37,10 +37,10 @@ export const ProductionCategories = () => {
 
                         return (
                             <AccordionItem
-                                className='mt-4 border bg-card px-4 rounded-md'
+                                className='mt-4 border bg-card rounded-md'
                                 value={category.name}
                                 key={category.id}>
-                                <AccordionTrigger className='min-h-20 items-center flex'>
+                                <AccordionTrigger className='min-h-20 px-4 items-center flex'>
                                     <div className='flex flex-col gap-y-2 items-start'>
                                         <div className='flex gap-x-2'>
                                             <span className='text-sm font-semibold'>
@@ -77,7 +77,7 @@ export const ProductionCategories = () => {
                                         )}
                                     </div>
                                 </AccordionTrigger>
-                                <AccordionContent className='flex flex-col gap-y-3'>
+                                <AccordionContent className='flex flex-col gap-y-3 px-4 pt-1'>
                                     <AccordionItem
                                         className='border-none'
                                         value='add-flow'>

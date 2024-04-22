@@ -118,7 +118,6 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
                 <TimePicker
                     isDisabled={!row.original.item?.flow?.id || row.original.completed}
                     item={row?.original?.item}
-                    key={row?.original?.item?.id + row?.original?.item?.time!}
                     originItemId={row.original?.id}
                     orderId={row.original.origin_order}
                 />
