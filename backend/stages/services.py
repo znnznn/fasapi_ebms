@@ -204,11 +204,12 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         new_flow = await super().create(obj)
         stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None))
         default_stages = await self.db_session.scalars(stmt)
+        default_stages = [stage.obj_copy() for stage in default_stages.all()]
         created_stages = []
-        for stage in default_stages.all():
-            stage.flow_id = new_flow.id
-            stage.default = False
-            created_stages.append(stage)
+        for stage in default_stages:
+            stage['flow_id'] = new_flow.id
+            stage['default'] = False
+            created_stages.append(Stage(**stage))
         self.db_session.add_all(created_stages)
         await self.db_session.commit()
         await self.db_session.refresh(new_flow)
