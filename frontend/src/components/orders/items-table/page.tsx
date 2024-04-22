@@ -26,7 +26,6 @@ export const ItemsTablePage = () => {
         category,
         scheduled,
         date,
-        dateRange,
         searchTerm,
         isOrderCompleted
         // overdue
@@ -39,9 +38,6 @@ export const ItemsTablePage = () => {
         })
     }, [category])
 
-    const [fromDate, toDate] = dateRange
-    const dateRangeToQuery = fromDate && toDate ? `${fromDate},${toDate}` : ''
-
     const queryParams: Partial<EBMSItemsQueryParams> = {
         offset,
         limit,
@@ -50,7 +46,6 @@ export const ItemsTablePage = () => {
         production_date: date,
         // over_due: overdue,
         completed: isOrderCompleted,
-        date_range: dateRangeToQuery,
         is_scheduled: scheduled,
         category: category!
     }
@@ -67,16 +62,7 @@ export const ItemsTablePage = () => {
 
     useEffect(() => {
         dispatch(setCurrentQueryParams(queryParams as EBMSItemsQueryParams))
-    }, [
-        category,
-        limit,
-        offset,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted
-    ])
+    }, [category, limit, offset, scheduled, date, searchTerm, isOrderCompleted])
 
     const { currentData, isLoading, isFetching, refetch } = useGetItemsQuery(queryParams)
     const pageCount = Math.ceil(currentData?.count! / limit)

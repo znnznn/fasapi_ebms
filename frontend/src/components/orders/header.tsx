@@ -1,5 +1,7 @@
 import { UserMenu } from '../user-menu'
 
+import { Filters } from './filters'
+import { WeekFilters } from './items-table/week-filters'
 import { Nav } from './nav'
 import { SideBar } from '@/components/sidebar'
 
@@ -25,6 +27,10 @@ export const Header = () => {
                     <Nav />
                 </div>
                 <UserMenu />
+            </div>
+            <div className='flex flex-wrap items-center justify-between gap-4 mb-3'>
+                <Filters />
+                <WeekFilters />
             </div>
         </header>
     )

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 
-import { setOrderCompleted, setOverDue } from './store/orders'
+import { setDate, setOrderCompleted, setOverDue } from './store/orders'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -27,6 +27,7 @@ export const Filters = () => {
         if (overdue) {
             newFilters.push('overdue')
             dispatch(setOverDue(true))
+            dispatch(setDate(''))
         } else {
             dispatch(setOverDue(false))
         }

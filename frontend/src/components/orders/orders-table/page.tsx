@@ -24,15 +24,8 @@ export const OrderTablePage = () => {
 
     const currentSortingTerm = sorting[0]?.desc ? `-${sorting[0]?.id}` : sorting[0]?.id
 
-    const {
-        category,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted,
-        overdue
-    } = useAppSelector(selectOrders)
+    const { category, scheduled, date, searchTerm, isOrderCompleted, overdue } =
+        useAppSelector(selectOrders)
 
     useEffect(() => {
         setPagination({
@@ -61,16 +54,7 @@ export const OrderTablePage = () => {
 
     useEffect(() => {
         dispatch(setCurrentQueryParams(queryParams as OrdersQueryParams))
-    }, [
-        category,
-        limit,
-        offset,
-        scheduled,
-        date,
-        dateRange,
-        searchTerm,
-        isOrderCompleted
-    ])
+    }, [category, limit, offset, scheduled, date, searchTerm, isOrderCompleted])
 
     const { currentData, isLoading, isFetching, refetch } = useGetOrdersQuery(queryParams)
 

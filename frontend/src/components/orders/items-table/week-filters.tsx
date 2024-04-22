@@ -24,7 +24,7 @@ export const WeekFilters = () => {
     const dispatch = useAppDispatch()
 
     const onValueChange = (value: string) => {
-        if (value === 'overdue') {
+        if (overdue) {
             dispatch(setOverDue(overdue ? false : true))
             dispatch(setDate(''))
         } else {
