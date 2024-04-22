@@ -38,14 +38,12 @@ export const OrderTablePage = () => {
         offset,
         limit,
         is_scheduled: scheduled,
-        // completed: isOrderCompleted,
         ordering: currentSortingTerm,
-        // over_due: overdue,
         search: searchTerm
     }
 
-    if (scheduled) {
-        queryParams.is_scheduled = scheduled
+    if (isOrderCompleted) {
+        queryParams.completed = isOrderCompleted
     }
 
     if (overdue) {

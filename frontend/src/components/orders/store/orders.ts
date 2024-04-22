@@ -23,9 +23,9 @@ interface State {
 
 const initialState: State = {
     isOrderCompleted: false,
-    category: 'Rollforming',
+    category: '',
     overdue: false,
-    scheduled: true,
+    scheduled: false,
     date: '',
     searchTerm: '',
     flowsData: [],
