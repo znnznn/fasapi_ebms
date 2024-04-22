@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 from typing import Generic, Type, Optional, List
 
@@ -47,8 +48,13 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
+        print("paginated_list")
+        time_start= time.time()
         count = await self.count_query_objs(self.get_query())
+        print("count", time.time() - time_start)
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
+
+        print(time.time() - time_start)
         return {
             "count": count,
             "results": objs.all(),
@@ -129,8 +135,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model
-        ).join(
-            self.model.rel_inventry
+        # ).join(
+        #     self.model.rel_inventry
         ).join(
             self.model.order
         ).where(

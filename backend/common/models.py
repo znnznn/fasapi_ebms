@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from sqlalchemy import MetaData, CheckConstraint, Integer
+from sqlalchemy import MetaData, CheckConstraint, Integer, inspect
 from sqlalchemy.orm import DeclarativeBase, as_declarative, declared_attr, Mapped, mapped_column
 
 
@@ -34,3 +34,11 @@ class DefaultBase:
 
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id})>"
+
+    def as_sdict(self) -> dict:
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+
+    def obj_copy(self) -> dict:
+        asdict = self.as_sdict()
+        del asdict['id']
+        return asdict
