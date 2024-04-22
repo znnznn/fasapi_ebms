@@ -15,7 +15,6 @@ import type { Item } from '@/store/api/ebms/ebms.types'
 import { usePatchItemMutation } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
-import { cn } from '@/utils/cn'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
 interface Props {
@@ -110,12 +109,12 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             : `Item ${item?.id} of Order ${invoice}`
 
         toast.success(successHeading, {
-            description: <div>{description}</div>,
-            classNames: {
-                toast: cn(isItemDone && '!bg-green-50'),
-                description: cn(isItemDone && '!text-green-700'),
-                success: cn(isItemDone && '!text-green-700')
-            }
+            description: <div>{description}</div>
+            // classNames: {
+            //     toast: cn(isItemDone && '!bg-green-50'),
+            //     description: cn(isItemDone && '!text-green-700'),
+            //     success: cn(isItemDone && '!text-green-700')
+            // }
         })
     }
 

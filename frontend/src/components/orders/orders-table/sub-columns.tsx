@@ -51,7 +51,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
         header: ({ column }) => createHeader('Status', column),
         cell: ({ row }) => (
             <StatusCell
-                key={row?.original?.id}
+                key={row?.original?.id + row?.original?.item?.stage?.name}
                 item={row.original.item}
                 invoice={row.original?.order}
                 originOrderId={row.original?.origin_order}
@@ -141,7 +141,8 @@ export const subColumns: ColumnDef<OriginItems>[] = [
                 <TimePicker
                     item={row?.original?.item}
                     originItemId={row.original?.id}
-                    // isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    // key={row?.original?.item?.id + row?.original?.item?.time!}
+                    isDisabled={!row.original.item?.flow?.id || row.original.completed}
                     orderId={row.original?.origin_order}
                 />
             )

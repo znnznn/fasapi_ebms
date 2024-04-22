@@ -2,12 +2,11 @@ import { Time } from '@internationalized/date'
 import { forwardRef, useEffect, useState } from 'react'
 import type { TimeValue } from 'react-aria'
 import { TimeFieldStateOptions } from 'react-stately'
-import { toast } from 'sonner'
 
 import { TimeField } from './time-field'
+import { useCallbackDebounce } from '@/hooks/use-callback-debounce'
 import type { Item } from '@/store/api/ebms/ebms.types'
-import { useAddItemMutation, usePatchItemMutation } from '@/store/api/items/items'
-import { isErrorWithMessage } from '@/utils/is-error-with-message'
+import { usePatchItemMutation } from '@/store/api/items/items'
 
 interface TimePickerProps extends Omit<TimeFieldStateOptions<TimeValue>, 'locale'> {
     item: Item | null
@@ -16,35 +15,17 @@ interface TimePickerProps extends Omit<TimeFieldStateOptions<TimeValue>, 'locale
 }
 
 const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>((props, _) => {
-    const [time, setTime] = useState<Time | undefined>()
+    const [hour, minute, second] = props?.item?.time?.split(':')?.map(Number) ?? []
 
-    const hour = +props.item?.time?.split(':')[0]!
-    const minute = +props.item?.time?.split(':')[1]!
-    const second = +props.item?.time?.split(':')[2]!
-
-    // const currentTime = `${hour}:${minute}:${second}`
+    const [time, setTime] = useState(
+        props.item?.time ? new Time(hour, minute, second) : undefined
+    )
 
     useEffect(() => {
-        setTime(props.item?.time ? new Time(hour, minute, second) : undefined)
-    }, [props.item?.production_date])
-
-    // const successToast = (prevValue: string, currentValue: string) => {
-    //     const description = time
-    //         ? `Due by time has been changed from ${prevValue} ➝  to ${currentValue}`
-    //         : `Due by time has been set to ${currentValue}`
-
-    //     toast.success('Due by time', {
-    //         description
-    //     })
-    // }
-
-    const errorToast = (message: string) =>
-        toast.error('Due by time', {
-            description: message
-        })
+        setTime(new Time(hour, minute, second))
+    }, [props.item?.time])
 
     const [patchItem] = usePatchItemMutation()
-    const [addItem] = useAddItemMutation()
 
     const handlePatchOrder = async (value: string) => {
         try {
@@ -55,50 +36,21 @@ const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>((props, _) => {
                     time: value
                 }
             }).unwrap()
-            // .then((data) => successToast(currentTime, data?.time))
-        } catch (error) {
-            const isErrorMessage = isErrorWithMessage(error)
-
-            const errorMessage = isErrorMessage
-                ? error.data.detail
-                : 'Something went wrong'
-
-            errorToast(errorMessage)
-        }
+        } catch {}
     }
 
-    const handleAddOrder = async (value: string) => {
-        try {
-            await addItem({
-                order: props.orderId,
-                time: value,
-                origin_item: props.originItemId
-            }).unwrap()
-            // .then((data) => successToast(currentTime, data?.time))
-        } catch (error) {
-            const isErrorMessage = isErrorWithMessage(error)
-
-            const errorMessage = isErrorMessage
-                ? error.data.detail
-                : 'Something went wrong'
-
-            errorToast(errorMessage)
-        }
-    }
+    const debouncedRequest = useCallbackDebounce((value: TimeValue) => {
+        handlePatchOrder(value.toString())
+    }, 400)
 
     const onChange = (value: TimeValue) => {
-        if (props.item) {
-            handlePatchOrder(value.toString())
-        } else {
-            handleAddOrder(value.toString())
-        }
-
-        const hour = +value.toString()?.split(':')[0]
-        const minute = +value.toString()?.split(':')[1]
-        const second = +value.toString()?.split(':')[2]
+        const [hour, minute, second] = value?.toString().split(':')?.map(Number)
 
         setTime(new Time(hour, minute, second))
+
+        debouncedRequest(value)
     }
+
     return <TimeField onChange={onChange} value={time} granularity='second' {...props} />
 })
 
