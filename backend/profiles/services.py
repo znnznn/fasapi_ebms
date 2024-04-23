@@ -1,7 +1,8 @@
-from typing import Type
+from typing import Type, Sequence
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, Select, ScalarResult
+from sqlalchemy import select, Select, ScalarResult, delete
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
@@ -55,10 +56,7 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         return await super().create(obj)
 
     async def delete(self, id: int) -> None | JSONResponse:
-        stmt = self.get_query(user_id=id)
-        instance = await self.db_session.scalars(stmt)
-        if not instance:
-            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
-        await self.db_session.delete(instance)
+        stmt = delete(self.model).where(self.model.creator == id)
+        await self.db_session.execute(stmt)
         await self.db_session.commit()
         return JSONResponse(status_code=204, content={"message": f"{self.model.__name__} with id {id} deleted"})
