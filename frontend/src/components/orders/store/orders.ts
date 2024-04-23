@@ -23,7 +23,7 @@ interface State {
 
 const initialState: State = {
     isOrderCompleted: false,
-    category: 'Trim',
+    category: '',
     overdue: false,
     scheduled: false,
     date: '',
