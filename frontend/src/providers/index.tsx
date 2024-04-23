@@ -1,5 +1,5 @@
 import { Theme } from '@radix-ui/themes'
-import { PropsWithChildren } from 'react'
+import { type PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 
 import { AuthProvider } from './auth-provider'

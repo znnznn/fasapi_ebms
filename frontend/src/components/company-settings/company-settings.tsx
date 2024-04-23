@@ -8,7 +8,7 @@ import {
     useAddCompanyProfilesMutation,
     useGetCompanyProfilesQuery
 } from '@/store/api/profiles/profiles'
-import { CompanyProfileData } from '@/store/api/profiles/profiles.types'
+import type { CompanyProfileData } from '@/store/api/profiles/profiles.types'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
 export const CompanySettings = () => {

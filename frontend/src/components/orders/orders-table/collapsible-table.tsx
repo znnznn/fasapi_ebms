@@ -17,7 +17,7 @@ import { TableSkeleton } from '../table-skeleton'
 import { SubTable } from './sub-table'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { useColumnDragDrop } from '@/hooks/use-column-controls'
-import { OrdersData } from '@/store/api/ebms/ebms.types'
+import type { OrdersData } from '@/store/api/ebms/ebms.types'
 import { useAddUsersProfilesMutation } from '@/store/api/profiles/profiles'
 import { stopEvent } from '@/utils/stop-events'
 

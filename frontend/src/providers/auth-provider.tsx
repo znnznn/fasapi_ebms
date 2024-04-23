@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react'
+import { type PropsWithChildren } from 'react'
 
 import { useGetUserQuery } from '@/store/api/users/users'
 import type { UserId } from '@/types/api'

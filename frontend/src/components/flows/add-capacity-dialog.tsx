@@ -27,7 +27,7 @@ import {
     useAddCapacityMutation,
     usePatchCapacityMutation
 } from '@/store/api/capacities/capacities'
-import {
+import type {
     CapacitiesAddData,
     CapacitiesPatchData
 } from '@/store/api/capacities/capacities.types'

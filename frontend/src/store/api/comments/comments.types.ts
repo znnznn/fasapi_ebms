@@ -1,4 +1,4 @@
-import { UserComment } from '../users/users.types'
+import type { UserComment } from '../users/users.types'
 
 import type { PatchData, Response } from '@/types/api'
 

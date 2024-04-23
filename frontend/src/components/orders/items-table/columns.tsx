@@ -74,7 +74,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         header: ({ column }) => createHeader('Status', column, '!w-40'),
         cell: ({ row }) => (
             <StatusCell
-                key={row?.original?.id + row?.original?.item?.stage?.name}
+                key={row?.original?.id + row?.original?.item?.stage?.id}
                 item={row.original.item}
                 originOrderId={row.original.origin_order}
             />

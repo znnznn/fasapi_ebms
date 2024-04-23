@@ -9,7 +9,7 @@ import { usePagination } from '@/hooks/use-pagination'
 import { useGetOrdersQuery } from '@/store/api/ebms/ebms'
 import type { OrdersData, OrdersQueryParams } from '@/store/api/ebms/ebms.types'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/hooks'
-import { AccessToken } from '@/types/auth'
+import type { AccessToken } from '@/types/auth'
 
 export const OrderTablePage = () => {
     const { limit, offset, setPagination } = usePagination()

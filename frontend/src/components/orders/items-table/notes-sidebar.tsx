@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
 import { Loader2, PlusCircleIcon, Send } from 'lucide-react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { type SubmitHandler, useForm } from 'react-hook-form'
 import type { infer as zodInfer } from 'zod'
 
 import { selectOrders } from '../store/orders'
@@ -33,7 +33,7 @@ import {
     useAddItemCommentMutation,
     useAddOrderCommentMutation
 } from '@/store/api/comments/comments'
-import { ItemComment } from '@/store/api/ebms/ebms.types'
+import type { ItemComment } from '@/store/api/ebms/ebms.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { getUserAvatarPlaceholder } from '@/utils/get-user-avatar-placeholder'
 

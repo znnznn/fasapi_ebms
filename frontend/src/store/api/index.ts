@@ -1,8 +1,8 @@
-import { RootState } from '..'
+import type { RootState } from '..'
 import {
-    BaseQueryFn,
-    FetchArgs,
-    FetchBaseQueryError,
+    type BaseQueryFn,
+    type FetchArgs,
+    type FetchBaseQueryError,
     createApi,
     fetchBaseQuery
 } from '@reduxjs/toolkit/query/react'

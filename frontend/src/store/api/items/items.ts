@@ -114,12 +114,11 @@ export const items = api.injectEndpoints({
                                 order: Math.random() * 1000,
                                 origin_item: (Math.random() * 1000).toString(),
                                 flow: {
-                                    id: data.flow!,
+                                    id: data?.flow!,
                                     name: data?.flowName!,
                                     stages: []
                                 },
                                 time: '',
-
                                 production_date: '',
                                 priority: data?.priority!,
                                 packages: data?.packages!,
