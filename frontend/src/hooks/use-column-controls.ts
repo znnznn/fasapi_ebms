@@ -3,7 +3,7 @@ import type { Table } from '@tanstack/react-table'
 import { useEffect, useState } from 'react'
 import type { DragEvent } from 'react'
 
-import { UsersProfileData } from '@/store/api/profiles/profiles.types'
+import type { UsersProfileData } from '@/store/api/profiles/profiles.types'
 
 export const useColumnOrder = (
     usersProfilesData: UsersProfileData[],

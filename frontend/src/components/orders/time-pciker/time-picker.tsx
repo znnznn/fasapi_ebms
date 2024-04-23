@@ -1,7 +1,7 @@
 import { Time } from '@internationalized/date'
 import { forwardRef, useEffect, useState } from 'react'
 import type { TimeValue } from 'react-aria'
-import { TimeFieldStateOptions } from 'react-stately'
+import { type TimeFieldStateOptions } from 'react-stately'
 
 import { TimeField } from './time-field'
 import { useCallbackDebounce } from '@/hooks/use-callback-debounce'

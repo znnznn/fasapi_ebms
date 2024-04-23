@@ -74,7 +74,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         header: ({ column }) => createHeader('Status', column, '!w-40'),
         cell: ({ row }) => (
             <StatusCell
-                key={row?.original?.id + row?.original?.item?.stage?.name}
+                key={row?.original?.id + row?.original?.item?.stage?.id}
                 item={row.original.item}
                 originOrderId={row.original.origin_order}
             />
@@ -112,7 +112,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'time',
-        header: ({ column }) => createHeader('Due by time', column, '!w-[144px]'),
+        header: ({ column }) => createHeader('Due by time', column, '!w-40'),
         cell: ({ row }) => {
             return (
                 <TimePicker
@@ -209,11 +209,8 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'id_inven',
-        header: ({ column }) => (
-            <div className='w-28'>
-                {createHeader('ID', column, 'text-left justify-start')}
-            </div>
-        ),
+        header: ({ column }) =>
+            createHeader('ID', column, 'text-left justify-start !w-28'),
         cell: ({ row }) => <div className='w-28 pl-4'>{row.original?.id_inven}</div>
     },
     {

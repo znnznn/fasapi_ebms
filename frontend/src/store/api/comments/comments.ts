@@ -7,7 +7,7 @@ import type {
     ItemComment,
     OrdersQueryParams
 } from '../ebms/ebms.types'
-import { UsersData } from '../users/users.types'
+import type { UsersData } from '../users/users.types'
 
 import type {
     CommentsAddData,
@@ -15,7 +15,7 @@ import type {
     CommentsPatchData,
     CommentsResponse
 } from './comments.types'
-import { RootState, store } from '@/store/index'
+import { type RootState, store } from '@/store/index'
 import type { BaseQueryParams } from '@/types/api'
 import { getQueryParamString } from '@/utils/get-query-param-string'
 

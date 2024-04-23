@@ -11,7 +11,7 @@ export const Header = () => {
     return (
         <header className='relative'>
             <div className='flex items-center h-20 justify-between gap-6'>
-                <div className='flex items-center gap-x-7 py-5'>
+                <div className='flex items-center gap-x-6 py-5'>
                     <div className='flex items-center gap-x-2'>
                         <SideBar />
                     </div>

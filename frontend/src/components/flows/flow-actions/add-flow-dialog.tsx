@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { flowSchema } from '@/config/validation-schemas'
 import { useAddFlowMutation } from '@/store/api/flows/flows'
-import { FlowsAddData } from '@/store/api/flows/flows.types'
+import type { FlowsAddData } from '@/store/api/flows/flows.types'
 import { stopPropagation } from '@/utils/stop-events'
 
 interface Props {

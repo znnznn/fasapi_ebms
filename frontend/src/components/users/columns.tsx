@@ -18,14 +18,15 @@ import type { UsersData } from '@/store/api/users/users.types'
 export const columns: ColumnDef<UsersData>[] = [
     {
         accessorKey: 'email',
-        header: ({ column }) => createHeader('Email', column, 'text-left justify-start'),
+        header: ({ column }) =>
+            createHeader('Email', column, 'text-left justify-start !w-60'),
         cell: ({ row }) => <div className='pl-4'>{row.original.email}</div>
     },
     {
         accessorKey: 'first_name',
         header: ({ column }) => (
             <div className='w-40'>
-                {createHeader('First Name', column, 'text-left justify-start')}
+                {createHeader('First Name', column, 'text-left justify-start !w-60')}
             </div>
         ),
         cell: ({ row }) => <div className='pl-4'>{row.original?.first_name}</div>
@@ -34,21 +35,23 @@ export const columns: ColumnDef<UsersData>[] = [
         accessorKey: 'last_name',
         header: ({ column }) => (
             <div className='w-40'>
-                {createHeader('Last Name', column, 'text-left justify-start')}
+                {createHeader('Last Name', column, 'text-left justify-start !w-60')}
             </div>
         ),
         cell: ({ row }) => <div className='pl-4'>{row.original?.last_name}</div>
     },
     {
         accessorKey: 'role',
-        header: ({ column }) => (
-            <div className='w-24'>{createHeader('Role', column)}</div>
-        ),
+        header: ({ column }) => createHeader('Role', column, 'w-24'),
         cell: ({ row }) => <div className='pl-5'>{getRoleBadge(row.original.role)}</div>
     },
     {
         id: 'actions',
-        header: '',
+        header: () => (
+            <Button variant='ghost' className='w-full'>
+                <div className='h-4 w-4 flex-shrink-0' />
+            </Button>
+        ),
         cell: ({ row }) => {
             return (
                 <DropdownMenu>

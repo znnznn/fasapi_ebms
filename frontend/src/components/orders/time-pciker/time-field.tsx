@@ -1,5 +1,10 @@
 import { useRef } from 'react'
-import { AriaTimeFieldProps, TimeValue, useLocale, useTimeField } from 'react-aria'
+import {
+    type AriaTimeFieldProps,
+    type TimeValue,
+    useLocale,
+    useTimeField
+} from 'react-aria'
 import { useTimeFieldState } from 'react-stately'
 
 import { DateSegment } from './date-segment'

@@ -18,7 +18,7 @@ import {
 
 import { Controls } from './controls'
 import { TableSkeleton } from './table-skeleton'
-import { UsersData } from '@/store/api/users/users.types'
+import type { UsersData } from '@/store/api/users/users.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import type { BaseTableProps } from '@/types/table'
 

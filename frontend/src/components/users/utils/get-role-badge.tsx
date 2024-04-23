@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import { UserRoles } from '@/store/api/users/users.types'
+import type { UserRoles } from '@/store/api/users/users.types'
 import { cn } from '@/utils/cn'
 
 export const getRoleBadge = (role: UserRoles) => {

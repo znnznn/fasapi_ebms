@@ -93,10 +93,13 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                         <br />
                     </>
                 ) : (
-                    <>
-                        Production date ➝ <span className='font-semibold'>{date}</span>
-                        <br />
-                    </>
+                    date && (
+                        <>
+                            Production date ➝{' '}
+                            <span className='font-semibold'>{date}</span>
+                            <br />
+                        </>
+                    )
                 )}
                 {flow !== -1 && (
                     <>
@@ -105,6 +108,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                 )}
             </span>
         )
+
         toast.success(`${currentRows.length} item(s) updated`, {
             description: message
         })

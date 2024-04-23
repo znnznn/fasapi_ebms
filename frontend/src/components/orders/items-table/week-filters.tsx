@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Progress } from '../../ui/progress'
 import { ToggleGroup, ToggleGroupItem } from '../../ui/toggle-group'
 import { selectCategory, selectOrders, setDate, setOverDue } from '../store/orders'
-import { FormattedDate, getWorkingDays } from '../utils/get-current-weeks-date'
+import { type FormattedDate, getWorkingDays } from '../utils/get-current-weeks-date'
 
 import { useGetCategoriesQuery } from '@/store/api/ebms/ebms'
 import { useGetCompanyProfilesQuery } from '@/store/api/profiles/profiles'

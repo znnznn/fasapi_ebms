@@ -97,6 +97,7 @@ const renderNavigationItems = () =>
 
 export const SideBar = () => {
     const navItems = renderNavigationItems()
+
     return (
         <Sheet>
             <SheetTrigger className='bg-secondary p-2 rounded-md'>
