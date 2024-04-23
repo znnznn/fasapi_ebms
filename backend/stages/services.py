@@ -250,7 +250,6 @@ class StagesService(BaseService[Stage, StageSchemaIn]):
         return await super().create(obj)
 
     async def validate_instance(self, instance: ModelType, input_obj: InputSchemaType) -> tuple[ModelType, InputSchemaType]:
-        print(input_obj)
         if getattr(input_obj, "position", None) and instance.flow_id:
             if instance.position < input_obj.position:
                 stages = update(Stage).where(
