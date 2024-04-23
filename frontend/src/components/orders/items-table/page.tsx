@@ -73,6 +73,8 @@ export const ItemsTablePage = () => {
             const dataToPatch = JSON.parse(event.data) as EBMSItemsData
             refetch()
 
+            console.log(dataToPatch?.item?.flow?.name)
+
             setDataToRender((prevData) => {
                 const newData = prevData.map((item) => {
                     if (item.id === dataToPatch.id) {

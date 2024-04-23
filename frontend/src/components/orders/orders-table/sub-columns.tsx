@@ -21,13 +21,13 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'category',
         header: ({ column }) =>
-            createHeader('Prod. category', column, 'text-left justify-start'),
+            createHeader('Prod. category', column, 'text-left justify-start !w-40'),
         cell: ({ row }) => <div className='pl-4'>{row.original?.category}</div>,
         enableHiding: false
     },
     {
         accessorKey: 'flow',
-        header: ({ column }) => createHeader('Flow/Machine', column),
+        header: ({ column }) => createHeader('Flow/Machine', column, '!w-40'),
         sortingFn: flowFn,
         cell: ({ row }) => {
             const { data: flowsData } = useGetFlowsQuery({
@@ -48,7 +48,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'status',
         sortingFn: statusFn,
-        header: ({ column }) => createHeader('Status', column),
+        header: ({ column }) => createHeader('Status', column, '!w-40'),
         cell: ({ row }) => (
             <StatusCell
                 key={row?.original?.id + row?.original?.item?.stage?.name}
@@ -60,7 +60,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'priority',
-        header: ({ column }) => createHeader('Priority', column),
+        header: ({ column }) => createHeader('Priority', column, 'w-[112px]'),
         cell: ({ row }) => (
             <InputCell
                 name='priority'
@@ -106,7 +106,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'production_date',
         sortingFn: dateFn,
-        header: ({ column }) => createHeader('Prod. date', column),
+        header: ({ column }) => createHeader('Prod. date', column, '!w-40'),
         cell: ({ row }) => {
             const [date, setDate] = useState<Date | undefined>(
                 row.original.item?.production_date!
@@ -135,7 +135,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'time',
-        header: ({ column }) => createHeader('Due by time', column, '!w-[144px]'),
+        header: ({ column }) => createHeader('Due by time', column, '!w-40'),
         cell: ({ row }) => {
             return (
                 <TimePicker
@@ -150,29 +150,29 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'order',
-        header: ({ column }) => createHeader('Order', column),
+        header: ({ column }) => createHeader('Order', column, '!w-28'),
         cell: ({ row }) => alignCell(row.original.order)
     },
     {
         accessorKey: 'quantity',
-        header: ({ column }) => createHeader('Ordered', column),
+        header: ({ column }) => createHeader('Ordered', column, '!w-28'),
         cell: ({ row }) => alignCell(row.original.quantity),
         sortingFn: 'alphanumeric'
     },
     {
         accessorKey: 'shipped',
-        header: ({ column }) => createHeader('Shipped', column),
+        header: ({ column }) => createHeader('Shipped', column, '!w-28'),
         cell: ({ row }) => alignCell(row?.original.shipped!),
         sortingFn: 'alphanumeric'
     },
     {
         accessorKey: 'color',
-        header: ({ column }) => createHeader('Color', column),
+        header: ({ column }) => createHeader('Color', column, '!w-28'),
         cell: ({ row }) => alignCell(getValidValue(row.original.color))
     },
     {
         accessorKey: 'profile',
-        header: ({ column }) => createHeader('Profile', column),
+        header: ({ column }) => createHeader('Profile', column, '!w-28'),
         cell: ({ row }) => alignCell(getValidValue(row.original.profile))
     },
     {
@@ -180,33 +180,31 @@ export const subColumns: ColumnDef<OriginItems>[] = [
         header: ({ column }) =>
             createHeader('Customer', column, 'text-left justify-start'),
         cell: ({ row }) => (
-            <div className='w-64 pl-4'>{getValidValue(row.original.customer)}</div>
+            <div className='w-72 pl-4'>{getValidValue(row.original.customer)}</div>
         )
     },
     {
         accessorKey: 'id_inven',
-        header: ({ column }) => (
-            <div className='w-28'>
-                {createHeader('ID', column, 'text-left justify-start')}
-            </div>
-        ),
+        header: ({ column }) =>
+            createHeader('ID', column, 'text-left justify-start !w-28'),
         cell: ({ row }) => <div className='w-28 pl-4'>{row.original?.id_inven}</div>
     },
     {
         accessorKey: 'bends',
-        header: ({ column }) => createHeader('Bends', column, 'text-left justify-start'),
+        header: ({ column }) => createHeader('Bends', column, '!w-28'),
         cell: ({ row }) => alignCell(row.original?.bends),
         sortingFn: 'alphanumeric'
     },
     {
         accessorKey: 'weight',
-        header: ({ column }) => createHeader('Weight', column, 'text-left justify-start'),
+        header: ({ column }) =>
+            createHeader('Weight', column, 'text-left justify-start !w-28'),
         cell: ({ row }) => alignCell(row.original?.weight),
         sortingFn: 'alphanumeric'
     },
     {
         accessorKey: 'w/l',
-        header: ({ column }) => createHeader('W/L', column, 'text-left justify-start'),
+        header: ({ column }) => createHeader('W/L', column, '!w-28'),
         sortingFn: widthLengthFn,
         cell: ({ row }) => alignCell(`${row.original?.width} / ${row.original?.length}`)
     },
@@ -230,7 +228,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'comments',
         sortingFn: notesFn,
-        header: ({ column }) => createHeader('Notes', column),
+        header: ({ column }) => createHeader('Notes', column, '!w-36'),
         cell: ({ row }) => (
             <NotesSidebar
                 notes={row.original?.item?.comments!}
