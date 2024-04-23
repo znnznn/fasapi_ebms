@@ -139,6 +139,7 @@ async def create_comment(
     instance = await CommentsService(db_session=session).create(comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
     await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
     return instance
 
 
@@ -151,6 +152,7 @@ async def update_comment(
     instance = await CommentsService(db_session=session).update(id, comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
     await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
     return instance
 
 
@@ -164,6 +166,7 @@ async def partial_update_comment(
     instance = await CommentsService(db_session=session).partial_update(id, comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
     await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
     return instance
 
 
@@ -175,6 +178,7 @@ async def delete_comment(
     instance = await CommentsService(db_session=session).get(id)
     item = await ItemsService(db_session=session).get(instance.item_id)
     await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
     return await CommentsService(db_session=session).delete(id)
 
 
