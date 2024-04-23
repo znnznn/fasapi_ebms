@@ -15,6 +15,7 @@
         "jsx": "react-jsx",
 
         "verbatimModuleSyntax": true,
+        "noImplicitOverride": true,
 
         /* Linting */
         "strict": true,
