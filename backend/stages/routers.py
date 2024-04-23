@@ -388,6 +388,7 @@ async def multiupdate_items(
         items: MultiUpdateItemSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    response = await ItemsService(db_session=session).multiupdate(items)
     items_data_to_send = await GetDataForSending(db_session=session).get_items_by_autoids(items.origin_items)
     orders_autoids = await ItemsService(db_session=session).get_orders_autoids_by_origin_items(items.origin_items)
     orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(orders_autoids)
@@ -395,7 +396,7 @@ async def multiupdate_items(
         await connection_manager.broadcast("items", item)
     for order in orders_data_to_send:
         await connection_manager.broadcast("orders", order)
-    return await ItemsService(db_session=session).multiupdate(items)
+    return response
 
 
 @router.post("/multiupdate/orders/", tags=["multiupdate"], response_model=MultiUpdateSalesOrderSchema)
@@ -403,10 +404,11 @@ async def multiupdate_salesorders(
         salesorders: MultiUpdateSalesOrderSchema, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
+    response = await SalesOrdersService(db_session=session).multiupdate(salesorders)
     orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(salesorders.origin_orders)
     for order in orders_data_to_send:
         await connection_manager.broadcast("orders", order)
-    return await SalesOrdersService(db_session=session).multiupdate(salesorders)
+    return response
 
 
 @router.get("/healthcheck/", tags=["healthcheck"])
