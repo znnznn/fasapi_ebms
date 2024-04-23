@@ -8,8 +8,9 @@ from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query
+from starlette import status
 from starlette.exceptions import HTTPException
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
@@ -166,14 +167,14 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             raise HTTPException(status_code=400, detail=f"Failed to update {self.model.__name__} {e}")
         return instance
 
-    async def delete(self, id: int) -> None | JSONResponse:
+    async def delete(self, id: int) -> None | Response:
         stmt = select(self.model).where(self.model.id == id)
         instance = await self.db_session.scalar(stmt)
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
         await self.db_session.delete(instance)
         await self.db_session.commit()
-        return JSONResponse(status_code=204, content={"message": f"{self.model.__name__} with id {id} deleted"})
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 class CapacitiesService(BaseService[Capacity, CapacitySchemaIn]):

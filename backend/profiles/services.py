@@ -4,7 +4,8 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import select, Select, ScalarResult, delete
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import JSONResponse
+from starlette import status
+from starlette.responses import JSONResponse, Response
 
 from common.constants import ModelType, InputSchemaType
 from database import get_async_session
@@ -55,8 +56,8 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         obj = UserProfileCreateSchema(creator=user_id, **obj.model_dump())
         return await super().create(obj)
 
-    async def delete(self, id: int) -> None | JSONResponse:
+    async def delete(self, id: int) -> None | Response:
         stmt = delete(self.model).where(self.model.creator == id)
         await self.db_session.execute(stmt)
         await self.db_session.commit()
-        return JSONResponse(status_code=204, content={"message": f"{self.model.__name__} with id {id} deleted"})
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
