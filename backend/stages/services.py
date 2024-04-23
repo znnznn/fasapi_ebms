@@ -135,7 +135,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         instance = await self.db_session.scalar(stmt)
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
-        await self.validate_instance(instance, obj)
+        instance, obj = await self.validate_instance(instance, obj)
         for key, value in obj.model_dump().items():
             setattr(instance, key, value)
         try:
@@ -153,9 +153,11 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         instance = await self.db_session.scalar(stmt)
         if not instance:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
-        await self.validate_instance(instance, baseschema)
-        for key, value in obj.items():
-            setattr(instance, key, value)
+        instance, obj = await self.validate_instance(instance, baseschema)
+        for key, value in obj.__dict__.items():
+            print(key, value)
+            if not key.startswith('__') and value is not None:
+                setattr(instance, key, value)
         try:
             self.db_session.add(instance)
             await self.db_session.commit()
@@ -202,13 +204,14 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
             stmt = update(Flow).where(Flow.position >= obj.position).values(position=Flow.position + 1)
             await self.db_session.execute(stmt)
         new_flow = await super().create(obj)
-        stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None))
+        stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None)).order_by(Stage.position)
         default_stages = await self.db_session.scalars(stmt)
         default_stages = [stage.obj_copy() for stage in default_stages.all()]
         created_stages = []
-        for stage in default_stages:
+        for index, stage in enumerate(default_stages):
             stage['flow_id'] = new_flow.id
             stage['default'] = False
+            stage['position'] = index
             created_stages.append(Stage(**stage))
         self.db_session.add_all(created_stages)
         await self.db_session.commit()
@@ -238,6 +241,36 @@ class StagesService(BaseService[Stage, StageSchemaIn]):
             self, model: Type[Stage] = Stage, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+
+    async def create(self, obj: InputSchemaType) -> ModelType:
+        if getattr(obj, "flow_id", None):
+            obj.position = 1
+            stages = update(Stage).where(Stage.flow_id == obj.flow_id, Stage.position >= obj.position).values(position=Stage.position + 1)
+            await self.db_session.execute(stages)
+        return await super().create(obj)
+
+    async def validate_instance(self, instance: ModelType, input_obj: InputSchemaType) -> tuple[ModelType, InputSchemaType]:
+        print(input_obj)
+        if getattr(input_obj, "position", None) and instance.flow_id:
+            if instance.position < input_obj.position:
+                stages = update(Stage).where(
+                    Stage.flow_id == instance.flow_id, Stage.position <= input_obj.position, Stage.position > instance.position,
+                    Stage.id != instance.id
+                ).values(position=Stage.position - 1)
+            else:
+                stages = update(Stage).where(
+                    Stage.flow_id == instance.flow_id, Stage.position < instance.position, Stage.position >= input_obj.position,
+                    Stage.id != instance.id
+                ).values(position=Stage.position + 1)
+            max_position = await self.db_session.scalar(
+                select(func.max(Stage.position)).where(Stage.flow_id == instance.flow_id)
+            )
+            if max_position is None:
+                max_position = 0
+            if input_obj.position > max_position:
+                input_obj.position = max_position
+            await self.db_session.execute(stages)
+        return instance, input_obj
 
 
 class CommentsService(BaseService[Comment, CommentSchemaIn]):

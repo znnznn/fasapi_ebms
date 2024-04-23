@@ -22,7 +22,7 @@ class Flow(DefaultBase):
     category_autoid: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
     items = relationship("Item", back_populates="flow", primaryjoin='Flow.id == Item.flow_id', innerjoin=True)
-    stages = relationship("Stage", back_populates="flow", primaryjoin='Flow.id == Stage.flow_id', innerjoin=True)
+    stages = relationship("Stage", back_populates="flow", primaryjoin='Flow.id == Stage.flow_id', innerjoin=True, order_by="Stage.position")
     # capacity = relationship("Capacity", back_populates="flows", primaryjoin='Flow.category_autoid == Capacity.category_autoid', innerjoin=True)
 
 
@@ -48,7 +48,7 @@ class Item(DefaultBase):
     location: Mapped[POSITIVE_INT_OR_ZERO]
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
     flow = relationship("Flow", back_populates="items")
-    comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id')
+    comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id', order_by="Comment.created_at")
     stage = relationship("Stage", back_populates="items")
     sales_order = relationship(
         'SalesOrder', back_populates="items", primaryjoin='Item.order == SalesOrder.order', foreign_keys=order)
