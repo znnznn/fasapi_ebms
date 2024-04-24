@@ -202,9 +202,9 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'customer',
         header: ({ column }) =>
-            createHeader('Customer', column, 'text-left justify-start'),
+            createHeader('Customer', column, 'text-left justify-start !w-64'),
         cell: ({ row }) => (
-            <div className='w-72 pl-4'>{getValidValue(row.original.customer)}</div>
+            <div className='w-64 pl-4'>{getValidValue(row.original.customer)}</div>
         )
     },
     {
@@ -230,7 +230,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'description',
         header: () => (
-            <Button variant='ghost' className='w-full justify-start'>
+            <Button variant='ghost' className='text-left justify-start !w-64'>
                 Description
             </Button>
         ),

@@ -131,8 +131,8 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                         <TableSkeleton cellCount={columns.length} />
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={colSpan} className='h-24 text-center '>
-                                No results.
+                            <TableCell colSpan={colSpan} className='h-24 text-left pl-4'>
+                                No results
                             </TableCell>
                         </TableRow>
                     )}

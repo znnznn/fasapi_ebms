@@ -1,19 +1,24 @@
 type KeyFinder<T> = ((item: T) => string) | keyof T
-
 type Grouped<T> = Array<[string, T[]]>
 
 export const groupBy = <T,>(values: T[], keyFinder: KeyFinder<T>): Grouped<T> => {
-    const groupedObj: { [key: string]: T[] } = values.reduce((a: any, b: any) => {
-        const key = typeof keyFinder === 'function' ? keyFinder(b) : b[keyFinder].order
+    const groupedObj: Map<string, T[]> = values.reduce(
+        (map: Map<string, T[]>, item: T) => {
+            const key =
+                typeof keyFinder === 'function'
+                    ? keyFinder(item)
+                    : (item[keyFinder] as { order: string }).order
 
-        if (!a[key]) {
-            a[key] = [b]
-        } else {
-            a[key] = [...a[key], b]
-        }
+            if (!map.has(key)) {
+                map.set(key, [item])
+            } else {
+                map.get(key)?.push(item)
+            }
 
-        return a
-    }, {})
+            return map
+        },
+        new Map<string, T[]>()
+    )
 
-    return Object.entries(groupedObj)
+    return Array.from(groupedObj.entries())
 }
