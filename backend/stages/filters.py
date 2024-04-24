@@ -73,7 +73,7 @@ class ItemFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Item
-        ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status', 'ship_date', 'stage')
+        ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status', 'stage')
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ['production_date']
         related_fields = {
