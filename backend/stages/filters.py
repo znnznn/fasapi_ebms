@@ -37,6 +37,10 @@ class FlowFilter(RenameFieldFilter):
             'flow': 'name',
             'category__prod_type': 'category_autoid',
         }
+        order_by_related_fields = {
+            'category__prod_type': 'category__autoid',
+            'flow': 'name',
+        }
 
 
 class StageFilter(RenameFieldFilter):
