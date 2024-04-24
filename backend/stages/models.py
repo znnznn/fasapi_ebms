@@ -36,6 +36,14 @@ class Stage(DefaultBase):
     flow = relationship("Flow", back_populates="stages")
     items = relationship("Item", back_populates="stage", primaryjoin='Stage.id == Item.stage_id', innerjoin=True)
 
+    @hybrid_property
+    def status(self):
+        return self.name
+
+    @status.expression
+    def status(cls):
+        return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery()
+
 
 class Item(DefaultBase):
     order: Mapped[str] = mapped_column(String(100), nullable=True)
