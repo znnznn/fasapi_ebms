@@ -263,6 +263,5 @@ class SalesOrderFilter(RenameFieldFilter):
             'status': SalesOrder.items,
             'status_not_in': SalesOrder.items,
             'completed': SalesOrder.items,
-            'production_date__isnull': SalesOrder.items
         }
         excluded_fields = ('production_date__isnull', 'status')

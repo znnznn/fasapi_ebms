@@ -157,7 +157,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         instance, obj = await self.validate_instance(instance, baseschema)
         for key, value in obj.__dict__.items():
             print(key, value)
-            if not key.startswith('__') and value is not None:
+            if not key.startswith('__'):
                 setattr(instance, key, value)
         try:
             self.db_session.add(instance)
