@@ -55,7 +55,10 @@ async def orders(
             db_session=session, list_filter=sales_order_filter
         ).get_filtering_origin_orders_autoids(do_ordering=True)
     if sales_order_filter.order_by:
-        default_position = len(filtering_sales_orders) + 2
+        ordering_filds = ''.join(sales_order_filter.order_by)
+        default_position = -1
+        if ordering_filds.startswith('-'):
+            default_position = len(filtering_sales_orders) + 2
         data_for_ordering = {v: i for i, v in enumerate(filtering_sales_orders, 1)}
         extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
     result = await OriginOrderService(
@@ -214,7 +217,10 @@ async def get_items(
     if not item_filter.is_filtering_values and item_filter.order_by:
         filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
     if item_filter.order_by:
-        default_position = len(filtering_items) + 2
+        ordering_fields = ''.join(item_filter.order_by)
+        default_position = -1
+        if ordering_fields.startswith('-'):
+            default_position = len(filtering_items) + 2
         data_for_ordering = {v: i for i, v in enumerate(filtering_items, 1)}
         extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
     result = await OriginItemService(

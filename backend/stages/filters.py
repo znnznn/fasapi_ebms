@@ -257,7 +257,7 @@ class SalesOrderFilter(RenameFieldFilter):
             'is_scheduled': 'production_date__isnull',
         }
         revert_values_fields = ('production_date__isnull',)
-        ordering_fields = ('production_date',)
+        ordering_fields = ('production_date', 'priority',)
         join_tables = {
             'over_due': SalesOrder.items,
             'status': SalesOrder.items,
