@@ -256,11 +256,19 @@ class Arinvdet(Base):
 
     @hybrid_property
     def profile(self):
-        return self.rel_inventry.rol_profile
+        return self.rel_inventry.rol_profil
+
+    @profile.expression
+    def profile(cls):
+        return select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
     @hybrid_property
     def color(self):
         return self.rel_inventry.rol_color
+
+    @color.expression
+    def color(cls):
+        return select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
     @hybrid_property
     def customer(self):

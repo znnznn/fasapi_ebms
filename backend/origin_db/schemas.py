@@ -47,7 +47,7 @@ class ArinvDetSchema(BaseModel):
     id_inven: str = Field(default=None, serialization_alias="id_inven", alias="inven")
     origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
     completed: bool = Field(default=False)  # TODO: check this
-    profile: bool = Field(default=False)
+    profile: str = Field(default=False)
     color: str = Field(default=None)
     item: ItemSchema | None = Field(default=None)
 
