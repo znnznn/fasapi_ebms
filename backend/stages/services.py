@@ -156,7 +156,6 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
         instance, obj = await self.validate_instance(instance, baseschema)
         for key, value in obj.__dict__.items():
-            print(key, value)
             if not key.startswith('__'):
                 setattr(instance, key, value)
         try:
@@ -317,6 +316,19 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             if not stage:
                 raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
             instance.stage = stage
+        if input_obj.flow_id:
+            origin_item = await self.db_session.scalar(
+                select(Arinvdet).where(Arinvdet.autoid == instance.origin_item).options(selectinload(Arinvdet.rel_inventry))
+            )
+            origin_item_category = origin_item.category if origin_item else False
+            flow = await self.db_session.scalar(select(Flow).where(Flow.id == input_obj.flow_id))
+            category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
+            category = category.prod_type if category else False
+            if category != origin_item_category:
+                raise HTTPException(
+                    status_code=400, detail=f"Cannot update item {origin_item.autoid} with flow {input_obj.flow_id} and category {category}"
+                )
+            input_obj.stage_id = None
         return instance, input_obj
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
@@ -344,6 +356,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             flow = await self.db_session.scalar(select(Flow).where(Flow.id == flow_id))
             if not flow:
                 raise HTTPException(status_code=404, detail=f"Flow with id {flow_id} not found")
+            object_data['stage_id'] = None
             category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
             category = category.prod_type if category else False
         origin_items_objs = await self.db_session.scalars(
