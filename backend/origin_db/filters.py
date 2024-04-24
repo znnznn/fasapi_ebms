@@ -68,10 +68,11 @@ class OriginItemFilter(RenameFieldFilter):
             'quantity': 'quan',
             'order': 'doc_aid',
             'id_inven': 'inven',
+            'shipped': 'ship',
         }
         ordering_fields = (
             'quan', 'weight', 'width', 'widthd', 'height', 'heightd', 'ship_date', "category", 'bends', 'length', 'width', 'quantity',
-            'id_inven', 'order',
+            'id_inven', 'order', 'weight', 'shipped', 'profile', 'quantity',
         )
 
 
@@ -98,8 +99,9 @@ class OrderFilter(RenameFieldFilter):
             'order': 'invoice',
             'date': 'inv_date',
             'created_at': 'crea_at',
+            'customer': 'name',
         }
         search_fields_by_models = {
             Arinv: ('invoice', 'name'),
         }
-        ordering_fields = ('order', 'invoice', 'name', 'date', 'created_at', 'count_items',)
+        ordering_fields = ('order', 'invoice', 'name', 'date', 'created_at', 'count_items', 'c_name', 'c_city')
