@@ -63,7 +63,7 @@ export const ItemsTablePage = () => {
     }, [currentData])
 
     const token = JSON.parse(
-        localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+        localStorage.getItem('token') || sessionStorage.getItem('token') || 'null'
     ) as AccessToken
 
     useEffect(() => {
