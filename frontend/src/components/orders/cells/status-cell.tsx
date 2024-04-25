@@ -31,9 +31,10 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
     const flowId = flow?.id
     const isFlow = !!flowId
 
-    const statuses = useMemo(() => {
-        return flow?.stages?.slice().sort((a, b) => a.position - b.position)
-    }, [flow?.stages])
+    const statuses = useMemo(
+        () => flow?.stages?.slice().sort((a, b) => a.position - b.position),
+        [flow?.stages]
+    )
 
     const defaultStatus = stageId ? String(stageId) : ''
 
@@ -105,11 +106,6 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
 
         toast.success(successHeading, {
             description: <div>{description}</div>
-            // classNames: {
-            //     toast: cn(isItemDone && '!bg-green-50'),
-            //     description: cn(isItemDone && '!text-green-700'),
-            //     success: cn(isItemDone && '!text-green-700')
-            // }
         })
     }
 
