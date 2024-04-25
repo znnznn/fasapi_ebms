@@ -69,7 +69,7 @@ class Item(DefaultBase):
     def over_due(cls):
         return case(
             (and_(
-                func.current_date() > Item.production_date, Item.stage.name != "Done"), True),
+                func.current_date() > Item.production_date, Stage.name != "Done"), True),
             else_=False
         ).label('over_due')
 

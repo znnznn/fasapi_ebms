@@ -62,7 +62,6 @@ class StageFilter(RenameFieldFilter):
 
 
 class ItemFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
     production_date__lt: Optional[date] = None
     status: Optional[StageFilter] = FilterDepends(StageFilter)
@@ -81,17 +80,18 @@ class ItemFilter(RenameFieldFilter):
         model = Item
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status', 'stage')
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
-        default_ordering = ['production_date']
+        default_ordering = ('production_date',)
         related_fields = {
             'is_scheduled': 'production_date__isnull',
         }
-        model_related_fields = {
-            'status': 'stage_id__isnull',
-            'flow': 'flow_id__isnull',
-        }
+        # model_related_fields = {
+        #     'status': 'stage_id__isnull',
+        #     'flow': 'flow_id__isnull',
+        # }
         join_tables = {
             'status': Stage,
             'flow': Flow,
+            'over_due': Stage,
         }
         order_by_related_fields = {
             'flow': 'name',
@@ -176,10 +176,6 @@ class NestedItemFilter(RenameFieldFilter):
         related_fields = {
             'is_scheduled': 'production_date__isnull',
         }
-        model_related_fields = {
-            'status': 'stage_id__isnull',
-            'flow': 'flow_id__isnull',
-        }
         join_tables = {
             'status': Stage,
             'flow': Flow,
@@ -239,12 +235,11 @@ class NestedItemFilter(RenameFieldFilter):
 
 
 class SalesOrderFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["id"], description="")
     production_date: Optional[date] = None
     production_date__isnull: Optional[bool] = None
     priority: Optional[int] = None
     is_scheduled: Optional[bool] = None
-    over_due: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
+    over_due: Optional[bool] = None
     completed: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
     status: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
     status_not_in: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
@@ -252,7 +247,7 @@ class SalesOrderFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = SalesOrder
-        default_ordering = ['id']
+        default_ordering = ('id',)
         related_fields = {
             'start_date': 'production_date',
             'end_date': 'production_date',
