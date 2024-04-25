@@ -43,6 +43,7 @@ async def orders(
     filtering_sales_orders = await SalesOrdersService(
         db_session=session, list_filter=sales_order_filter
     ).get_filtering_origin_orders_autoids()
+    print(filtering_sales_orders)
     extra_ordering = None
     if filtering_sales_orders:
         if sales_order_filter.is_exclude:
