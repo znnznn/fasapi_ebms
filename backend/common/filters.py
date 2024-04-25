@@ -126,10 +126,11 @@ class RenameFieldFilter(Filter):
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
-                if need_join_table and not need_join_table in self.Constants.joins and value:
+                if need_join_table and not need_join_table in self.Constants.joins and field_value.is_filtering_values:
                     query = query.join(need_join_table)
                     self.Constants.joins.add(need_join_table)
-                query = field_value.filter(query)
+                elif value:
+                    query = field_value.filter(query)
             else:
                 field_name = self.related_field(field_name)
                 value = self.get_value(field_name, value)
