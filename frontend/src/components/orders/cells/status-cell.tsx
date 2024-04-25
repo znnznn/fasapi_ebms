@@ -45,12 +45,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
 
     const orderCompletedToast = () =>
         toast.success(`Order ${originOrderId}`, {
-            description: 'Has been moved to Completed',
-            classNames: {
-                toast: '!bg-green-50',
-                description: '!text-green-700',
-                success: '!text-green-700'
-            }
+            description: 'Has been moved to Completed'
         })
 
     const successToast = (status: string, color: string) => {
