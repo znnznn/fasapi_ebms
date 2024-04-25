@@ -6,10 +6,10 @@ import { selectOrders, setCurrentQueryParams } from '../store/orders'
 import { columns } from './columns'
 import { OrdersTable } from './table'
 import { usePagination } from '@/hooks/use-pagination'
+import { useWebSocket } from '@/hooks/use-web-socket'
 import { useGetOrdersQuery } from '@/store/api/ebms/ebms'
-import type { OrdersData, OrdersQueryParams } from '@/store/api/ebms/ebms.types'
+import type { OrdersQueryParams } from '@/store/api/ebms/ebms.types'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/hooks'
-import type { AccessToken } from '@/types/auth'
 
 export const OrderTablePage = () => {
     const { limit, offset, setPagination } = usePagination()
@@ -56,39 +56,11 @@ export const OrderTablePage = () => {
 
     const { currentData, isLoading, isFetching, refetch } = useGetOrdersQuery(queryParams)
 
-    const [dataToRender, setDataToRender] = useState(currentData?.results || [])
-
-    useEffect(() => {
-        setDataToRender(currentData?.results || [])
-    }, [currentData])
-
-    const token = JSON.parse(
-        localStorage.getItem('token') || sessionStorage.getItem('token') || 'null'
-    ) as AccessToken
-
-    useEffect(() => {
-        const websocket = new WebSocket(`wss://api.dev-ebms.fun/ws/orders/`, token.access)
-
-        websocket.addEventListener('message', (event) => {
-            const dataToPatch = JSON.parse(event.data) as OrdersData
-
-            refetch()
-            setDataToRender((prevData) => {
-                const newData = prevData.map((item) => {
-                    if (item.id === dataToPatch.id) {
-                        return dataToPatch
-                    } else {
-                        return item
-                    }
-                })
-                return newData
-            })
-        })
-
-        return () => {
-            websocket.close()
-        }
-    }, [])
+    const { dataToRender } = useWebSocket({
+        currentData: currentData!,
+        endpoint: 'orders',
+        refetch
+    })
 
     const pageCount = Math.ceil(currentData?.count! / limit)
 
