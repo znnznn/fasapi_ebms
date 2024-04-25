@@ -102,6 +102,7 @@ class RenameFieldFilter(Filter):
         values = []
         for field_name, value in self.filtering_fields:
             if isinstance(value, dict):
+                value.pop(self.Constants.ordering_field_name, None)
                 for key, nested_value in value.items():
                     if nested_value or isinstance(nested_value, bool):
                         values.append(nested_value)
@@ -129,7 +130,6 @@ class RenameFieldFilter(Filter):
                 if need_join_table and not need_join_table in self.Constants.joins and field_value.is_filtering_values:
                     query = query.join(need_join_table)
                     self.Constants.joins.add(need_join_table)
-                elif value:
                     query = field_value.filter(query)
             else:
                 field_name = self.related_field(field_name)
@@ -157,6 +157,13 @@ class RenameFieldFilter(Filter):
     def sort(self, query: Union[Query, Select]):
         if not self.ordering_values:
             print('no ordering')
+            for field_name in self.Constants.default_ordering:
+                direction = Filter.Direction.asc
+                if field_name.startswith("-"):
+                    direction = Filter.Direction.desc
+                field_name = field_name.replace("-", "").replace("+", "")
+                order_by_field = getattr(self.Constants.model, self.order_by_related_field(field_name))
+                query = query.order_by(getattr(order_by_field, direction)())
             return query
         else:
             self.Constants.do_ordering = True

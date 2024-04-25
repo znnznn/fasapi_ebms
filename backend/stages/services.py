@@ -573,12 +573,13 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         #         Stage.name == "Done",
         #     )
         # ).join(Stage)
-        if self.filter and self.filter.is_filtering_values:
+        if not do_ordering and self.filter and self.filter.is_filtering_values:
             query = self.filter.filter(select(self.model.order))
             query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
         if do_ordering:
+            print("do_ordering")
             query = self.filter.sort(select(self.model.order))
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all()

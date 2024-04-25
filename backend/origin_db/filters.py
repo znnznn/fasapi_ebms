@@ -16,6 +16,7 @@ class InventryFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Inventry
+        default_ordering = ('recno5',)
         related_fields = {
             'category': 'prod_type',
             'categories': 'prod_type',
@@ -29,6 +30,7 @@ class CategoryFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Inprodtype
+        default_ordering = ('recno5',)
         related_fields = {
             'name': 'prod_type',
             'categories': 'prod_type__in',
@@ -51,6 +53,7 @@ class OriginItemFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Arinvdet
+        default_ordering = ('recno5',)
         search_fields_by_models = {
             Arinv: ('name', 'invoice'),
         }
@@ -78,7 +81,7 @@ class OriginItemFilter(RenameFieldFilter):
 
 class OrderFilter(RenameFieldFilter):
     search: Optional[str] = None
-    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
+    order_by: Optional[List[str]] = None
     order: Optional[str] = None
     invoice: Optional[str] = None
     name: Optional[str] = None
@@ -89,6 +92,7 @@ class OrderFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Arinv
+        default_ordering = ('recno5',)
         related_fields = {
             'order': 'autoid',
             'invoice': 'invoice__like',
