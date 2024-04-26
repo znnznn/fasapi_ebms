@@ -219,9 +219,6 @@ async def update_item(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    if hasattr(item, "flow_id"):
-        if not getattr(item, "stage_id", None):
-            item.stage_id = None
     instance = await ItemsService(db_session=session).update(id, item)
     await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
     await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
@@ -234,10 +231,6 @@ async def partial_update_item(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    if hasattr(item, "flow_id"):
-        if not getattr(item, "stage_id", None):
-            item.stage_id = None
-
     item = item.model_dump(exclude_unset=True)
 
     instance = await ItemsService(db_session=session).partial_update(id, item)
