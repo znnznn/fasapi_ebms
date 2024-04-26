@@ -53,7 +53,7 @@ class StageFilter(RenameFieldFilter):
 
     class Constants(RenameFieldFilter.Constants):
         model = Stage
-        default_ordering = ['id']
+        default_ordering = ['position']
         related_fields = {
             'status': 'name',
             'status_not_in': 'name__not_in',
@@ -64,7 +64,7 @@ class StageFilter(RenameFieldFilter):
 class ItemFilter(RenameFieldFilter):
     production_date: Optional[date] = None
     production_date__lt: Optional[date] = None
-    status: Optional[StageFilter] = FilterDepends(StageFilter)
+    status: Optional[str] = None
     status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
     is_scheduled: Optional[bool] = None
     flow: Optional[FlowFilter] = FilterDepends(FlowFilter)
@@ -81,21 +81,20 @@ class ItemFilter(RenameFieldFilter):
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status', 'stage')
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ('production_date',)
-        # related_fields = {
-        #     'is_scheduled': 'production_date__isnull',
-        # }
+        related_fields = {
+            'status': 'stage_name',
+        }
         # model_related_fields = {
         #     'status': 'stage_id__isnull',
         #     'flow': 'flow_id__isnull',
         # }
         join_tables = {
-            'status': Stage,
             'flow': Flow,
-            'over_due': Stage,
         }
         order_by_related_fields = {
             'flow': 'name',
             'comments': 'count_comments',
+            'status': 'stage_name',
         }
         excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
 
@@ -139,7 +138,7 @@ class ItemFilter(RenameFieldFilter):
 
 
 class NestedItemFilter(RenameFieldFilter):
-    status: Optional[StageFilter] = FilterDepends(StageFilter)
+    status: Optional[str] = None
     status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
     flow: Optional[FlowFilter] = FilterDepends(FlowFilter)
     stage_id__isnull: Optional[bool] = None
@@ -156,9 +155,10 @@ class NestedItemFilter(RenameFieldFilter):
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ['production_date']
         excluded_fields = ('status', )
-        # related_fields = {
-        #     'is_scheduled': 'production_date__isnull',
-        # }
+        related_fields = {
+            # 'is_scheduled': 'production_date__isnull',
+            'status': 'stage_name',
+        }
         join_tables = {
             'status': Stage,
             'flow': Flow,
