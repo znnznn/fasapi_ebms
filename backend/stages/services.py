@@ -209,6 +209,13 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         stmt = select(Stage).where(and_(Stage.default == True, Stage.flow_id == None)).order_by(Stage.position)
         default_stages = await self.db_session.scalars(stmt)
         default_stages = [stage.obj_copy() for stage in default_stages.all()]
+        if not default_stages:
+            stage_1 = await StagesService(
+                db_session=self.db_session).create(StageSchemaIn(name="Unscheduled", default=True, position=0, color='#E3E8EF'))
+            default_stages = [stage_1.obj_copy()]
+            stage_2 = await StagesService(
+                db_session=self.db_session).create(StageSchemaIn(name="Done", default=True, position=1, color='#C8E3D7'))
+            default_stages.append(stage_2.obj_copy())
         created_stages = []
         for index, stage in enumerate(default_stages):
             stage['flow_id'] = new_flow.id
