@@ -65,7 +65,7 @@ class RenameFieldFilter(Filter):
     @property
     def need_exclude(self) -> bool:
         for field_name, value in self.filtering_fields:
-            if not isinstance(value, RenameFieldFilter) and value:
+            if not isinstance(value, dict) and value:
                 return False
         return True
 

@@ -45,6 +45,8 @@ async def orders(
     ).get_filtering_origin_orders_autoids()
     extra_ordering = None
     if filtering_sales_orders:
+        print(sales_order_filter.need_exclude)
+        print(filtering_sales_orders)
         if sales_order_filter.is_exclude:
             origin_order_filter.autoid__not_in = filtering_sales_orders
         else:
