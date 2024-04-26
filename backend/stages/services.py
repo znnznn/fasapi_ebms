@@ -535,18 +535,18 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
-        query = select(self.model).join(self.model.items).options(selectinload(self.model.items))
-        if self.filter:
-            query = self.filter.filter(query, **kwargs)
-            query = self.filter.sort(query)
-        else:
-            query = query.order_by(getattr(self.model, self.default_ordering_field))
-        if limit:
-            query = query.limit(limit)
-        if offset:
-            query = query.offset(offset)
-        return query
+    # def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
+    #     query = select(self.model)
+    #     if self.filter:
+    #         query = self.filter.filter(query, **kwargs)
+    #         query = self.filter.sort(query)
+    #     # else:
+    #     #     query = query.order_by(getattr(self.model, self.default_ordering_field))
+    #     if limit:
+    #         query = query.limit(limit)
+    #     if offset:
+    #         query = query.offset(offset)
+    #     return query
 
     async def multiupdate(self, objs: MultiUpdateSalesOrderSchema):
         object_data = objs.model_dump(exclude_unset=True)
@@ -581,7 +581,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         #         Stage.name == "Done",
         #     )
         # ).join(Stage)
-        query = select(self.model.order).join(self.model.items).join(Stage)
+        query = select(self.model.order)
         if not do_ordering and self.filter and self.filter.is_filtering_values:
             query = self.filter.filter(query)
             query = self.filter.sort(query)
