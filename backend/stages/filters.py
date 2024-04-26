@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from typing import Optional, Any, List, Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from sqlalchemy import Select
 from sqlalchemy.orm import Query
 from typing_extensions import Literal
@@ -68,6 +68,7 @@ class ItemFilter(RenameFieldFilter):
     status_not_in: Optional[StageFilter] = FilterDepends(StageFilter)
     is_scheduled: Optional[bool] = None
     flow: Optional[FlowFilter] = FilterDepends(FlowFilter)
+    time: Optional[str] = None
     stage_id__isnull: Optional[bool] = None
     flow_id__isnull: Optional[bool] = None
     date_range: Optional[str] = None
@@ -98,6 +99,14 @@ class ItemFilter(RenameFieldFilter):
         }
         excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
 
+    @field_validator('time')
+    def validate_time(cls, value):
+        try:
+            datetime.strptime(value, '%H:%M:%S')
+        except ValueError:
+            raise ValueError('Invalid time format')
+        return value
+
     def model_dump(
             self,
             *,
@@ -122,6 +131,7 @@ class ItemFilter(RenameFieldFilter):
             round_trip=round_trip,
             warnings=warnings,
         )
+        print(fields)
         if date_range := fields.pop('date_range', None):
             try:
                 min_date, max_date = str(date_range).split(',')
