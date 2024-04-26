@@ -10,7 +10,7 @@ from origin_db.nested_filters import NestedOriginItemFilter
 
 
 class InventryFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
+    order_by: Optional[List[str]] = None
     category: Optional[str] = None
     categories: Optional[List[str]] = None
 
@@ -39,7 +39,7 @@ class CategoryFilter(RenameFieldFilter):
 
 class OriginItemFilter(RenameFieldFilter):
     search: Optional[str] = None
-    order_by: Optional[List[str]] = Field(default=["recno5"], description="")
+    order_by: Optional[List[str]] = None
     ship_date: Optional[datetime] = None
     weight: Optional[float] = None
     order: Optional[str] = None

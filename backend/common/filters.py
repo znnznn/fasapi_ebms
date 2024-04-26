@@ -170,8 +170,9 @@ class RenameFieldFilter(Filter):
             query = query.order_by(extra_ordering)
         return query
 
-    def sort(self, query: Union[Query, Select]):
-        if not self.ordering_values:
+    def sort(self, query: Union[Query, Select], **kwargs: Optional[dict]):
+        extra_ordering = kwargs.get("extra_ordering")
+        if not self.ordering_values and extra_ordering is None:
             print('no ordering')
             for field_name in self.Constants.default_ordering:
                 direction = Filter.Direction.asc

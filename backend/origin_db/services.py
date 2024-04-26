@@ -157,7 +157,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
-            query = self.filter.sort(query)
+            query = self.filter.sort(query, **kwargs)
         else:
             query = query.order_by(getattr(self.model, self.default_ordering_field))
         if limit:
@@ -210,7 +210,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         # print(query.compile(compile_kwargs={"literal_binds": True}))
         if self.filter:
             query = self.filter.filter(query, **kwargs)
-            query = self.filter.sort(query)
+            query = self.filter.sort(query, **kwargs)
         else:
             query = query.order_by(getattr(self.model, self.default_ordering_field))
         if limit:
