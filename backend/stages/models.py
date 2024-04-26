@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME, select, func, case, and_
+from sqlalchemy import ForeignKey, TIMESTAMP, String, Integer, Boolean, DATE, TIME, select, func, case, and_, null, all_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -87,10 +87,12 @@ class Item(DefaultBase):
 
     @completed.expression
     def completed(cls):
-        return case(
-            (Item.stage.name == "Done", True),
+        return select(case(
+            (cls.stage_name == "Done", True),
+            (cls.stage_name != "Done", False),
+            (cls.stage_id == null(), False),
             else_=False
-        ).label('completed')
+        ).label('completed')).correlate_except(Stage).scalar_subquery()
 
     @hybrid_property
     def count_comments(self):
@@ -105,6 +107,26 @@ class Item(DefaultBase):
         ).correlate_except(
             Comment
         ).scalar_subquery()
+
+    @hybrid_property
+    def is_scheduled(self):
+        return self.production_date is not None
+
+    @is_scheduled.expression
+    def is_scheduled(self):
+        return self.production_date != None
+
+    @hybrid_property
+    def over_due(self):
+        return self.production_date < datetime.now().date()
+
+    @over_due.expression
+    def over_due(cls):
+        return case(
+            (and_(
+                func.current_date() > Item.production_date, cls.completed == False), True),
+            else_=False
+        ).label('over_due')
 
 
 class Comment(DefaultBase):
@@ -127,3 +149,35 @@ class SalesOrder(DefaultBase):
         'Item', back_populates='sales_order', primaryjoin='SalesOrder.order==Item.order', foreign_keys='Item.order',
         innerjoin=True
     )
+
+    @hybrid_property
+    def completed(self):
+        return False
+
+    @completed.expression
+    def completed(cls):
+        return select(case(
+            (and_(
+                func.current_date() > SalesOrder.production_date, Item.completed == False), False),
+            else_=False
+        ))
+
+    @hybrid_property
+    def over_due(self):
+        return self.production_date < datetime.now().date()
+
+    @over_due.expression
+    def over_due(cls):
+        return case(
+            (and_(
+                func.current_date() > SalesOrder.production_date, cls.completed == False), True),
+            else_=False
+        ).label('over_due')
+
+    @hybrid_property
+    def is_scheduled(self):
+        return self.production_date is not None
+
+    @is_scheduled.expression
+    def is_scheduled(self):
+        return self.production_date != None

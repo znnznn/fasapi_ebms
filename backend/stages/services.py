@@ -25,6 +25,8 @@ from stages.schemas import (
 
 
 class BaseService(Generic[ModelType, InputSchemaType]):
+    default_ordering_field = 'id'
+
     def __init__(
             self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session),
             list_filter: Optional[RenameFieldFilter] = None
@@ -497,20 +499,13 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         return objs.all()
 
     async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
-        stmt = select(self.model).options(
-            selectinload(self.model.stage),
-            selectinload(self.model.comments),
-            selectinload(self.model.flow).selectinload(Flow.stages),
-        )
-        if self.filter:
-            stmt = self.filter.filter(stmt, **kwargs)
-            stmt = self.filter.sort(stmt)
+        stmt = self.get_query(**kwargs)
         objs: ScalarResult[ModelType] = await self.db_session.scalars(stmt)
         return objs.all()
 
     async def get_filtering_origin_items_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
         if self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(select(self.model.origin_item))
+            query = self.filter.filter(select(self.model.origin_item)).join(Stage)
             query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
@@ -539,6 +534,19 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+
+    def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
+        query = select(self.model).join(self.model.items).options(selectinload(self.model.items))
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query)
+        else:
+            query = query.order_by(getattr(self.model, self.default_ordering_field))
+        if limit:
+            query = query.limit(limit)
+        if offset:
+            query = query.offset(offset)
+        return query
 
     async def multiupdate(self, objs: MultiUpdateSalesOrderSchema):
         object_data = objs.model_dump(exclude_unset=True)
@@ -573,14 +581,15 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         #         Stage.name == "Done",
         #     )
         # ).join(Stage)
+        query = select(self.model.order).join(self.model.items).join(Stage)
         if not do_ordering and self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(select(self.model.order))
+            query = self.filter.filter(query)
             query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
         if do_ordering:
             print("do_ordering")
-            query = self.filter.sort(select(self.model.order))
+            query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all()
         return None

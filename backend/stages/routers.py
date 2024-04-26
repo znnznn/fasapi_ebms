@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from common.constants import Role
 from database import get_async_session
 from origin_db.services import CategoryService
-from stages.filters import ItemFilter, StageFilter, FlowFilter
+from stages.filters import ItemFilter, StageFilter, FlowFilter, SalesOrderFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
@@ -263,7 +263,8 @@ async def delete_item(
 async def get_salesorders(
         limit: int = 10, offset: int = 0,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        salesorder_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter)
 ):
     result = await SalesOrdersService(db_session=session).paginated_list(limit=limit, offset=offset)
     return result

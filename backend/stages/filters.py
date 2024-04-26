@@ -81,9 +81,9 @@ class ItemFilter(RenameFieldFilter):
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status', 'stage')
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ('production_date',)
-        related_fields = {
-            'is_scheduled': 'production_date__isnull',
-        }
+        # related_fields = {
+        #     'is_scheduled': 'production_date__isnull',
+        # }
         # model_related_fields = {
         #     'status': 'stage_id__isnull',
         #     'flow': 'flow_id__isnull',
@@ -141,17 +141,19 @@ class ItemFilter(RenameFieldFilter):
             time_shift = today + timedelta(days=int(shift_date))
             fields['production_date__gte'] = today.strftime('%Y-%m-%d')
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
-        completed = fields.pop('completed', None)
+        is_scheduled = fields.get('is_scheduled', None)
+        if isinstance(is_scheduled, bool):
+            if not is_scheduled:
+                fields['is_scheduled'] = True
+                self.Constants.exclude = True
+        completed = fields.get('completed', None)
         if isinstance(completed, bool):
-            fields['status'] = {'status': 'Done'}
-            fields['is_scheduled'] = True
             if not completed:
                 self.Constants.exclude = True
-        over_due = fields.pop('over_due', None)
+        over_due = fields.get('over_due', None)
         if isinstance(over_due, bool):
-            fields['production_date__lt'] = datetime.now().date()
-            fields['status_not_in'] = {'status_not_in':'Done'}
             if not over_due:
+                fields['over_due'] = True
                 self.Constants.exclude = True
         return fields
 
@@ -216,20 +218,15 @@ class NestedItemFilter(RenameFieldFilter):
             today = datetime.now().date()
             fields['production_date__gte'] = today
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
-        completed = fields.pop('completed', None)
+        completed = fields.get('completed', None)
         if isinstance(completed, bool):
-            fields['status'] = 'Done'
-            fields['production_date__isnull'] = False
             if not completed:
+                fields['completed'] = True
                 self.Constants.exclude = True
-        over_due = fields.pop('over_due', None)
+        over_due = fields.get('over_due', None)
         if isinstance(over_due, bool):
-            if over_due:
-                fields['production_date__lt'] = datetime.now().date()
-                fields['status_not_in'] = 'Done,'
-            else:
-                fields['production_date__lt'] = datetime.now().date()
-                fields['status_not_in'] = 'Done,'
+            if not over_due:
+                fields['over_due'] = True
                 self.Constants.exclude = True
         return fields
 
