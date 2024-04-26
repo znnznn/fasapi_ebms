@@ -130,8 +130,8 @@ class Item(DefaultBase):
 
 
 class Comment(DefaultBase):
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete="CASCADE"))
-    item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete="CASCADE"), nullable=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey('item.id', ondelete="CASCADE"), nullable=True)
     text: Mapped[str] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
     item = relationship("Item", back_populates="comments")
