@@ -312,8 +312,8 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
     async def validate_instance(self, instance: Item, input_obj: ItemSchemaIn) -> tuple[Item, ItemSchemaIn]:
-        if input_obj.stage_id:
-            stmt = select(Stage).where(Stage.id == input_obj.stage_id, Stage.flow_id == instance.flow_id)
+        if stage_id := getattr(input_obj, "stage_id", None):
+            stmt = select(Stage).where(Stage.id == stage_id, Stage.flow_id == instance.flow_id)
             stage = await self.db_session.scalar(stmt)
             if not stage:
                 raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
