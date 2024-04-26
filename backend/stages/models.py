@@ -180,4 +180,4 @@ class SalesOrder(DefaultBase):
 
     @is_scheduled.expression
     def is_scheduled(cls):
-        return cls.production_date.isnot(None)
+        return cls.production_date != None
