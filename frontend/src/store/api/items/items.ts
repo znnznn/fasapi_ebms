@@ -238,8 +238,7 @@ export const items = api.injectEndpoints({
                                 })
                             } else if (item?.item) {
                                 Object.assign(item?.item, {
-                                    ...data,
-                                    stage: null
+                                    ...data
                                 })
                             }
                         }
