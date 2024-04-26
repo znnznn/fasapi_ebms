@@ -63,6 +63,13 @@ class RenameFieldFilter(Filter):
         return query
 
     @property
+    def need_exclude(self) -> bool:
+        for field_name, value in self.filtering_fields:
+            if not isinstance(value, RenameFieldFilter) and value:
+                return False
+        return True
+
+    @property
     def is_only_excluded(self) -> bool:
         only_excluded = []
         for field_name, value in self.filtering_fields:
@@ -70,11 +77,13 @@ class RenameFieldFilter(Filter):
             if isinstance(field_value, RenameFieldFilter):
                 only_excluded.append(field_value.Constants.only_exclude)
         only_excluded.append(self.Constants.only_exclude)
-        return any(only_excluded)
+        return all(only_excluded)
 
     @property
     def is_exclude(self) -> bool:
         excluded = []
+        if not self.need_exclude:
+            return False
         for field_name, value in self.filtering_fields:
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, RenameFieldFilter):
@@ -85,8 +94,7 @@ class RenameFieldFilter(Filter):
     def get_value(self, field_name, value) -> Any:
         revert_values_fields = getattr(self.Constants, "revert_values_fields", None)
         is_excluded_field = field_name in self.Constants.excluded_fields
-        print("field_name", field_name)
-        if is_excluded_field and value is False:
+        if is_excluded_field and value is False and self.need_exclude:
             self.Constants.exclude = True
             value = True
         elif not is_excluded_field and value is not None:
@@ -139,7 +147,6 @@ class RenameFieldFilter(Filter):
 
     def filter(self, query: Union[Query, Select], **kwargs: Optional[dict]):
         for field_name, value in self.filtering_fields:
-            print(field_name, value)
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, Filter):
                 need_join_table = self.get_join_table(field_name)
