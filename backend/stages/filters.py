@@ -155,7 +155,7 @@ class NestedItemFilter(RenameFieldFilter):
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status',)
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ['production_date']
-        excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
+        excluded_fields = ('status', )
         # related_fields = {
         #     'is_scheduled': 'production_date__isnull',
         # }
@@ -199,6 +199,15 @@ class NestedItemFilter(RenameFieldFilter):
             today = datetime.now().date()
             fields['production_date__gte'] = today
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
+        completed = fields.get('completed', None)
+        if isinstance(completed, bool):
+            if not completed:
+                fields['completed'] = True
+                self.Constants.exclude = True
+        over_due = fields.get('over_due', None)
+        if isinstance(over_due, bool):
+            if not over_due:
+                fields['over_due'] = True
         return fields
 
 
@@ -219,6 +228,7 @@ class SalesOrderFilter(RenameFieldFilter):
         related_fields = {
             'start_date': 'production_date',
             'end_date': 'production_date',
+            'is_scheduled': 'production_date__isnull',
         }
         revert_values_fields = ('production_date__isnull',)
         ordering_fields = ('production_date', 'priority',)
@@ -228,4 +238,41 @@ class SalesOrderFilter(RenameFieldFilter):
             'status_not_in': SalesOrder.items,
             'completed': SalesOrder.items,
         }
-        excluded_fields = ('production_date__isnull', 'status', 'completed', 'is_scheduled', 'over_due')
+        excluded_fields = ('production_date__isnull', 'status',) # 'completed', 'is_scheduled', 'over_due')
+
+    # def model_dump(
+    #     self,
+    #     *,
+    #     mode: Literal['json', 'python'] | str = 'python',
+    #     include: IncEx = None,
+    #     exclude: IncEx = None,
+    #     by_alias: bool = False,
+    #     exclude_unset: bool = False,
+    #     exclude_defaults: bool = False,
+    #     exclude_none: bool = False,
+    #     round_trip: bool = False,
+    #     warnings: bool = True,
+    # ) -> dict[str, Any]:
+    #     fields = super().model_dump(
+    #         mode=mode,
+    #         include=include,
+    #         exclude=exclude,
+    #         by_alias=by_alias,
+    #         exclude_unset=exclude_unset,
+    #         exclude_defaults=exclude_defaults,
+    #         exclude_none=exclude_none,
+    #         round_trip=round_trip,
+    #         warnings=warnings,
+    #     )
+    #     is_scheduled = fields.pop('is_scheduled', None)
+    #     if is_scheduled:
+    #         fields['production_date__isnull'] = False
+    #         if not is_scheduled:
+    #             fields['production_date__isnull'] = True
+    #             self.Constants.exclude = True
+    #         # completed = fields.get('completed', None)
+    #         # if isinstance(completed, bool):
+    #         #     if not completed:
+    #         #         fields['completed'] = True
+    #         #         self.Constants.exclude = True
+    #     return fields
