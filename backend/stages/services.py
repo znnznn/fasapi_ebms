@@ -318,18 +318,19 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             if not stage:
                 raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
         if flow_id := getattr(input_obj, "flow_id", None):
-            origin_item = await self.db_session.scalar(
-                select(Arinvdet).where(Arinvdet.autoid == instance.origin_item).options(selectinload(Arinvdet.rel_inventry))
-            )
-            origin_item_category = origin_item.category if origin_item else False
-            flow = await self.db_session.scalar(select(Flow).where(Flow.id == flow_id))
-            category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
-            category = category.prod_type if category else False
-            if category != origin_item_category:
-                raise HTTPException(
-                    status_code=400, detail=f"Cannot update item {origin_item.autoid} with flow {flow_id} and category {category}"
+            if flow_id != instance.flow_id:
+                origin_item = await self.db_session.scalar(
+                    select(Arinvdet).where(Arinvdet.autoid == instance.origin_item).options(selectinload(Arinvdet.rel_inventry))
                 )
-            setattr(input_obj, "stage_id", None)
+                origin_item_category = origin_item.category if origin_item else False
+                flow = await self.db_session.scalar(select(Flow).where(Flow.id == flow_id))
+                category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
+                category = category.prod_type if category else False
+                if category != origin_item_category:
+                    raise HTTPException(
+                        status_code=400, detail=f"Cannot update item {origin_item.autoid} with flow {flow_id} and category {category}"
+                    )
+                setattr(input_obj, "stage_id", None)
         return instance, input_obj
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
