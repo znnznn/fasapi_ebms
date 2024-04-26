@@ -97,13 +97,7 @@ class ItemFilter(RenameFieldFilter):
             'flow': 'name',
             'comments': 'count_comments',
         }
-        excluded_fields = ('status', )
-
-    def get_value(self, field_name, value):
-        if field_name == 'production_date__isnull' and value is False:
-            value = True
-            self.Constants.exclude = True
-        return super().get_value(field_name, value)
+        excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
 
     def model_dump(
             self,
@@ -141,20 +135,6 @@ class ItemFilter(RenameFieldFilter):
             time_shift = today + timedelta(days=int(shift_date))
             fields['production_date__gte'] = today.strftime('%Y-%m-%d')
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
-        is_scheduled = fields.get('is_scheduled', None)
-        if isinstance(is_scheduled, bool):
-            if not is_scheduled:
-                fields['is_scheduled'] = True
-                self.Constants.exclude = True
-        completed = fields.get('completed', None)
-        if isinstance(completed, bool):
-            if not completed:
-                self.Constants.exclude = True
-        over_due = fields.get('over_due', None)
-        if isinstance(over_due, bool):
-            if not over_due:
-                fields['over_due'] = True
-                self.Constants.exclude = True
         return fields
 
 
@@ -175,9 +155,10 @@ class NestedItemFilter(RenameFieldFilter):
         ordering_fields = ('comments', 'production_date', 'priority', 'flow', 'status',)
         revert_values_fields = ('production_date__isnull', 'comments__isnull')
         default_ordering = ['production_date']
-        related_fields = {
-            'is_scheduled': 'production_date__isnull',
-        }
+        excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
+        # related_fields = {
+        #     'is_scheduled': 'production_date__isnull',
+        # }
         join_tables = {
             'status': Stage,
             'flow': Flow,
@@ -218,16 +199,6 @@ class NestedItemFilter(RenameFieldFilter):
             today = datetime.now().date()
             fields['production_date__gte'] = today
             fields['production_date__lte'] = today + timedelta(days=int(shift_date))
-        completed = fields.get('completed', None)
-        if isinstance(completed, bool):
-            if not completed:
-                fields['completed'] = True
-                self.Constants.exclude = True
-        over_due = fields.get('over_due', None)
-        if isinstance(over_due, bool):
-            if not over_due:
-                fields['over_due'] = True
-                self.Constants.exclude = True
         return fields
 
 
@@ -248,7 +219,6 @@ class SalesOrderFilter(RenameFieldFilter):
         related_fields = {
             'start_date': 'production_date',
             'end_date': 'production_date',
-            'is_scheduled': 'production_date__isnull',
         }
         revert_values_fields = ('production_date__isnull',)
         ordering_fields = ('production_date', 'priority',)
@@ -258,4 +228,4 @@ class SalesOrderFilter(RenameFieldFilter):
             'status_not_in': SalesOrder.items,
             'completed': SalesOrder.items,
         }
-        excluded_fields = ('production_date__isnull', 'status')
+        excluded_fields = ('production_date__isnull', 'status', 'completed', 'is_scheduled', 'over_due')

@@ -114,7 +114,7 @@ class Item(DefaultBase):
 
     @is_scheduled.expression
     def is_scheduled(self):
-        return self.production_date != None
+        return self.production_date.isnot(None)
 
     @hybrid_property
     def over_due(self):
@@ -179,5 +179,5 @@ class SalesOrder(DefaultBase):
         return self.production_date is not None
 
     @is_scheduled.expression
-    def is_scheduled(self):
-        return self.production_date != None
+    def is_scheduled(cls):
+        return cls.production_date.isnot(None)

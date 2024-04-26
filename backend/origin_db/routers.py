@@ -91,9 +91,11 @@ async def orders(
     origin_order_filter.Constants.do_ordering = None
     origin_order_filter.Constants.exclude = None
     origin_order_filter.Constants.joins = set()
+    origin_order_filter.Constants.only_exclude = True
     sales_order_filter.Constants.do_ordering = None
     sales_order_filter.Constants.exclude = None
     sales_order_filter.Constants.joins = set()
+    sales_order_filter.Constants.only_exclude = True
     print(time.time() - time_start)
     return result
 
@@ -155,9 +157,11 @@ async def get_categories(
     category_filter.Constants.do_ordering = None
     category_filter.Constants.exclude = None
     category_filter.Constants.joins = set()
+    category_filter.Constants.only_exclude = True
     item_filter.Constants.do_ordering = None
     item_filter.Constants.exclude = None
     item_filter.Constants.joins = set()
+    item_filter.Constants.only_exclude = True
     return result
 
 
@@ -188,9 +192,11 @@ async def get_categories_all(
     category_filter.Constants.do_ordering = None
     category_filter.Constants.exclude = None
     category_filter.Constants.joins = set()
+    category_filter.Constants.only_exclude = True
     item_filter.Constants.do_ordering = None
     item_filter.Constants.exclude = None
     item_filter.Constants.joins = set()
+    item_filter.Constants.only_exclude = True
     return result
 
 
@@ -242,8 +248,10 @@ async def get_items(
     origin_item_filter.Constants.do_ordering = None
     origin_item_filter.Constants.exclude = None
     origin_item_filter.Constants.joins = set()
+    origin_item_filter.Constants.only_exclude = True
     item_filter.Constants.do_ordering = None
     item_filter.Constants.exclude = None
+    item_filter.Constants.only_exclude = True
     item_filter.Constants.joins = set()
     print(time.time() - time_start)
     return result

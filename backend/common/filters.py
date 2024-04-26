@@ -38,6 +38,7 @@ class RenameFieldFilter(Filter):
         model_related_fields = {}  # excluded foreign keys with null values
         revert_values_fields = ()  # revert true to false or false to true (use to boolean fields)
         exclude = False  # exclude from query
+        only_exclude = True
         do_ordering = None
         excluded_fields = ()  # exclude from query by fields
         join_tables = {}  # auto join tables
@@ -64,18 +65,26 @@ class RenameFieldFilter(Filter):
     @property
     def is_exclude(self) -> bool:
         excluded = []
+        only_excluded = []
         for field_name, value in self.filtering_fields:
             field_value = getattr(self, field_name, None)
             if isinstance(field_value, RenameFieldFilter):
                 excluded.append(field_value.Constants.exclude)
+                only_excluded.append(field_value.Constants.only_exclude)
         excluded.append(self.Constants.exclude)
-        return any(excluded)
+        only_excluded.append(self.Constants.only_exclude)
+        if all(only_excluded):
+            return any(excluded)
+        return False
 
     def get_value(self, field_name, value) -> Any:
         revert_values_fields = getattr(self.Constants, "revert_values_fields", None)
-        if field_name in self.Constants.excluded_fields and value is False:
+        is_excluded_field = field_name in self.Constants.excluded_fields
+        if is_excluded_field and value is False:
             self.Constants.exclude = True
             value = True
+        elif not is_excluded_field and value is not None:
+            self.Constants.only_exclude = False
         if field_name in revert_values_fields and isinstance(value, bool):
             return not value
         return value
