@@ -126,7 +126,7 @@ class Arinv(Base):
     man_usetax: Mapped[bool] = mapped_column("MAN_USETAX", Boolean)
     externalid: Mapped[str] = mapped_column("EXTERNALID", String)
     p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL)
-    details = relationship('Arinvdet', back_populates="order", innerjoin=True, primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
+    details = relationship('Arinvdet', back_populates="order", innerjoin=True, order_by='Arinvdet.autoid', primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
     _sales_order = None
 
     @hybrid_property

@@ -14,7 +14,6 @@ from stages.models import Item, Stage, Flow, Comment, SalesOrder
 
 
 class CommentFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["id"], description="")
     has_comments: Optional[bool] = None
 
     class Constants(RenameFieldFilter.Constants):
@@ -28,7 +27,6 @@ class CommentFilter(RenameFieldFilter):
 
 
 class FlowFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["id"], description="")
     flow: Optional[str] = None
     category__prod_type: Optional[str] = None
 
@@ -46,7 +44,6 @@ class FlowFilter(RenameFieldFilter):
 
 
 class StageFilter(RenameFieldFilter):
-    order_by: Optional[List[str]] = Field(default=["id"], description="")
     status: Optional[str] = None
     status_not_in: Optional[str] = None
     flow: Optional[int] = None
@@ -96,6 +93,7 @@ class ItemFilter(RenameFieldFilter):
             'flow': 'name',
             'comments': 'count_comments',
             'status': 'stage_name',
+            'production_date': 'production_date',
         }
         excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
 
