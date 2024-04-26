@@ -147,7 +147,7 @@ class RenameFieldFilter(Filter):
                     query = self.get_search_query(query, value)
                 else:
                     model_field = getattr(self.Constants.model, field_name)
-                    query = query.filter(getattr(model_field, operator)(value))
+                    query = query.where(getattr(model_field, operator)(value))
         # print(query.compile(compile_kwargs={"literal_binds": True}))
         extra_ordering = kwargs.get("extra_ordering")
         if extra_ordering is not None:

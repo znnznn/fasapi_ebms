@@ -199,8 +199,8 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         ).join(
             # sbq, sbq.doc_aid == self.model.autoid
             self.model.details,
-        ).join(
-            Inventry
+        # ).join(
+        #     Inventry
         ).options(
             # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
