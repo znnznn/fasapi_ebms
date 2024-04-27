@@ -79,7 +79,7 @@ class Item(DefaultBase):
 
     @stage_name.expression
     def stage_name(cls):
-        return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery()
+        return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery().label('stage_name')
 
     @hybrid_property
     def completed(self):

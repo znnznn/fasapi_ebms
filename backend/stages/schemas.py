@@ -212,6 +212,7 @@ class ItemSchemaOut(ItemSchemaIn):
     id: int
     flow_id: Optional[int] = Field(None, serialization_alias="flow")
     stage_id: Optional[int] = Field(None, serialization_alias="stage")
+    completed: bool | None = Field(default=None)
 
     class Config:
         orm_mode = True
