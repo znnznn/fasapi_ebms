@@ -37,7 +37,7 @@ export const ItemsTablePage = () => {
         limit,
         ordering: currentSortingTerm,
         search: searchTerm,
-        production_date: date,
+        production_date: scheduled ? date : '',
         // completed: isOrderCompleted,
         is_scheduled: scheduled,
         category: category!
