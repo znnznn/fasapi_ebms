@@ -119,6 +119,7 @@ export const columns: ColumnDef<OrdersData>[] = [
 
             return (
                 <OrderDatePicker
+                    defaultDate={shipDate}
                     disabled={row.original.completed}
                     key={row.original?.id}
                     date={date}

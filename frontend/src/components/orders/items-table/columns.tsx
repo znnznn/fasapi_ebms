@@ -103,6 +103,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
                     key={row.original?.id}
                     date={date}
                     setDate={setDate}
+                    defaultDate={row.original.item?.production_date}
                     itemId={row.original?.item?.id}
                     disabled={!row.original.item?.flow?.id || row.original.completed}
                     orderId={row.original.origin_order}

@@ -38,13 +38,17 @@ export const ItemsTablePage = () => {
         ordering: currentSortingTerm,
         search: searchTerm,
         production_date: date,
-        completed: isOrderCompleted,
+        // completed: isOrderCompleted,
         is_scheduled: scheduled,
         category: category!
     }
 
     if (overdue) {
         queryParams.over_due = overdue
+    }
+
+    if (isOrderCompleted) {
+        queryParams.completed = isOrderCompleted
     }
 
     const dispatch = useAppDispatch()
