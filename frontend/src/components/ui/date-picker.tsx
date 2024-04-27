@@ -23,12 +23,14 @@ interface Props {
     itemId: number | undefined
     orderId: string
     disabled?: boolean
+    defaultDate?: string | null
     setDate: React.Dispatch<React.SetStateAction<Date | undefined>>
 }
 export const DatePicker: React.FC<Props> = ({
     date,
     setDate,
     itemId,
+    defaultDate = null,
     disabled = false,
     orderId
 }) => {
@@ -154,6 +156,7 @@ export const DatePicker: React.FC<Props> = ({
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
+                                    disabled={!defaultDate}
                                     onClick={handleResetDate}
                                     size='icon'
                                     variant='destructive'>

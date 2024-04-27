@@ -8,7 +8,16 @@ import { TooltipCell } from '../cells/tooltip-cell'
 import { NotesSidebar } from '../items-table/notes-sidebar'
 import { TimePicker } from '../time-pciker/time-picker'
 import { alignCell, createHeader } from '../utils/columns-helpers'
-import { dateFn, flowFn, notesFn, statusFn, widthLengthFn } from '../utils/sorting'
+import {
+    dateFn,
+    flowFn,
+    notesFn,
+    packagesFn,
+    priorityFn,
+    statusFn,
+    timeFn,
+    widthLengthFn
+} from '../utils/sorting'
 
 import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -61,6 +70,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'priority',
         header: ({ column }) => createHeader('Priority', column, 'w-[112px]'),
+        sortingFn: priorityFn,
         cell: ({ row }) => (
             <InputCell
                 name='priority'
@@ -76,6 +86,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'packages',
         header: ({ column }) => createHeader('Packages', column, 'w-[112px]'),
+        sortingFn: packagesFn,
         cell: ({ row }) => (
             <InputCell
                 key={row.original?.id}
@@ -90,6 +101,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'location',
+        sortingFn: packagesFn,
         header: ({ column }) => createHeader('Location', column, 'w-[112px]'),
         cell: ({ row }) => (
             <InputCell
@@ -135,6 +147,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'time',
+        sortingFn: timeFn,
         header: ({ column }) => createHeader('Due by time', column, '!w-40'),
         cell: ({ row }) => {
             return (

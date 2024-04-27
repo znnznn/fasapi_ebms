@@ -50,7 +50,7 @@ export const ProductionCategories = () => {
                                                 {category.flow_count} flows
                                             </Badge>
                                         </div>
-                                        {category.capacity ? (
+                                        {isCapacity ? (
                                             <div className='flex gap-x-2'>
                                                 <span className='text-sm'>
                                                     Daily Capacity:
@@ -61,15 +61,11 @@ export const ProductionCategories = () => {
                                                             category?.capacity
                                                         )}
                                                     </span>
-                                                    {isCapacity && (
-                                                        <AddCapacityDialog
-                                                            capacityId={
-                                                                category?.capacity_id
-                                                            }
-                                                            categoryId={category.id}
-                                                            capacity={category?.capacity!}
-                                                        />
-                                                    )}
+                                                    <AddCapacityDialog
+                                                        capacityId={category?.capacity_id}
+                                                        categoryId={category.id}
+                                                        capacity={category?.capacity!}
+                                                    />
                                                 </div>
                                             </div>
                                         ) : (

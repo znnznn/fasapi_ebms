@@ -67,6 +67,8 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
     const userId = useAppSelector((state) => state.auth?.user?.id)
 
     const handleAddComments = async (text: string) => {
+        form.setValue('text', '')
+
         try {
             await handleFunction({
                 order: orderId,
@@ -74,7 +76,6 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
                 user: userId!,
                 text
             }).unwrap()
-            form.setValue('text', '')
         } catch (error) {}
     }
 
