@@ -211,8 +211,8 @@ async def get_items(
     print('items')
     time_start = time.time()
     if ordering:
-        item_filter.order_by = ItemFilter.remove_invalid_fields(ordering)
-        origin_item_filter.order_by = OriginItemFilter.remove_invalid_fields(ordering)
+        item_filter.order_by = item_filter.remove_invalid_fields(ordering)
+        origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
     extra_ordering = None
     if filtering_items:

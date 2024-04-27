@@ -81,6 +81,7 @@ class ItemFilter(RenameFieldFilter):
         default_ordering = ('production_date',)
         related_fields = {
             'status': 'stage_name',
+            'is_scheduled': 'production_date__isnull',
         }
         # model_related_fields = {
         #     'status': 'stage_id__isnull',
@@ -95,7 +96,7 @@ class ItemFilter(RenameFieldFilter):
             'status': 'stage_name',
             'production_date': 'production_date',
         }
-        excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due')
+        excluded_fields = ('status', 'completed', 'is_scheduled', 'over_due', 'production_date__isnull', 'comments__isnull')
 
     @field_validator('time')
     def validate_time(cls, value):
@@ -129,7 +130,6 @@ class ItemFilter(RenameFieldFilter):
             round_trip=round_trip,
             warnings=warnings,
         )
-        print(fields)
         if date_range := fields.pop('date_range', None):
             try:
                 min_date, max_date = str(date_range).split(',')
@@ -250,40 +250,7 @@ class SalesOrderFilter(RenameFieldFilter):
         }
         excluded_fields = ('production_date__isnull', 'status',) # 'completed', 'is_scheduled', 'over_due')
 
-    # def filter(self, query: Union[Query, Select], **kwargs: Optional[dict]):
-    #     for field_name, value in self.filtering_fields:
-    #         field_value = getattr(self, field_name, None)
-    #         if isinstance(field_value, Filter):
-    #             need_join_table = self.get_join_table(field_name)
-    #             if need_join_table and not need_join_table in self.Constants.joins and field_value.is_filtering_values:
-    #                 query = query.join(need_join_table)
-    #                 self.Constants.joins.add(need_join_table)
-    #                 query = field_value.filter(query)
-    #         else:
-    #             print(type(value))
-    #             field_name = self.related_field(field_name)
-    #             value = self.get_value(field_name, value)
-    #             if "__" in field_name:
-    #                 field_name, operator = field_name.split("__")
-    #                 if operator in ("in", "not_in") and isinstance(value, str):
-    #                     value = value.split(",")
-    #                 operator, value = _orm_operator_transformer[operator](value)
-    #
-    #             else:
-    #                 operator = "__eq__"
-    #
-    #             if field_name == self.Constants.search_field_name and hasattr(self.Constants, "search_fields_by_models"):
-    #                 query = self.get_search_query(query, value)
-    #             else:
-    #                 model_field = getattr(self.Constants.model, field_name)
-    #                 # print(model_field)
-    #                 # print(value)
-    #                 query = query.where(getattr(model_field, operator)(value))
-    #     # print(query.compile(compile_kwargs={"literal_binds": True}))
-    #     extra_ordering = kwargs.get("extra_ordering")
-    #     if extra_ordering is not None:
-    #         query = query.order_by(extra_ordering)
-    #     return query
+
 
     def model_dump(
         self,
