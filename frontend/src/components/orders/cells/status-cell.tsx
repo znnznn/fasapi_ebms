@@ -110,7 +110,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
     }
 
     const errorToast = (message: string) =>
-        toast.error(`Item ${item?.id}`, {
+        toast.error(`Item ${item?.origin_item}`, {
             description: message
         })
 
