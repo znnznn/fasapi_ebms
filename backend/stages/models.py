@@ -69,7 +69,7 @@ class Item(DefaultBase):
     def over_due(cls):
         return case(
             (and_(
-                func.current_date() > Item.production_date, Stage.name != "Done"), True),
+                func.current_date() > cls.production_date, Stage.name != "Done"), True),
             else_=False
         ).label('over_due')
 
@@ -79,7 +79,7 @@ class Item(DefaultBase):
 
     @stage_name.expression
     def stage_name(cls):
-        return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery().label('stage_name')
+        return select(Stage.name).where(Stage.id == cls.stage_id).correlate_except(Stage).scalar_subquery().label('stage_name')
 
     @hybrid_property
     def completed(self):
@@ -127,7 +127,7 @@ class Item(DefaultBase):
     def over_due(cls):
         return case(
             (and_(
-                func.current_date() > Item.production_date, cls.completed == False), True),
+                func.current_date() > cls.production_date, cls.completed == False), True),
             else_=False
         ).label('over_due')
 

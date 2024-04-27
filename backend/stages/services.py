@@ -513,7 +513,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def get_filtering_origin_items_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
         if self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(select(self.model.origin_item)).join(Stage)
+            query = self.filter.filter(select(self.model.origin_item))
             query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
