@@ -137,8 +137,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
             self.model
         # ).join(
         #     self.model.rel_inventry
-        ).join(
-            self.model.order
+        # ).join(
+        #     self.model.order
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,

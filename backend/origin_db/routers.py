@@ -214,6 +214,7 @@ async def get_items(
         item_filter.order_by = item_filter.remove_invalid_fields(ordering)
         origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
+    print(filtering_items)
     extra_ordering = None
     if filtering_items:
         if item_filter.is_exclude:

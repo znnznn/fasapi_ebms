@@ -11,11 +11,13 @@ from users.services import UserService
 engines = {
     EBMSBase: create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
         EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME),
-        pool_size=30, max_overflow=60
+        pool_size=30, max_overflow=60, pool_pre_ping=True, isolation_level="SERIALIZABLE", pool_recycle=3600,
+        connect_args={"server_settings": {"jit": "off"}},
     ),
     DefaultBase: create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
         Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME),
-        pool_size=30, max_overflow=60
+        pool_size=30, max_overflow=60,
+        connect_args={"server_settings": {"jit": "off"}},
     ),
 }
 
