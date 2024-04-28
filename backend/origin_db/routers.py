@@ -44,9 +44,13 @@ async def orders(
         db_session=session, list_filter=sales_order_filter
     ).get_filtering_origin_orders_autoids()
     extra_ordering = None
+    ordering_orders = None
     if filtering_sales_orders:
         if sales_order_filter.is_exclude:
             origin_order_filter.autoid__not_in = filtering_sales_orders
+            ordering_orders = await SalesOrdersService(
+                db_session=session, list_filter=sales_order_filter
+            ).get_filtering_origin_orders_autoids(not_excluded=True)
         else:
             origin_order_filter.autoid__in = filtering_sales_orders
 
@@ -55,11 +59,12 @@ async def orders(
             db_session=session, list_filter=sales_order_filter
         ).get_filtering_origin_orders_autoids(do_ordering=True)
     if sales_order_filter.order_by:
+        ordering_orders = filtering_sales_orders if ordering_orders is None else ordering_orders
         ordering_filds = ''.join(sales_order_filter.order_by)
         default_position = -1
         if ordering_filds.startswith('-'):
-            default_position = len(filtering_sales_orders) + 2
-        data_for_ordering = {v: i for i, v in enumerate(filtering_sales_orders, 1)}
+            default_position = len(ordering_orders) + 2
+        data_for_ordering = {v: i for i, v in enumerate(ordering_orders, 1)}
         extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
     result = await OriginOrderService(
         db_session=session, list_filter=origin_order_filter
@@ -223,13 +228,11 @@ async def get_items(
             ordering_items = await ItemsService(
                 db_session=session, list_filter=item_filter
             ).get_filtering_origin_items_autoids(not_excluded=True)
-            print('ordering_items', ordering_items)
         else:
             origin_item_filter.autoid__in = filtering_items
     if not item_filter.is_filtering_values and item_filter.order_by:
         filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
     if item_filter.order_by:
-        print("-------------------------------extra ordering-------------------------------")
         ordering_items = filtering_items if not ordering_items else ordering_items
         ordering_fields = ''.join(item_filter.order_by)
         default_position = -1
