@@ -216,19 +216,24 @@ async def get_items(
     filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
     print(filtering_items)
     extra_ordering = None
+    ordering_items = None
     if filtering_items:
         if item_filter.is_exclude:
             origin_item_filter.autoid__not_in = filtering_items
+            ordering_items = await ItemsService(
+                db_session=session, list_filter=item_filter
+            ).get_filtering_origin_items_autoids(not_excluded=True)
         else:
             origin_item_filter.autoid__in = filtering_items
     if not item_filter.is_filtering_values and item_filter.order_by:
         filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
     if item_filter.order_by:
+        ordering_items = filtering_items if not ordering_items else ordering_items
         ordering_fields = ''.join(item_filter.order_by)
         default_position = -1
         if ordering_fields.startswith('-'):
             default_position = len(filtering_items) + 2
-        data_for_ordering = {v: i for i, v in enumerate(filtering_items, 1)}
+        data_for_ordering = {v: i for i, v in enumerate(ordering_items, 1)}
         extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
     result = await OriginItemService(
         db_session=session, list_filter=origin_item_filter

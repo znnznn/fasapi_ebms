@@ -91,10 +91,10 @@ class RenameFieldFilter(Filter):
         excluded.append(self.Constants.exclude)
         return any(excluded)
 
-    def get_value(self, field_name, value) -> Any:
+    def get_value(self, field_name, value, **kwargs) -> Any:
         revert_values_fields = getattr(self.Constants, "revert_values_fields", None)
         is_excluded_field = field_name in self.Constants.excluded_fields
-        if is_excluded_field and value is False and self.need_exclude:
+        if is_excluded_field and value is False and self.need_exclude and not kwargs.get('not_excluded', False):
             self.Constants.exclude = True
             value = True
         elif not is_excluded_field and value is not None:
@@ -156,7 +156,7 @@ class RenameFieldFilter(Filter):
                     query = field_value.filter(query)
             else:
                 field_name = self.related_field(field_name)
-                value = self.get_value(field_name, value)
+                value = self.get_value(field_name, value, **kwargs)
                 if "__" in field_name:
                     field_name, operator = field_name.split("__")
                     if operator in ("in", "not_in") and isinstance(value, str):
