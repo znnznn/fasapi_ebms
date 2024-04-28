@@ -581,7 +581,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         objs = await self.db_session.scalars(stmt)
         return objs.all()
 
-    async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
+    async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False, **kwargs) -> Sequence[str] | None:
         # subq = select(self.model.order).where(
         #     and_(
         #         self.model.production_date != None,
@@ -591,13 +591,13 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         # ).join(Stage)
         query = select(self.model.order)
         if not do_ordering and self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(query)
-            query = self.filter.sort(query)
+            query = self.filter.filter(query, **kwargs)
+            query = self.filter.sort(query, **kwargs)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
         if do_ordering:
             print("do_ordering")
             query = self.filter.sort(query)
-            objs: ScalarResult[str] = await self.db_session.scalars(query)
+            objs: ScalarResult[str] = await self.db_session.scalars(query, **kwargs)
             return objs.all()
         return None
