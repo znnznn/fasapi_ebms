@@ -1,17 +1,18 @@
 import time
 from collections import defaultdict
-from typing import Generic, Type, Optional, List
+from typing import Generic, Type, Optional, List, NamedTuple
 
+import sqlalchemy
 from fastapi import Depends, HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal
+from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query, contains_eager
 
 from common.constants import InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
-from database import get_async_session
+from database import get_async_session, get_ebms_session, ebms_connection, ebms_engine
 from origin_db.filters import CategoryFilter
 from origin_db.models import Inprodtype, Arinvdet, Arinv, Inventry
 from origin_db.schemas import CategorySchema, ArinvDetSchema, ArinvRelatedArinvDetSchema, InventrySchema
@@ -45,19 +46,36 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         return obj
 
     async def count_query_objs(self, query) -> int:
+        start_time = time.time()
+        print("count count")
+        # sql_text = str(select(func.count()).select_from(query.subquery()).compile(compile_kwargs={"literal_binds": True}, dialect='mssql'))
+        # print(sql_text)
+        # result = await self.db_session.execute(text(sql_text))
+        # print(result)
+        print(time.time() - start_time)
         return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
 
-    async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
-        print("paginated_list")
+    async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
+        list_query = self.get_query(limit=limit, offset=offset, **kwargs)
+        count_sql = str(select(
+            func.count()).select_from(self.get_query().subquery()
+        ).compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
+        sql_text = str(list_query.compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
+        async with AsyncSession(ebms_engine) as session:
+            count = await session.execute(text(count_sql))
+            data = await session.execute(text(sql_text))
         time_start = time.time()
-        count = await self.count_query_objs(self.get_query())
-        print("count", time.time() - time_start)
-        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
-
+        list_objs = [data._asdict() for data in data.all()]
+        list_objs_as_model = []
+        for obj in list_objs:
+            data_to_lower_key = {}
+            for k, v in obj.items():
+                data_to_lower_key[k.lower()] = v
+            list_objs_as_model.append(self.model(**data_to_lower_key))
         print(time.time() - time_start)
         return {
-            "count": count,
-            "results": objs.all(),
+            "count": count.scalar(),
+            "results": list_objs_as_model,
         }
 
     async def get(self, autoid: str) -> Optional[OriginModelType]:
