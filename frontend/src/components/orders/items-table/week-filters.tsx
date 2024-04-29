@@ -37,7 +37,11 @@ export const WeekFilters = () => {
     const [defaultDate, setDefaultDate] = useState(currentWeeksDates?.[0].date)
 
     useEffect(() => {
-        if (scheduled && !overdue) {
+        if (
+            (category === 'Rollforming' || category === 'Trim') &&
+            scheduled &&
+            !overdue
+        ) {
             setDefaultDate(currentWeeksDates?.[0].date)
         } else {
             setDefaultDate('')
@@ -54,7 +58,9 @@ export const WeekFilters = () => {
         if (!scheduled) {
             dispatch(setDate(''))
         } else {
-            dispatch(setDate(defaultDate))
+            if (category === 'Rollforming' || category === 'Trim') {
+                dispatch(setDate(defaultDate))
+            }
         }
     }, [scheduled, defaultDate])
 

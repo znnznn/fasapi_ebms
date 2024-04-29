@@ -33,7 +33,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
 
     const colSpan = columns.length + 1
 
-    const groupByOrder = groupBy(table.getRowModel().rows, 'original')
+    const groupByOrder = groupBy(table?.getRowModel()?.rows, 'original')
 
     return (
         <div className='rounded-md'>
@@ -106,7 +106,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                         // })
                         groupByOrder.map((group) =>
                             group[1].map((row, index) => (
-                                <Fragment key={row.id}>
+                                <Fragment key={row.original?.id}>
                                     {index === 0 && (
                                         <TableRow className='pointer-events-none !p-0'>
                                             <TableCell
@@ -121,7 +121,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                         </TableRow>
                                     )}
                                     <TableRow
-                                        key={row.id}
+                                        key={row.original?.id}
                                         className='odd:bg-secondary/60'
                                         data-state={row.getIsSelected() && 'selected'}>
                                         {row.getVisibleCells().map((cell) => (

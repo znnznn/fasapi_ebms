@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+
 import { selectCategory } from '../store/orders'
 
 import {
@@ -11,6 +14,7 @@ import type { Item } from '@/store/api/ebms/ebms.types'
 import type { FlowsData } from '@/store/api/flows/flows.types'
 import {
     useAddItemMutation,
+    useAddOrderItemMutation,
     usePatchItemMutation,
     usePatchOrderItemMutation
 } from '@/store/api/items/items'
@@ -28,7 +32,13 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
     const { flow, id: itemId } = item || {}
     const flowId = flow?.id
 
-    const defalueValue = flowId ? String(flowId) : ''
+    // const defalueValue = flowId ? String(flowId) : ''
+
+    const [defalueValue, setDefaultValue] = useState(flowId ? String(flowId) : '')
+
+    useEffect(() => {
+        setDefaultValue(flowId ? String(flowId) : '')
+    }, [flowId])
 
     const [patchItemStatus] = usePatchItemMutation()
     const [patchOrderStatus] = usePatchOrderItemMutation()
@@ -36,6 +46,7 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
     const category = useAppSelector(selectCategory)
 
     const [addItem] = useAddItemMutation()
+    const [addOrderItem] = useAddOrderItemMutation()
 
     const handlePatchItem = async (data: ItemsPatchData) => {
         try {
@@ -44,13 +55,21 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
             } else {
                 await patchOrderStatus(data).unwrap()
             }
-        } catch (error) {}
+        } catch (error) {
+            toast.error('Error patching item')
+        }
     }
 
     const handleAddItem = async (data: Partial<ItemsAddData>) => {
         try {
-            await addItem(data).unwrap()
-        } catch (error) {}
+            if (category) {
+                await addItem(data).unwrap()
+            } else {
+                await addOrderItem(data).unwrap()
+            }
+        } catch (error) {
+            toast.error('Error adding item')
+        }
     }
 
     const onValueChange = (value: string) => {
@@ -58,9 +77,10 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
 
         const data = {
             flow: +value,
-            order: orderId,
             flowName
         }
+
+        setDefaultValue(value)
 
         if (itemId) {
             handlePatchItem({
@@ -79,8 +99,9 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
 
     return (
         <Select
-            key={defalueValue}
+            // key={defalueValue}
             defaultValue={defalueValue}
+            value={defalueValue}
             onValueChange={onValueChange}>
             <SelectTrigger className='w-40 text-left'>
                 <SelectValue placeholder='Select flow' />

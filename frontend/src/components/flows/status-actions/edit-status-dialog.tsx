@@ -45,7 +45,7 @@ export const EditStatusDialog: React.FC<Props> = ({ id, name, description, color
         shouldFocusError: true,
         values: {
             name,
-            description
+            description: description || ''
         }
     })
 
