@@ -128,10 +128,11 @@ class Arinv(Base):
     p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL)
     details = relationship('Arinvdet', back_populates="order", innerjoin=True, order_by='Arinvdet.autoid', primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
     _sales_order = None
+    _count_items = None
 
     @hybrid_property
     def count_items(self):
-        return len(self.details)
+        return self._count_items
 
     @count_items.expression
     def count_items(self):
@@ -150,6 +151,10 @@ class Arinv(Base):
         ).correlate_except(
             Arinvdet
         ).scalar_subquery()
+
+    @count_items.setter
+    def count_items(self, value):
+        self._count_items = value
 
     @hybrid_property
     def sales_order(self):
@@ -242,37 +247,61 @@ class Arinvdet(Base):
     int_note: Mapped[str] = mapped_column('INT_NOTE', String)
     tax_expl: Mapped[str] = mapped_column('TAX_EXPL', String)
     on_site: Mapped[float] = mapped_column('ON_SITE', DECIMAL)
-    order = relationship('Arinv', back_populates='details', lazy='selectin')
-    rel_inventry = relationship('Inventry', back_populates='arinvdet', primaryjoin="Inventry.id == Arinvdet.inven")
+    order = relationship('Arinv', back_populates='details', primaryjoin="Arinv.autoid == Arinvdet.doc_aid")
+    rel_inventry = relationship('Inventry', back_populates='arinvdet', primaryjoin="Inventry.id == Arinvdet.inven", lazy='selectin')
     _item = None
+    _customer = None
+    _category = None
+    _profile = None
+    _color = None
 
     @hybrid_property
     def category(self):
-        return self.rel_inventry.prod_type
+        return self._category
 
     @category.expression
     def category(cls):
         return select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
+    @category.setter
+    def category(self, value):
+        self._category = value
+
     @hybrid_property
     def profile(self):
-        return self.rel_inventry.rol_profil
+        return self._profile
 
     @profile.expression
     def profile(cls):
         return select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
+    @profile.setter
+    def profile(self, value):
+        self._profile = value
+
     @hybrid_property
     def color(self):
-        return self.rel_inventry.rol_color
+        return self._color
+
+    @color.setter
+    def color(self, value):
+        self._color = value
 
     @color.expression
     def color(cls):
-        return select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
+        return select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
 
     @hybrid_property
     def customer(self):
-        return self.order.name
+        return self._customer
+
+    @customer.expression
+    def customer(cls):
+        return select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer')
+
+    @customer.setter
+    def customer(self, value):
+        self._customer = value
 
     @hybrid_property
     def item(self):

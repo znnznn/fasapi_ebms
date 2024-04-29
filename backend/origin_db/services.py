@@ -5,7 +5,7 @@ from typing import Generic, Type, Optional, List, NamedTuple
 import sqlalchemy
 from fastapi import Depends, HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text
+from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query, contains_eager
@@ -61,17 +61,22 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
             func.count()).select_from(self.get_query().subquery()
         ).compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
         sql_text = str(list_query.compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
+        # print(sql_text)
         async with AsyncSession(ebms_engine) as session:
             count = await session.execute(text(count_sql))
             data = await session.execute(text(sql_text))
         time_start = time.time()
-        list_objs = [data._asdict() for data in data.all()]
+        data_all = data.all()
+        print(data_all)
+        list_objs = [data._asdict() for data in data_all]
+
         list_objs_as_model = []
         for obj in list_objs:
             data_to_lower_key = {}
             for k, v in obj.items():
                 data_to_lower_key[k.lower()] = v
             list_objs_as_model.append(self.model(**data_to_lower_key))
+        # print(obj.items())
         print(time.time() - time_start)
         return {
             "count": count.scalar(),
@@ -152,9 +157,17 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
-            self.model
-        # ).join(
-        #     self.model.rel_inventry
+            self.model,
+            # Inventry.prod_type, Inventry.rol_profil,
+            select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer'),
+            select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('category'),
+            select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('profile'),
+            select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
+            # literal(Inventry.prod_type).label('category'),
+            # select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).subquery('INVENTRY'),
+            # select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).subquery('category'),
+        ).join(
+            self.model.rel_inventry
         # ).join(
         #     self.model.order
         ).where(
@@ -171,7 +184,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
             selectinload(self.model.rel_inventry),
             selectinload(self.model.order),
         ).group_by(
-            self.model
+            self.model,
+            # Inventry.prod_type, Inventry.rol_profil
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
@@ -212,11 +226,35 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
+            select(
+                func.count(Arinvdet.doc_aid).label('count_items')
+            ).where(
+                Arinvdet.doc_aid == self.model.autoid,
+                Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                # Arinvdet.category != None,
+                Arinvdet.category != '',
+                Arinvdet.category != 'Vents',
+                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                Arinvdet.par_time == '',
+                Arinvdet.inven != None,
+                Arinvdet.inven != '',
+            ).correlate_except(
+                Arinvdet
+            ).scalar_subquery().label('count_items')
         ).where(
             and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
         ).join(
             # sbq, sbq.doc_aid == self.model.autoid
-            self.model.details,
+            Arinvdet, and_(
+                Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                # Arinvdet.category != None,
+                Arinvdet.category != '',
+                Arinvdet.category != 'Vents',
+                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                Arinvdet.par_time == '',
+                Arinvdet.inven != None,
+                Arinvdet.inven != '',
+            )
         # ).join(
         #     Inventry
         ).options(
