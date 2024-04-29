@@ -42,7 +42,7 @@ class ArinvDetSchema(BaseModel):
     weight: float = Field(default=0, serialization_alias="weight")
     length: float = Field(default=0, serialization_alias="length", alias="heightd")
     bends: float = Field(default=0, serialization_alias="bends", alias="demd")
-    customer: str = Field(default=None)
+    customer: str | None = Field(default=None)
     order: str = Field(default=None, serialization_alias="order", alias="invoice",)
     id_inven: str = Field(default=None, serialization_alias="id_inven", alias="inven")
     origin_order: str = Field(default=None, serialization_alias="origin_order", alias="doc_aid")
