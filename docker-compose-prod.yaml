@@ -46,8 +46,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-    command: npm run preview
+      - NODE_ENV=production
+    command: npm run dev
     depends_on:
       - backend
 
