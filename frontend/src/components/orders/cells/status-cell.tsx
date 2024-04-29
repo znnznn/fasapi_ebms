@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { selectCategory, selectOrders } from '../store/orders'
@@ -36,9 +36,13 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
         [flow?.stages]
     )
 
-    const defaultStatus = stageId ? String(stageId) : ''
+    const [defaultStatus, setDefaultStatus] = useState(stageId ? String(stageId) : '')
 
-    const [patchStatus] = usePatchItemMutation()
+    useEffect(() => {
+        setDefaultStatus(stageId ? String(stageId) : '')
+    }, [stageId])
+
+    const [patchItem] = usePatchItemMutation()
 
     const isCompleted = useAppSelector(selectOrders).isOrderCompleted
 
@@ -116,7 +120,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
 
     const handlePatchItem = async (data: ItemsPatchData) => {
         try {
-            await patchStatus(data)
+            await patchItem(data)
                 .unwrap()
                 .then(() => {
                     if (!category) {
@@ -142,6 +146,8 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
         const stageName = currentStatus?.name
         const stageColor = currentStatus?.color
 
+        setDefaultStatus(value)
+
         const data = {
             order: originOrderId,
             stage: +value
@@ -161,8 +167,10 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
         <Select
             onValueChange={onValueChange}
             defaultValue={defaultStatus}
+            value={defaultStatus}
             disabled={isDisabled}
-            key={flowId}>
+            // key={flowId}
+        >
             <SelectTrigger className='max-w-40'>
                 <SelectValue placeholder='Select status' />
             </SelectTrigger>

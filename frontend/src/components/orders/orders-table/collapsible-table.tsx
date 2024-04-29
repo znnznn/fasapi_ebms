@@ -95,7 +95,7 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                             const originItems = (row.original as OrdersData).origin_items
 
                             return (
-                                <Collapsible key={row.id} asChild>
+                                <Collapsible key={row?.original?.id} asChild>
                                     <>
                                         <TableRow
                                             className='odd:bg-secondary/60'

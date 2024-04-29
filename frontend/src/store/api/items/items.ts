@@ -39,7 +39,7 @@ export const items = api.injectEndpoints({
                 method: 'POST',
                 body: data
             }),
-            async onQueryStarted({ ...data }, { dispatch, queryFulfilled }) {
+            async onQueryStarted(data, { dispatch, queryFulfilled }) {
                 const queryKeyParams = store.getState().orders.currentQueryParams
 
                 const patchResult = dispatch(
@@ -101,7 +101,7 @@ export const items = api.injectEndpoints({
                 method: 'POST',
                 body: data
             }),
-            async onQueryStarted({ ...data }, { dispatch, queryFulfilled }) {
+            async onQueryStarted(data, { dispatch, queryFulfilled }) {
                 const queryKeyParams = store.getState().orders.currentQueryParams
 
                 const patchResult = dispatch(
@@ -155,7 +155,7 @@ export const items = api.injectEndpoints({
                 body: data
             }),
             async onQueryStarted(
-                { data: { ...data }, id },
+                { data: { ...data }, stageColor, stageName, id },
                 { dispatch, queryFulfilled }
             ) {
                 const queryKeyParams = store.getState().orders.currentQueryParams
@@ -183,7 +183,11 @@ export const items = api.injectEndpoints({
                                 Object.assign(item?.item, {
                                     ...data,
                                     flow: flowToPatch,
-                                    stage: null
+                                    stage: {
+                                        id: data.stage!,
+                                        name: stageName!,
+                                        color: stageColor!
+                                    }
                                 })
                             } else if (item?.item) {
                                 Object.assign(item?.item, {
@@ -210,7 +214,7 @@ export const items = api.injectEndpoints({
                 body: data
             }),
             async onQueryStarted(
-                { data: { ...data }, id },
+                { data, stageColor, stageName, id },
                 { dispatch, queryFulfilled }
             ) {
                 const queryKeyParams = store.getState().orders.currentQueryParams
@@ -230,15 +234,32 @@ export const items = api.injectEndpoints({
                                 stages: []
                             }
 
-                            if (data.flowName && item?.item) {
+                            const dataToPatch = {
+                                ...data
+                            }
+
+                            if (stageName && stageColor) {
+                                Object.assign(dataToPatch, {
+                                    stage: {
+                                        id: data.stage!,
+                                        name: stageName!,
+                                        color: stageColor!
+                                    }
+                                })
+                            }
+
+                            if (data?.flowName && item?.item) {
                                 Object.assign(item?.item, {
                                     ...data,
                                     flow: flowToPatch,
                                     stage: null
                                 })
                             } else if (item?.item) {
+                                console.log('something')
+
                                 Object.assign(item?.item, {
-                                    ...data
+                                    ...dataToPatch
+                                    // stage: null
                                 })
                             }
                         }
@@ -268,6 +289,7 @@ export const {
     useGetItemQuery,
     useAddItemMutation,
     usePatchOrderItemMutation,
+    useAddOrderItemMutation,
     usePatchItemMutation,
     useRemoveItemMutation
 } = items
