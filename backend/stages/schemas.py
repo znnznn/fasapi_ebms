@@ -45,7 +45,7 @@ class CommentSchemaOut(BaseModel):
     id: int = Field(default=None)
     item_id: int = Field(default=None, serialization_alias="item")
     text: str = Field(default=None)
-    created_at: datetime = Field(default=None)
+    created_at: datetime | str = Field(default=None)
     user: UserReadShortSchema = Field(default=None)
 
     class Config:
