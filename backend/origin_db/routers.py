@@ -19,8 +19,10 @@ from origin_db.schemas import (
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter, SalesOrderFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
+from stages.utils import GetDataForSending
 from users.mixins import active_user_with_permission
 from users.models import User
+from websockets_connection.managers import connection_manager
 
 router = APIRouter(prefix="/ebms", tags=["ebms"])
 
@@ -309,6 +311,7 @@ async def partial_update_item(
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
+    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.autoid))
     return {"message": response.json()}
 
 

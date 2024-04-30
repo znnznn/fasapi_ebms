@@ -15,7 +15,8 @@ from starlette.responses import JSONResponse, Response
 from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
 from database import get_async_session
-from origin_db.models import Inprodtype, Arinv, Arinvdet
+from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
+from origin_db.services import OriginItemService
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
 from stages.schemas import (
@@ -326,11 +327,9 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
         if flow_id := getattr(input_obj, "flow_id", None):
             if flow_id != instance.flow_id:
-                origin_item = await self.db_session.scalar(
-                    select(Arinvdet).where(Arinvdet.autoid == instance.origin_item).options(selectinload(Arinvdet.rel_inventry))
-                )
+                origin_item = await OriginItemService(db_session=self.db_session).get(instance.origin_item)
                 origin_item_category = origin_item.category if origin_item else False
-                flow = await self.db_session.scalar(select(Flow).where(Flow.id == flow_id))
+                flow = await FlowsService(db_session=self.db_session).get(flow_id)
                 category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
                 category = category.prod_type if category else False
                 if category != origin_item_category:
