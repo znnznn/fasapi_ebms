@@ -63,7 +63,7 @@ class GetDataForSending:
         return [ArinvDetSchema.from_orm(i).model_dump() for i in origin_items]
 
     async def get_orders_by_autoids(self, autoids: list) -> list[dict]:
-        origin_orders = await OriginOrderService(db_session=self.db_session).get_listy_by_autoids(autoids=autoids)
+        origin_orders = await OriginOrderService(db_session=self.db_session).get_origin_order_by_autoids(autoids=autoids)
         autoids = [i.autoid for i in origin_orders]
         items = await ItemsService(db_session=self.db_session).group_by_order_annotated_statistics(autoids=autoids)
         sales_order = await SalesOrdersService(db_session=self.db_session).list_by_orders(autoids=autoids)

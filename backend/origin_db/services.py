@@ -90,7 +90,7 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query())
         return objs.all()
 
-    async def get_listy_by_autoids(self, autoids: List[str]) -> Sequence[OriginModelType]:
+    async def get_listy_by_autoids(self, autoids: List[str] | set) -> Sequence[OriginModelType]:
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(select(self.model).where(self.model.autoid.in_(autoids)))
         return objs.all()
 
@@ -195,6 +195,14 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
 
     async def get_origin_item_with_item(self, autoid: str):
         return await self.get(autoid)
+
+    async def get_listy_by_autoids(self, autoids: List[str] | set) -> Sequence[OriginModelType]:
+        stmt = self.get_query().where(self.model.autoid.in_(autoids))
+        sql_text = self.to_sql(stmt)
+        async with AsyncSession(ebms_engine) as session:
+            result = await session.execute(text(sql_text))
+        list_objs = [self.model(**self.dict_keys_to_lowercase(data._asdict())) for data in result.all()]
+        return list_objs
 
 
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
@@ -305,6 +313,14 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             return self.model(**self.dict_keys_to_lowercase(result._asdict()), details=data_details)
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
+
+    async def get_origin_order_by_autoids(self, autoids: List[str] | set) -> Sequence[str] | None:
+        query = self.get_query().where(self.model.autoid.in_(autoids))
+        sql_text = self.to_sql(query)
+        async with AsyncSession(ebms_engine) as session:
+            result = await session.execute(text(sql_text))
+            list_objs = [self.model(**self.dict_keys_to_lowercase(data._asdict())) for data in result.all()]
+        return list_objs
 
 
 class InventryService(BaseService[Inventry, InventrySchema]):

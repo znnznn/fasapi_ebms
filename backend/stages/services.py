@@ -16,7 +16,7 @@ from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
 from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
-from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService
+from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
 from stages.schemas import (
@@ -367,9 +367,8 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             object_data['stage_id'] = None
             category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
             category = category.prod_type if category else False
-        origin_items_objs = await self.db_session.scalars(
-            select(Arinvdet).where(Arinvdet.autoid.in_(origin_items)).options(selectinload(Arinvdet.rel_inventry))
-        )
+        origin_items_objs = await OriginItemService(db_session=self.db_session).get_listy_by_autoids(origin_items)
+        print(origin_items_objs)
         stage = None
         if stage_id := object_data.get("stage_id"):
             stage = await self.db_session.scalar(select(Stage).where(Stage.id == stage_id).options(selectinload(Stage.flow)))
@@ -561,7 +560,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         if production_date := object_data.get("production_date"):
             await self.validate_production_date(production_date)
         sales_orders = await self.db_session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
-        origin_orders = await self.db_session.scalars(select(Arinv).where(Arinv.autoid.in_(origin_orders)))
+        origin_orders = await OriginOrderService(db_session=self.db_session).get_origin_order_by_autoids(origin_orders)
         origin_orders_data = {obj.autoid: obj for obj in origin_orders}
         for obj in sales_orders:
             origin_order = origin_orders_data.pop(obj.order, None)
