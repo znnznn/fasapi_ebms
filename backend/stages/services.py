@@ -16,7 +16,7 @@ from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
 from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
-from origin_db.services import OriginItemService
+from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
 from stages.schemas import (
@@ -79,10 +79,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return query
 
     async def validate_autoid(self, autoid: str, model):
-        smt = select(model).where(model.autoid == autoid)
-        result = await self.db_session.scalar(smt)
-        if not result:
-            raise HTTPException(status_code=404, detail=f"{model.__name__} with autoid {autoid} not found")
+        result = await BaseEbmsBaseService(db_session=self.db_session, model=model).get(autoid)
         return result
 
     async def count_query_objs(self, query) -> int:
@@ -290,11 +287,14 @@ class CommentsService(BaseService[Comment, CommentSchemaIn]):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
     async def create(self, obj: CommentSchemaIn) -> ModelType:
-        obj = await self.root_validator(obj)
         obj_data = obj.model_dump(exclude_none=True, exclude_unset=True)
         origin_item = await self.validate_autoid(obj.item_id, Arinvdet)
+        print(origin_item.doc_aid)
+        print(origin_item.autoid)
+
         item = await ItemsService(db_session=self.db_session).get_related_items_by_origin_items([origin_item.autoid])
         if not item:
+            print("ctreated new item")
             item = await ItemsService(
                 db_session=self.db_session
             ).create(
