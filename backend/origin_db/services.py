@@ -5,7 +5,7 @@ from typing import Generic, Type, Optional, List, NamedTuple
 import sqlalchemy
 from fastapi import Depends, HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column
+from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column, Select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query, contains_eager
@@ -30,6 +30,12 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         self.db_session = db_session
         self.filter = list_filter
 
+    def to_sql(self, query: Select | Query) -> str:
+        return str(query.compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
+
+    def dict_keys_to_lowercase(self, obj: dict) -> dict:
+        return {k.lower(): v for k, v in obj.items()}
+
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
         query = select(self.model).where(and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR))
         if self.filter:
@@ -45,38 +51,16 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         obj = await self.get(autoid)
         return obj
 
-    async def count_query_objs(self, query) -> int:
-        start_time = time.time()
-        print("count count")
-        # sql_text = str(select(func.count()).select_from(query.subquery()).compile(compile_kwargs={"literal_binds": True}, dialect='mssql'))
-        # print(sql_text)
-        # result = await self.db_session.execute(text(sql_text))
-        # print(result)
-        print(time.time() - start_time)
-        return await self.db_session.scalar(select(func.count()).select_from(query.subquery()))
-
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
-        list_query = self.get_query(limit=limit, offset=offset, **kwargs)
-        count_sql = str(select(
-            func.count()).select_from(self.get_query().subquery()
-        ).compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
-        sql_text = str(list_query.compile(compile_kwargs={"literal_binds": True}, dialect=sqlalchemy.dialects.mssql.dialect()))
-        # print(sql_text)
         async with AsyncSession(ebms_engine) as session:
-            count = await session.execute(text(count_sql))
-            data = await session.execute(text(sql_text))
+            count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
+            data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
         time_start = time.time()
         data_all = data.all()
-        print(data_all)
         list_objs = [data._asdict() for data in data_all]
-
         list_objs_as_model = []
         for obj in list_objs:
-            data_to_lower_key = {}
-            for k, v in obj.items():
-                data_to_lower_key[k.lower()] = v
-            list_objs_as_model.append(self.model(**data_to_lower_key))
-        # print(obj.items())
+            list_objs_as_model.append(self.model(**self.dict_keys_to_lowercase(obj)))
         print(time.time() - time_start)
         return {
             "count": count.scalar(),
@@ -84,19 +68,30 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         }
 
     async def get(self, autoid: str) -> Optional[OriginModelType]:
-        stmt = self.get_query().where(self.model.autoid == autoid)
-        result = await self.db_session.scalars(stmt)
+        query = self.get_query().where(self.model.autoid == autoid)
+        sql_text = self.to_sql(query)
+        async with AsyncSession(ebms_engine) as session:
+            result = await session.execute(text(sql_text))
         try:
-            return result.one()
+            result = result.one()
+            return self.model(**self.dict_keys_to_lowercase(result._asdict()))
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
+
+    # async def get(self, autoid: str) -> Optional[OriginModelType]:
+    #     stmt = self.get_query().where(self.model.autoid == autoid)
+    #     result = await self.db_session.scalars(stmt)
+    #     try:
+    #         return result.one()
+    #     except NoResultFound:
+    #         raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
 
     async def list(self, kwargs: Optional[dict] = None) -> Sequence[OriginModelType]:
         objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query())
         return objs.all()
 
     async def get_listy_by_autoids(self, autoids: List[str]) -> Sequence[OriginModelType]:
-        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query().where(self.model.autoid.in_(autoids)))
+        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(select(self.model).where(self.model.autoid.in_(autoids)))
         return objs.all()
 
     async def create(self, obj: InputSchemaType) -> OriginModelType:
@@ -158,18 +153,10 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
-            # Inventry.prod_type, Inventry.rol_profil,
             select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer'),
             select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('category'),
             select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('profile'),
             select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
-            # literal(Inventry.prod_type).label('category'),
-            # select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).subquery('INVENTRY'),
-            # select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).subquery('category'),
-        ).join(
-            self.model.rel_inventry
-        # ).join(
-        #     self.model.order
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
@@ -185,7 +172,6 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
             selectinload(self.model.order),
         ).group_by(
             self.model,
-            # Inventry.prod_type, Inventry.rol_profil
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
@@ -203,7 +189,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
 
     async def list_by_orders(self, autoids: List[str]):
         stmt = self.get_query().where(self.model.doc_aid.in_(autoids))
-        objs = await self.db_session.scalars(stmt)
+        sql_text = self.to_sql(stmt)
+        objs = await self.db_session.execute(text(sql_text))
         return objs.all()
 
     async def get_origin_item_with_item(self, autoid: str):
@@ -218,12 +205,17 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    # async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
-    #     count = await self.count_query_objs(super().get_query())
-    #     objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
-    #     return {"count": count, "results": objs.all()}
-
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
+        # stmt = select(Arinvdet).where(and_(
+        #         Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+        #         # Arinvdet.category != None,
+        #         Arinvdet.category != '',
+        #         Arinvdet.category != 'Vents',
+        #         # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+        #         Arinvdet.par_time == '',
+        #         Arinvdet.inven != None,
+        #         Arinvdet.inven != '',)
+        # ).subquery('details')
         query = select(
             self.model,
             select(
@@ -278,29 +270,41 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
-    async def get(self, autoid: str) -> Optional[OriginModelType]:
-        query = select(
-            self.model,
-        ).where(
-            self.model.autoid == autoid
-        ).join(
-            Arinvdet
-        ).options(
-            selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
-        ).order_by(
-            getattr(self.model, self.default_ordering_field)
-        ).group_by(
-            self.model
+    async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
+        async with AsyncSession(ebms_engine) as session:
+            count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
+            data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
+            data_all = data.all()
+            list_objs = [self.dict_keys_to_lowercase(data._asdict()) for data in data_all]
+            orders_details = await OriginItemService(db_session=session).list_by_orders(autoids=[data['autoid'] for data in list_objs])
+        time_start = time.time()
+        details = defaultdict(list)
+        for order_detail in orders_details:
+            order_detail = Arinvdet(**self.dict_keys_to_lowercase(order_detail._asdict()))
+            details[order_detail.doc_aid].append(order_detail)
+        list_objs_as_model = []
+        for obj in list_objs:
+            list_objs_as_model.append(self.model(**self.dict_keys_to_lowercase(obj), details=details.get(obj['autoid'], [])))
+        print(time.time() - time_start)
+        return {
+            "count": count.scalar(),
+            "results": list_objs_as_model,
+        }
 
-        )
-        result = await self.db_session.scalars(query)
+    async def get(self, autoid: str) -> Optional[OriginModelType]:
+        query = self.get_query().where(self.model.autoid == autoid)
+        sql_text = self.to_sql(query)
+        async with AsyncSession(ebms_engine) as session:
+            result = await session.execute(text(sql_text))
+            details = await OriginItemService(db_session=session).list_by_orders(autoids=[autoid])
         try:
-            return result.one()
+            result = result.one()
+            data_details = [Arinvdet(**self.dict_keys_to_lowercase(detail._asdict())) for detail in details]
+            order = self.model(**self.dict_keys_to_lowercase(result._asdict()))
+            order.details_data = data_details
+            return self.model(**self.dict_keys_to_lowercase(result._asdict()), details=data_details)
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
-
-    async def get_origin_order_with_sales_order(self, autoid: str) -> Optional[OriginModelType]:
-        return await self.get(autoid)
 
 
 class InventryService(BaseService[Inventry, InventrySchema]):
@@ -328,9 +332,10 @@ class InventryService(BaseService[Inventry, InventrySchema]):
         )
         return await self.db_session.execute(stmt)
 
-    async def count_capacity_by_days(self, items_data: dict) -> Sequence[Result]:
+    async def count_capacity_by_days(self, items_data: dict, list_categories = None) -> Sequence[Result]:
         """  Return total capacity for an inventory group by prod type with count arinv"""
         compair_data = defaultdict(list)
+        list_categories = list_categories or []
         for autoid, date in items_data.items():
             compair_data[date.strftime('%Y-%m-%d')].append(autoid)
         list_subqueries = []
@@ -345,7 +350,7 @@ class InventryService(BaseService[Inventry, InventrySchema]):
                     else_=Arinvdet.quan
                 )).label("total_capacity"),
             ).where(
-                Arinvdet.autoid.in_(autoids), Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES), Arinvdet.par_time == '',
+                Arinvdet.autoid.in_(autoids), Inventry.prod_type.in_(list_categories), Arinvdet.par_time == '',
             ).join(
                 self.model.arinvdet,
             ).group_by(

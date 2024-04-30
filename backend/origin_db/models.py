@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Integer, String, TIMESTAMP, Boolean, BINARY, DECIMAL, ForeignKey, Date, DATE, select, func
+    Integer, String, TIMESTAMP, Boolean, BINARY, DECIMAL, ForeignKey, Date, DATE, select, func, and_
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -129,6 +129,7 @@ class Arinv(Base):
     details = relationship('Arinvdet', back_populates="order", innerjoin=True, order_by='Arinvdet.autoid', primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
     _sales_order = None
     _count_items = None
+    _details_data = None
 
     @hybrid_property
     def count_items(self):
@@ -163,6 +164,33 @@ class Arinv(Base):
     @sales_order.setter
     def sales_order(self, value):
         self._sales_order = value
+
+    @property
+    def details_data(self):
+        return self._details_data
+
+    # @details.setter
+    # def details_data(self, value):
+    #     self._details = value
+
+    # @details.expression
+    # def details(self):
+    #     return select(Arinvdet).where(
+    #         and_(Arinvdet.doc_aid == self.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+    #              # Arinvdet.category != None,
+    #              Arinvdet.category != '',
+    #              Arinvdet.category != 'Vents',
+    #              # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+    #              Arinvdet.par_time == '',
+    #              Arinvdet.inven != None,
+    #              Arinvdet.inven != '',
+    #              )
+    #     ).correlate_except(
+    #         Arinvdet
+    #     )
+    @details_data.setter
+    def details_data(self, value):
+        self._details_data = value
 
 
 class Arinvdet(Base):

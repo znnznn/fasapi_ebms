@@ -286,12 +286,15 @@ async def get_capacities_calendar(
     item_objs = await ItemsService(db_session=session).get_autoids_and_production_date_by_month(year=year, month=month)
     items_data = {i.origin_item: i.production_date for i in item_objs}
     capacities = await CapacitiesService(db_session=session).list()
-    total_capacity = await InventryService(db_session=session).count_capacity_by_days(items_data=items_data) if items_data else []
-    for capacity in total_capacity:
-        context[capacity.production_date] = {
-            capacity.prod_type: {"capacity": float(capacity.total_capacity), "count_orders": capacity.count_orders}
-        }
+    items_data = items_data if items_data else []
+    total_capacity = await InventryService(
+        db_session=session).count_capacity_by_days(items_data=items_data, list_categories=categories_data.values()) if items_data else []
     context['capacity_data'] = {categories_data.get(capacity.category_autoid): capacity.per_day for capacity in capacities}
+    if context['capacity_data']:
+        for capacity in total_capacity:
+            context[capacity.production_date] = {
+                capacity.prod_type: {"capacity": float(capacity.total_capacity), "count_orders": capacity.count_orders}
+            }
     return JSONResponse(content=context)
 
 
