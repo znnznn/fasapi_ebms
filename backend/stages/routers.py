@@ -138,8 +138,12 @@ async def create_comment(
 ):
     instance = await CommentsService(db_session=session).create(comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
+    # item_data = await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item)
+    # print(item_data)
+    order_data = await GetDataForSending(db_session=session).one_origin_order_object(item.order)
+    print(order_data)
+    # await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
+    # await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
     return instance
 
 
