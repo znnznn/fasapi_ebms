@@ -167,7 +167,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
                 self.model.inven != None,
                 self.model.inven != '',
             ),
-        ).options(
+        ).join(Arinvdet.order).options(
             selectinload(self.model.rel_inventry),
             selectinload(self.model.order),
         ).group_by(
