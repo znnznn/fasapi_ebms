@@ -153,7 +153,7 @@ async def register(
 ):
     try:
         created_user = await user_manager.create(
-            user_create, safe=False, request=request
+            user_create, safe=True, request=request
         )
     except exceptions.UserAlreadyExists:
         raise HTTPException(
