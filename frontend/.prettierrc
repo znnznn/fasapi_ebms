@@ -9,6 +9,7 @@
     "endOfLine": "crlf",
     "printWidth": 90,
     "bracketSameLine": true,
+    "singleAttributePerLine": true,
     "bracketSpacing": true,
     "importOrderSeparation": true,
     "importOrderSortSpecifiers": true,

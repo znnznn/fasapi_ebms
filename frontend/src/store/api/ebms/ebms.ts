@@ -32,7 +32,8 @@ export const embs = api.injectEndpoints({
             providesTags: ['Categories']
         }),
         getAllCategories: build.query<AllCategoriesData[], void>({
-            query: () => 'ebms/categories/all/'
+            query: () => 'ebms/categories/all/',
+            providesTags: ['Categories']
         }),
         getOrders: build.query<OrdersResponse, Partial<OrdersQueryParams>>({
             query: (params) => {

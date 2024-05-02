@@ -12,7 +12,6 @@ export const usePagination = () => {
     return {
         limit: pageSize,
         setPagination,
-        pagination,
         offset
     }
 }

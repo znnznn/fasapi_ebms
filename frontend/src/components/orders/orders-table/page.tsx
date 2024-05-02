@@ -1,5 +1,5 @@
 import type { SortingState } from '@tanstack/react-table'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { selectOrders, setCurrentQueryParams } from '../store/orders'
 
@@ -62,7 +62,10 @@ export const OrderTablePage = () => {
         refetch
     })
 
-    const pageCount = Math.ceil(currentData?.count! / limit)
+    const pageCount = useMemo(
+        () => (currentData?.count ? Math.ceil(currentData?.count! / limit) : 0),
+        [isLoading, limit]
+    )
 
     return (
         <div className='mx-auto'>

@@ -152,8 +152,10 @@ export const AddUserDialog = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value='admin'>Admin</SelectItem>
-                                            <SelectItem value='worker'>Worker</SelectItem>
-                                            <SelectItem value='manager'>
+                                            <SelectItem disabled value='worker'>
+                                                Worker
+                                            </SelectItem>
+                                            <SelectItem disabled value='manager'>
                                                 Manager
                                             </SelectItem>
                                         </SelectContent>

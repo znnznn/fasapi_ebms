@@ -35,7 +35,7 @@ export const Filters = () => {
         }
 
         if (done) {
-            newFilters.push('done')
+            newFilters.push('completed')
             dispatch(setOrderCompleted(true))
         } else {
             dispatch(setOrderCompleted(false))
@@ -61,14 +61,16 @@ export const Filters = () => {
         setFilters((prev) => prev?.filter((f) => f !== filter))
 
         if (filter === 'overdue') setOverdue(false)
-        if (filter === 'done') setDone(false)
+        if (filter === 'completed') setDone(false)
     }
 
     return (
         <div className='flex gap-5 items-center'>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button className='h-[43px]' variant='outline'>
+                    <Button
+                        className='h-[43px]'
+                        variant='outline'>
                         Filters
                     </Button>
                 </DropdownMenuTrigger>
@@ -78,7 +80,9 @@ export const Filters = () => {
                         onCheckedChange={setOverdue}>
                         Overdue
                     </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={done} onCheckedChange={setDone}>
+                    <DropdownMenuCheckboxItem
+                        checked={done}
+                        onCheckedChange={setDone}>
                         Completed
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>

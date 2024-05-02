@@ -88,10 +88,12 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
 
     const onSubmit: SubmitHandler<FormData> = (formData) => handlePatchUser(formData)
 
-    const isDisabled = user.role === 'admin'
+    // const isDisabled = user.role === 'admin'
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+            open={open}
+            onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
                     onClick={stopPropagation}
@@ -107,10 +109,12 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
                     <DialogTitle>Edit {userName} ?</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                    <form className='space-y-5' onSubmit={form.handleSubmit(onSubmit)}>
+                    <form
+                        className='space-y-5'
+                        onSubmit={form.handleSubmit(onSubmit)}>
                         <FormField
                             control={form.control}
-                            disabled={isDisabled}
+                            // disabled={isDisabled}
                             name='email'
                             render={({ field }) => (
                                 <FormItem>
@@ -127,27 +131,33 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
                         />
                         <FormField
                             control={form.control}
-                            disabled={isDisabled}
+                            // disabled={isDisabled}
                             name='first_name'
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>First name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder='John' {...field} />
+                                        <Input
+                                            placeholder='John'
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                         <FormField
-                            disabled={isDisabled}
+                            // disabled={isDisabled}
                             control={form.control}
                             name='last_name'
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Last name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder='Doe' {...field} />
+                                        <Input
+                                            placeholder='Doe'
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -160,7 +170,7 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
                                 <FormItem>
                                     <FormLabel>Role</FormLabel>
                                     <Select
-                                        disabled={isDisabled}
+                                        // disabled={isDisabled}
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}>
                                         <SelectTrigger className='min-w-[160px] w-full text-left'>
@@ -168,8 +178,14 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value='admin'>Admin</SelectItem>
-                                            <SelectItem value='worker'>Worker</SelectItem>
-                                            <SelectItem value='manager'>
+                                            <SelectItem
+                                                disabled
+                                                value='worker'>
+                                                Worker
+                                            </SelectItem>
+                                            <SelectItem
+                                                disabled
+                                                value='manager'>
                                                 Manager
                                             </SelectItem>
                                         </SelectContent>
@@ -179,10 +195,14 @@ export const EditUserDialog: React.FC<Props> = ({ user }) => {
                                 </FormItem>
                             )}
                         />
-                        <Button className='w-full' type='submit' disabled={isDisabled}>
+                        <Button
+                            className='w-full'
+                            type='submit'
+                            // disabled={isDisabled}
+                        >
                             {isLoading ? (
                                 <Loader2 className='h-4 w-4 animate-spin' />
-                            ) : isDisabled ? (
+                            ) : false ? (
                                 "You can't edit admin"
                             ) : (
                                 'Edit user'
