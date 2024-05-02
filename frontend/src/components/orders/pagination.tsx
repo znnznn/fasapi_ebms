@@ -59,11 +59,14 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
         })
     }
 
+    const isPageCount = !table.getPageCount()
+
     return (
         <div className='flex items-center gap-3 py-2'>
             <div className='flex items-center space-x-2'>
                 <p className='text-sm font-medium'>Rows per page</p>
                 <Select
+                    disabled={isPageCount}
                     value={`${table.getState().pagination.pageSize}`}
                     onValueChange={(value) => {
                         table.setPageSize(Number(value))
@@ -73,7 +76,9 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     </SelectTrigger>
                     <SelectContent side='top'>
                         {[10, 20, 30, 40, 50].map((pageSize) => (
-                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                            <SelectItem
+                                key={pageSize}
+                                value={`${pageSize}`}>
                                 {pageSize}
                             </SelectItem>
                         ))}
@@ -90,7 +95,7 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     variant='outline'
                     className='h-8 w-8 p-0 flex'
                     onClick={() => table.setPageIndex(0)}
-                    disabled={!table.getCanPreviousPage()}>
+                    disabled={!table.getCanPreviousPage() || isPageCount}>
                     <span className='sr-only'>Go to first page</span>
                     <SkipBack className='h-4 w-4' />
                 </Button>
@@ -98,7 +103,7 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     variant='outline'
                     className='h-8 w-8 p-0'
                     onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}>
+                    disabled={!table.getCanPreviousPage() || isPageCount}>
                     <span className='sr-only'>Go to previous page</span>
                     <ArrowLeft className='h-4 w-4' />
                 </Button>
@@ -106,7 +111,7 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     variant='outline'
                     className='h-8 w-8 p-0'
                     onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}>
+                    disabled={!table.getCanNextPage() || isPageCount}>
                     <span className='sr-only'>Go to next page</span>
                     <ArrowRight className='h-4 w-4' />
                 </Button>
@@ -114,7 +119,7 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     variant='outline'
                     className='h-8 w-8 p-0 flex'
                     onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                    disabled={!table.getCanNextPage()}>
+                    disabled={!table.getCanNextPage() || isPageCount}>
                     <span className='sr-only'>Go to last page</span>
                     <SkipForward className='h-4 w-4' />
                 </Button>
@@ -122,7 +127,9 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant='outline' className='ml-auto'>
+                    <Button
+                        variant='outline'
+                        className='ml-auto'>
                         Columns
                     </Button>
                 </DropdownMenuTrigger>

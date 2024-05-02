@@ -16,6 +16,7 @@ import { usePatchItemMutation } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
+import { trunc } from '@/utils/trunc'
 
 interface Props {
     item: Item | null
@@ -186,7 +187,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                                 style={{
                                     backgroundColor: status.color
                                 }}></div>
-                            {status.name}
+                            {trunc(status.name, 14)}
                         </div>
                     </SelectItem>
                 ))}

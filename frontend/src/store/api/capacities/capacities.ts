@@ -28,7 +28,7 @@ export const capacities = api.injectEndpoints({
                 method: 'POST',
                 body: data
             }),
-            invalidatesTags: ['Capacities', 'Flows', 'Categories']
+            invalidatesTags: ['Capacities', 'Flows', 'Categories', 'Calendar']
         }),
         patchCapacity: build.mutation<void, CapacitiesPatchData>({
             query: ({ data, id }) => ({
@@ -36,7 +36,7 @@ export const capacities = api.injectEndpoints({
                 method: 'PATCH',
                 body: data
             }),
-            invalidatesTags: ['Capacities', 'Flows', 'Categories']
+            invalidatesTags: ['Capacities', 'Flows', 'Categories', 'Calendar']
         }),
         removeCapacity: build.mutation<void, number>({
             query: (id) => ({

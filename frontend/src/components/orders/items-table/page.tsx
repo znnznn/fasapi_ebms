@@ -1,5 +1,5 @@
 import type { SortingState } from '@tanstack/react-table'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { selectOrders, setCurrentQueryParams } from '../store/orders'
 
@@ -58,7 +58,11 @@ export const ItemsTablePage = () => {
     }, [category, limit, offset, scheduled, date, searchTerm, isOrderCompleted])
 
     const { currentData, isLoading, isFetching, refetch } = useGetItemsQuery(queryParams)
-    const pageCount = Math.ceil(currentData?.count! / limit)
+
+    const pageCount = useMemo(
+        () => (currentData?.count ? Math.ceil(currentData?.count! / limit) : 0),
+        [isLoading, limit]
+    )
 
     const { dataToRender } = useWebSocket({
         currentData: currentData!,

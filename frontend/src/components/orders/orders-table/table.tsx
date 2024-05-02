@@ -62,6 +62,10 @@ export const OrdersTable = <TData, TValue>({
     })
 
     return (
-        <CollapsibleTable isLoading={isLoading} table={table} isFetching={isFetching} />
+        <CollapsibleTable
+            isLoading={isLoading}
+            table={table}
+            isFetching={isFetching}
+        />
     )
 }

@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const RemoveUserDialog: React.FC<Props> = ({ user }) => {
-    const isDisabled = user.role === 'admin'
+    // const isDisabled = user.role === 'admin'
     const userName = `${user.first_name} ${user.last_name}`
     const userId = user.id
 
@@ -49,7 +49,9 @@ export const RemoveUserDialog: React.FC<Props> = ({ user }) => {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+            open={open}
+            onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
                     onClick={stopPropagation}
@@ -68,7 +70,7 @@ export const RemoveUserDialog: React.FC<Props> = ({ user }) => {
                     </DialogTitle>
                 </DialogHeader>
                 <Button
-                    disabled={isDisabled}
+                    // disabled={isDisabled}
                     onClick={(e) => {
                         e.stopPropagation()
                         handleRemoveUser(userId)
@@ -77,7 +79,7 @@ export const RemoveUserDialog: React.FC<Props> = ({ user }) => {
                     className='flex items-center gap-x-1.5 w-fit '>
                     {isLoading ? (
                         <Loader2 className='h-4 w-4 animate-spin' />
-                    ) : isDisabled ? (
+                    ) : false ? (
                         "Can't remove admin"
                     ) : (
                         'Remove'

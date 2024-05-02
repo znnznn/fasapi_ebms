@@ -255,11 +255,8 @@ export const items = api.injectEndpoints({
                                     stage: null
                                 })
                             } else if (item?.item) {
-                                console.log('something')
-
                                 Object.assign(item?.item, {
                                     ...dataToPatch
-                                    // stage: null
                                 })
                             }
                         }
