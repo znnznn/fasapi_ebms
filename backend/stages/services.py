@@ -16,7 +16,7 @@ from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
 from database import get_async_session
 from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
-from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService
+from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService, CategoryService
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
 from stages.schemas import (
@@ -79,6 +79,8 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return query
 
     async def validate_autoid(self, autoid: str, model):
+        if issubclass(model, Inprodtype):
+            return CategoryService(db_session=self.db_session).get(autoid)
         result = await BaseEbmsBaseService(db_session=self.db_session, model=model).get(autoid)
         return result
 
