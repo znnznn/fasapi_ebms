@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from fastapi import FastAPI
@@ -10,11 +11,19 @@ from stages.routers import router as stages_router
 from profiles.routers import router as profiles_router
 from users.routers import router as users_router
 from users.auth_routers import router as auth_router
+from websockets_connection.managers import connection_manager
 from websockets_connection.routers import router as ws_router
 
 
 class ErrorResponse(BaseModel):
     errors: Optional[List[str]]
+
+
+@asynccontextmanager
+async def websocketlifespan(app: FastAPI):
+    await connection_manager.connect_broadcaster()
+    yield
+    await connection_manager.disconnect_broadcaster()
 
 
 app = FastAPI(
@@ -30,7 +39,9 @@ app = FastAPI(
     redoc_url='/redoc',
     openapi_url='/openapi.json',
     swagger_ui_parameters={"deepLinking": False},
+    lifespan=websocketlifespan
 )
+
 
 origins = [
     "*",
@@ -48,22 +59,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-
-# @app.exception_handler(Exception)
-# async def validation_exception_handler(request: Request, exc: Exception):
-#     # Change here to Logger
-#     print("++++++++++++++++++++++++++++++++++++")
-#     return JSONResponse(
-#         status_code=500,
-#         content={
-#             "message": (
-#                 f"Failed method {request.method} at URL {request.url}."
-#                 f" Exception message is {exc!r}."
-#             )
-#         },
-#     )
 
 
 disable_installed_extensions_check()
