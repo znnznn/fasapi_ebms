@@ -190,7 +190,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     async def list_by_orders(self, autoids: List[str]):
         stmt = self.get_query().where(self.model.doc_aid.in_(autoids))
         sql_text = self.to_sql(stmt)
-        objs = await self.db_session.execute(text(sql_text))
+        async with AsyncSession(ebms_engine) as session:
+            objs = await session.execute(text(sql_text))
         return objs.all()
 
     async def get_origin_item_with_item(self, autoid: str):
