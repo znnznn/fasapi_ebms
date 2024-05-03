@@ -1,8 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from common.utils import DateValidator
+from origin_db.filters import CategoryFilter
 from origin_db.schemas import ArinvDetSchema, ArinvRelatedArinvDetSchema, ArinvDetPaginateSchema
-from origin_db.services import OriginItemService, OriginOrderService
-from stages.services import ItemsService, SalesOrdersService
+from origin_db.services import OriginItemService, OriginOrderService, CategoryService, InventryService
+from stages.services import ItemsService, SalesOrdersService, CapacitiesService
+from websockets_connection.services_mapper import publish
 
 
 class GetDataForSending:
@@ -77,4 +80,50 @@ class GetDataForSending:
         return [ArinvRelatedArinvDetSchema.from_orm(i).model_dump() for i in origin_orders]
 
 
+async def send_data_to_ws(subscribe: str, session: AsyncSession, autoid: str = None, list_autoids: list = None) -> None:
+    data = None
+    if list_autoids:
+        if subscribe == 'items':
+            data = await GetDataForSending(db_session=session).get_items_by_autoids(list_autoids)
+            for item in data:
+                await publish(subscribe, item)
+        elif subscribe == 'orders':
+            data = await GetDataForSending(db_session=session).get_orders_by_autoids(list_autoids)
+            for item in data:
+                await publish(subscribe, item)
+        return
+    if not autoid:
+        return
+    elif subscribe == 'items':
+        data = await GetDataForSending(db_session=session).one_origin_item_object(autoid)
+    elif subscribe == 'orders':
+        data = await GetDataForSending(db_session=session).one_origin_order_object(autoid)
+    if data:
+        await publish(subscribe, data)
+
+
+async def send_calendars_data_to_ws(year: int, month: int, item_autoid: str, session: AsyncSession) -> None:
+    category_filter: CategoryFilter = CategoryFilter()
+    origin_item = await OriginItemService(db_session=session).get(autoid=item_autoid)
+    category_filter.name = origin_item.category
+    list_of_days = DateValidator.get_month_days(year=year, month=month)
+    context = {}
+    for day in list_of_days:
+        context[day] = {}
+    categories = await CategoryService(db_session=session, list_filter=category_filter).list()
+    categories_data = {c.autoid: c.prod_type for c in categories}
+    item_objs = await ItemsService(db_session=session).get_autoids_and_production_date_by_month(year=year, month=month)
+    items_data = {i.origin_item: i.production_date for i in item_objs}
+    capacities = await CapacitiesService(db_session=session).list()
+    items_data = items_data if items_data else []
+    total_capacity = await InventryService(
+        db_session=session).count_capacity_by_days(items_data=items_data, list_categories=categories_data.values()) if items_data else []
+    context['capacity_data'] = {categories_data.get(capacity.category_autoid): capacity.per_day for capacity in capacities}
+    if context['capacity_data']:
+        for capacity in total_capacity:
+            context[capacity.production_date] = {
+                capacity.prod_type: {"capacity": float(capacity.total_capacity), "count_orders": capacity.count_orders}
+            }
+    if context:
+        await publish(f'calendar-{origin_item.category}-{year}-{month}', context)
 

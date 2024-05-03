@@ -1,10 +1,11 @@
 from typing import AsyncGenerator
 
 from fastapi import Depends
+import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from common.models import EBMSBase, DefaultBase
-from settings import EBMS_DB, Default_DB
+from settings import EBMS_DB, Default_DB, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB
 from users.models import User
 from users.services import UserService
 
@@ -52,3 +53,10 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
 
 async def get_embs_connection() -> AsyncGenerator[AsyncSession, None]:
     yield ebms_connection
+
+
+def create_redis_pool():
+    return aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=REDIS_DB)
+
+
+redis_pool = create_redis_pool()

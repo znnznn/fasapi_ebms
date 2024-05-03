@@ -48,5 +48,11 @@ class DataBase(BaseSettings):
         extra = "allow"
 
 
+REDIS_PASSWORD = config("REDIS_PASSWORD", default="")
+REDIS_HOST = config("REDIS_HOST", default="redis")
+REDIS_PORT = config("REDIS_PORT", default=6379)
+REDIS_DB = config("REDIS_DB", default=0)
+
+
 EBMS_DB = EBMSDatabase()
 Default_DB = DataBase()
