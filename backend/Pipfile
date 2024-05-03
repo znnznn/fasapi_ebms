@@ -33,6 +33,8 @@ resend = "*"
 setuptools = "*"
 websockets = "*"
 redis = "*"
+broadcaster = "*"
+asyncio-redis = "*"
 
 [dev-packages]
 

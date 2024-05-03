@@ -52,6 +52,7 @@ REDIS_PASSWORD = config("REDIS_PASSWORD", default="")
 REDIS_HOST = config("REDIS_HOST", default="redis")
 REDIS_PORT = config("REDIS_PORT", default=6379)
 REDIS_DB = config("REDIS_DB", default=0)
+REDIS_URL = config("REDIS_URL", default="redis://redis:6379")
 
 
 EBMS_DB = EBMSDatabase()
