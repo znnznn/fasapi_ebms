@@ -80,11 +80,11 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def validate_autoid(self, autoid: str, model):
         if issubclass(model, Inprodtype):
-            return CategoryService(db_session=self.db_session).get(autoid)
+            return await CategoryService(db_session=self.db_session).get(autoid)
         if issubclass(model, Arinvdet):
-            return OriginItemService(db_session=self.db_session).get(autoid)
+            return await OriginItemService(db_session=self.db_session).get(autoid)
         if issubclass(model, Arinv):
-            return OriginOrderService(db_session=self.db_session).get(autoid)
+            return await OriginOrderService(db_session=self.db_session).get(autoid)
         result = await BaseEbmsBaseService(db_session=self.db_session, model=model).get(autoid)
         return result
 
