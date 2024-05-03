@@ -51,7 +51,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-    command: npm run dev
+    command: npm run start
     depends_on:
       - backend
 
