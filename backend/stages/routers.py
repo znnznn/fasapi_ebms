@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, BackgroundTasks
 from fastapi_filter import FilterDepends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,10 +15,9 @@ from stages.schemas import (
     PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema, MultiUpdateItemSchema,
     MultiUpdateSalesOrderSchema
 )
-from stages.utils import GetDataForSending
+from stages.utils import send_data_to_ws, send_calendars_data_to_ws
 from users.mixins import IsAuthenticatedAs, active_user_with_permission
 from users.models import User
-from websockets_connection.managers import connection_manager
 
 router = APIRouter()
 
@@ -134,12 +133,13 @@ async def get_comment(
 @router.post("/comments/", tags=["comments"], response_model=CommentSchema)
 async def create_comment(
         comment: CommentSchemaIn, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await CommentsService(db_session=session).create(comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
+    background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders", session=session)
     return instance
 
 
@@ -147,12 +147,13 @@ async def create_comment(
 async def update_comment(
         id: int, comment: CommentSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await CommentsService(db_session=session).update(id, comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
+    background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders", session=session)
     return instance
 
 
@@ -160,25 +161,27 @@ async def update_comment(
 async def partial_update_comment(
         id: int, comment: CommentSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     comment = comment.model_dump(exclude_unset=True)
     instance = await CommentsService(db_session=session).partial_update(id, comment)
     item = await ItemsService(db_session=session).get(instance.item_id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
+    background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders", session=session)
     return instance
 
 
 @router.delete("/comments/{id}/", tags=["comments"])
 async def delete_comment(
         id: int, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await CommentsService(db_session=session).get(id)
     item = await ItemsService(db_session=session).get(instance.item_id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(item.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(item.order))
+    background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders", session=session)
     return await CommentsService(db_session=session).delete(id)
 
 
@@ -205,50 +208,73 @@ async def get_item(
 async def create_item(
         item: ItemSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await ItemsService(db_session=session).create(item)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
+    if item.production_date:
+        background_tasks.add_task(
+            send_calendars_data_to_ws, year=item.production_date.year, month=item.production_date.month, session=session
+        )
     return instance
 
 
-@router.put("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
+@router.put("/items/{id}/", tags=["items"], response_model=ItemSchema)
 async def update_item(
         id: int, item: ItemSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await ItemsService(db_session=session).update(id, item)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    instance = await ItemsService(db_session=session).get(instance.id)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
+    if item.production_date:
+        background_tasks.add_task(
+            send_calendars_data_to_ws, year=item.production_date.year, month=item.production_date.month, item_autoid=instance.origin_item,
+            session=session)
     return instance
 
 
-@router.patch("/items/{id}/", tags=["items"], response_model=ItemSchemaOut)
+@router.patch("/items/{id}/", tags=["items"], response_model=ItemSchema)
 async def partial_update_item(
         id: int, item: ItemSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    item = item.model_dump(exclude_unset=True)
+    item_data = item.model_dump(exclude_unset=True)
 
-    instance = await ItemsService(db_session=session).partial_update(id, item)
-    item_data = await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item)
-    order_data = await GetDataForSending(db_session=session).one_origin_order_object(instance.order)
-    await connection_manager.broadcast("items", item_data)
-    await connection_manager.broadcast("orders", order_data)
+    instance = await ItemsService(db_session=session).partial_update(id, item_data)
+    instance = await ItemsService(db_session=session).get(instance.id)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
+    if item.production_date:
+        background_tasks.add_task(
+            send_calendars_data_to_ws, year=item.production_date.year, month=item.production_date.month, item_autoid=instance.origin_item,
+            session=session
+        )
     return instance
 
 
 @router.delete("/items/{id}/", tags=["items"])
 async def delete_item(
         id: int, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await ItemsService(db_session=session).get(id)
-    await connection_manager.broadcast("items", await GetDataForSending(db_session=session).one_origin_item_object(instance.origin_item))
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items", session=session)
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
+    if instance.production_date:
+        background_tasks.add_task(
+            send_calendars_data_to_ws, year=instance.production_date.year, month=instance.production_date.month,
+            item_autoid=instance.origin_item,
+            session=session
+        )
     return await ItemsService(db_session=session).delete(id)
 
 
@@ -274,20 +300,22 @@ async def get_salesorder(
 @router.post("/sales-orders/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def create_salesorder(
         salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await SalesOrdersService(db_session=session).create(salesorder)
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
     return instance
 
 
 @router.put("/sales-orders/{id}/", tags=["sales-orders"], response_model=SalesOrderSchema)
 async def update_salesorder(
         id: int, salesorder: SalesOrderSchemaIn, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await SalesOrdersService(db_session=session).update(id, salesorder)
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
     return instance
 
 
@@ -295,21 +323,23 @@ async def update_salesorder(
 async def partial_update_salesorder(
         id: int, salesorder: SalesOrderSchemaIn,
         session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     salesorder = salesorder.model_dump(exclude_unset=True)
     instance = await SalesOrdersService(db_session=session).partial_update(id, salesorder)
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
     return instance
 
 
 @router.delete("/sales-orders/{id}/", tags=["sales-orders"])
 async def delete_salesorder(
         id: int, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await SalesOrdersService(db_session=session).get(id)
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.order))
+    background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders", session=session)
     return await SalesOrdersService(db_session=session).delete(id)
 
 
@@ -377,35 +407,30 @@ async def delete_flow(
         id: int, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    await connection_manager.broadcast("items")
     return await FlowsService(db_session=session).delete(id)
 
 
 @router.post("/multiupdate/items/", tags=["multiupdate"], response_model=MultiUpdateItemSchema)
 async def multiupdate_items(
         items: MultiUpdateItemSchema, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     response = await ItemsService(db_session=session).multiupdate(items)
-    items_data_to_send = await GetDataForSending(db_session=session).get_items_by_autoids(items.origin_items)
     orders_autoids = await ItemsService(db_session=session).get_orders_autoids_by_origin_items(items.origin_items)
-    orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(orders_autoids)
-    for item in items_data_to_send:
-        await connection_manager.broadcast("items", item)
-    for order in orders_data_to_send:
-        await connection_manager.broadcast("orders", order)
+    background_tasks.add_task(send_data_to_ws, subscribe="orders", session=session, list_autoids=orders_autoids)
+    background_tasks.add_task(send_data_to_ws, subscribe="items", session=session, list_autoids=items.origin_items)
     return response
 
 
 @router.post("/multiupdate/orders/", tags=["multiupdate"], response_model=MultiUpdateSalesOrderSchema)
 async def multiupdate_salesorders(
         salesorders: MultiUpdateSalesOrderSchema, session: AsyncSession = Depends(get_async_session),
-        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     response = await SalesOrdersService(db_session=session).multiupdate(salesorders)
-    orders_data_to_send = await GetDataForSending(db_session=session).get_orders_by_autoids(salesorders.origin_orders)
-    for order in orders_data_to_send:
-        await connection_manager.broadcast("orders", order)
+    background_tasks.add_task(send_data_to_ws, subscribe="orders", session=session, list_autoids=salesorders.origin_orders)
     return response
 
 
