@@ -29,7 +29,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
     default_ordering_field = 'id'
 
     def __init__(
-            self, model: Type[ModelType], db_session: AsyncSession = Depends(get_async_session),
+            self, model: Type[ModelType], db_session: AsyncSession,
             list_filter: Optional[RenameFieldFilter] = None
     ):
         self.model = model
@@ -183,13 +183,13 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
 
 class CapacitiesService(BaseService[Capacity, CapacitySchemaIn]):
-    def __init__(self, model: Type[Capacity] = Capacity, db_session: AsyncSession = Depends(get_async_session)):
+    def __init__(self, db_session: AsyncSession, model: Type[Capacity] = Capacity):
         super(CapacitiesService, self).__init__(model=model, db_session=db_session)
 
 
 class FlowsService(BaseService[Flow, FlowSchemaIn]):
     def __init__(
-            self, model: Type[Flow] = Flow, db_session: AsyncSession = Depends(get_async_session),
+            self, db_session: AsyncSession, model: Type[Flow] = Flow,
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
@@ -251,7 +251,7 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
 
 class StagesService(BaseService[Stage, StageSchemaIn]):
     def __init__(
-            self, model: Type[Stage] = Stage, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+            self, db_session: AsyncSession, model: Type[Stage] = Stage, list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
@@ -287,7 +287,7 @@ class StagesService(BaseService[Stage, StageSchemaIn]):
 
 class CommentsService(BaseService[Comment, CommentSchemaIn]):
     def __init__(
-            self, model: Type[Comment] = Comment, db_session: AsyncSession = Depends(get_async_session),
+            self, db_session: AsyncSession, model: Type[Comment] = Comment,
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
@@ -321,7 +321,7 @@ class CommentsService(BaseService[Comment, CommentSchemaIn]):
 
 class ItemsService(BaseService[Item, ItemSchemaIn]):
     def __init__(
-            self, model: Type[Item] = Item, db_session: AsyncSession = Depends(get_async_session), list_filter: Optional[Filter] = None
+            self, db_session: AsyncSession, model: Type[Item] = Item, list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
@@ -542,7 +542,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
     def __init__(
-            self, model: Type[SalesOrder] = SalesOrder, db_session: AsyncSession = Depends(get_async_session),
+            self, db_session: AsyncSession, model: Type[SalesOrder] = SalesOrder,
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)

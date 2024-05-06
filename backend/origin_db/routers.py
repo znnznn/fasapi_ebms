@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from common.utils import DateValidator
-from database import get_async_session
+from database import get_async_session, async_session_maker
 from ebms_api.client import ArinvClient
 from origin_db.filters import CategoryFilter, OriginItemFilter, OrderFilter
 from origin_db.models import Arinvdet, Arinv
@@ -31,7 +31,6 @@ router = APIRouter(prefix="/ebms", tags=["ebms"])
 async def orders(
         limit: int = 10, offset: int = 0,
         ordering: str = None,
-        session: AsyncSession = Depends(get_async_session),
         origin_order_filter: OrderFilter = FilterDepends(OrderFilter),
         sales_order_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter),
         user: User = Depends(active_user_with_permission),
@@ -39,44 +38,46 @@ async def orders(
 ):
     print('orders')
     time_start = time.time()
-    if ordering:
-        sales_order_filter.order_by = sales_order_filter.remove_invalid_fields(ordering)
-        origin_order_filter.order_by = origin_order_filter.remove_invalid_fields(ordering)
-    filtering_sales_orders = await SalesOrdersService(
-        db_session=session, list_filter=sales_order_filter
-    ).get_filtering_origin_orders_autoids()
-    extra_ordering = None
-    ordering_orders = None
-    if filtering_sales_orders:
-        if sales_order_filter.is_exclude:
-            origin_order_filter.autoid__not_in = filtering_sales_orders
-            ordering_orders = await SalesOrdersService(
-                db_session=session, list_filter=sales_order_filter
-            ).get_filtering_origin_orders_autoids(not_excluded=True)
-        else:
-            origin_order_filter.autoid__in = filtering_sales_orders
+    async with async_session_maker() as session:
 
-    if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
+        if ordering:
+            sales_order_filter.order_by = sales_order_filter.remove_invalid_fields(ordering)
+            origin_order_filter.order_by = origin_order_filter.remove_invalid_fields(ordering)
         filtering_sales_orders = await SalesOrdersService(
             db_session=session, list_filter=sales_order_filter
-        ).get_filtering_origin_orders_autoids(do_ordering=True)
-    if sales_order_filter.order_by:
-        ordering_orders = filtering_sales_orders if ordering_orders is None else ordering_orders
-        ordering_filds = ''.join(sales_order_filter.order_by)
-        default_position = -1
-        if ordering_filds.startswith('-'):
-            default_position = len(ordering_orders) + 2
-        data_for_ordering = {v: i for i, v in enumerate(ordering_orders, 1)}
-        extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
-    result = await OriginOrderService(
-        db_session=session, list_filter=origin_order_filter
-    ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
-    print('connected to ebms', time.time() - time_start)
-    autoids = [i.autoid for i in result["results"]]
-    items_dates = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
-    sales_orders = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
-    items_dates = {i.order: i for i in items_dates}
-    items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
+        ).get_filtering_origin_orders_autoids()
+        extra_ordering = None
+        ordering_orders = None
+        if filtering_sales_orders:
+            if sales_order_filter.is_exclude:
+                origin_order_filter.autoid__not_in = filtering_sales_orders
+                ordering_orders = await SalesOrdersService(
+                    db_session=session, list_filter=sales_order_filter
+                ).get_filtering_origin_orders_autoids(not_excluded=True)
+            else:
+                origin_order_filter.autoid__in = filtering_sales_orders
+
+        if not sales_order_filter.is_filtering_values and sales_order_filter.order_by:
+            filtering_sales_orders = await SalesOrdersService(
+                db_session=session, list_filter=sales_order_filter
+            ).get_filtering_origin_orders_autoids(do_ordering=True)
+        if sales_order_filter.order_by:
+            ordering_orders = filtering_sales_orders if ordering_orders is None else ordering_orders
+            ordering_filds = ''.join(sales_order_filter.order_by)
+            default_position = -1
+            if ordering_filds.startswith('-'):
+                default_position = len(ordering_orders) + 2
+            data_for_ordering = {v: i for i, v in enumerate(ordering_orders, 1)}
+            extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
+        result = await OriginOrderService(
+            db_session=session, list_filter=origin_order_filter
+        ).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
+        print('connected to ebms', time.time() - time_start)
+        autoids = [i.autoid for i in result["results"]]
+        items_dates = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
+        sales_orders = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+        items_dates = {i.order: i for i in items_dates}
+        items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
     items = {i.origin_item: i for i in items}
     sales_order_data = {i.order: i for i in sales_orders}
     for i in result["results"]:
@@ -112,11 +113,12 @@ async def order_retrieve(
         autoid: str, session: AsyncSession = Depends(get_async_session),
         user: User = Depends(active_user_with_permission)
 ):
-    result = await OriginOrderService(db_session=session).get(autoid=autoid)
-    autoids = [result.autoid]
-    items = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
-    sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
-    related_items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
+    async with async_session_maker() as session:
+        result = await OriginOrderService(db_session=session).get(autoid=autoid)
+        autoids = [result.autoid]
+        items = await ItemsService(db_session=session).group_by_order_annotated_statistics(autoids=autoids)
+        sales_order = await SalesOrdersService(db_session=session).list_by_orders(autoids=autoids)
+        related_items = await ItemsService(db_session=session).get_related_items_by_order(autoids=autoids)
     items_statistic_data = {i.order: i for i in items}
     items_data = {i.origin_item: i for i in related_items}
     sales_order_data = {i.order: i for i in sales_order}
@@ -141,17 +143,17 @@ async def order_retrieve(
 @router.get("/categories/", response_model=CategoryPaginateSchema)
 async def get_categories(
         limit: int = 10, offset: int = 0,
-        session: AsyncSession = Depends(get_async_session),
         category_filter: CategoryFilter = FilterDepends(CategoryFilter),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(active_user_with_permission),
 ):
-    result = await CategoryService(db_session=session, list_filter=category_filter).paginated_list(limit=limit, offset=offset)
-    flows_data = await FlowsService(db_session=session).group_by_category()
-    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
-    item_ids = item_ids if item_ids else ["-1"]
-    capacities = await CapacitiesService(db_session=session).list()
-    total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
+    async with async_session_maker() as session:
+        result = await CategoryService(db_session=session, list_filter=category_filter).paginated_list(limit=limit, offset=offset)
+        flows_data = await FlowsService(db_session=session).group_by_category()
+        item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(production_date=item_filter.production_date)
+        item_ids = item_ids if item_ids else ["-1"]
+        capacities = await CapacitiesService(db_session=session).list()
+        total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
     total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
     capacities_data = {c.category_autoid: c for c in capacities}
     for category in result["results"]:
@@ -174,19 +176,19 @@ async def get_categories(
 
 @router.get("/categories/all/", response_model=list[CategorySchema])
 async def get_categories_all(
-        session: AsyncSession = Depends(get_async_session),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         category_filter: CategoryFilter = FilterDepends(CategoryFilter),
         user: User = Depends(active_user_with_permission),
 ):
-    result = await CategoryService(db_session=session, list_filter=category_filter).list()
-    flows_data = await FlowsService(db_session=session).group_by_category()
-    item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(
-        production_date=item_filter.production_date
-    )
-    item_ids = item_ids if item_ids else ["-1"]
-    capacities = await CapacitiesService(db_session=session).list()
-    total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
+    async with async_session_maker() as session:
+        result = await CategoryService(db_session=session, list_filter=category_filter).list()
+        flows_data = await FlowsService(db_session=session).group_by_category()
+        item_ids = await ItemsService(db_session=session).get_autoid_by_production_date(
+            production_date=item_filter.production_date
+        )
+        item_ids = item_ids if item_ids else ["-1"]
+        capacities = await CapacitiesService(db_session=session).list()
+        total_capacity = await InventryService(db_session=session).count_capacity(autoids=item_ids)
     total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
     capacities_data = {c.category_autoid: c for c in capacities}
     for category in result:
@@ -210,48 +212,46 @@ async def get_categories_all(
 @router.get("/items/", response_model=ArinvDetPaginateSchema)
 async def get_items(
         limit: int = 10, offset: int = 0, ordering: str = None,
-        session: AsyncSession = Depends(get_async_session),
         origin_item_filter: OriginItemFilter = FilterDepends(OriginItemFilter),
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(active_user_with_permission),
 ):
     print('items')
-    time_start = time.time()
-    if ordering:
-        item_filter.order_by = item_filter.remove_invalid_fields(ordering)
-        origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
-    filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
-    print(filtering_items)
-    extra_ordering = None
-    ordering_items = None
-    if filtering_items:
-        if item_filter.is_exclude:
-            origin_item_filter.autoid__not_in = filtering_items
-            ordering_items = await ItemsService(
-                db_session=session, list_filter=item_filter
-            ).get_filtering_origin_items_autoids(not_excluded=True)
-        else:
-            origin_item_filter.autoid__in = filtering_items
-    if not item_filter.is_filtering_values and item_filter.order_by:
-        filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
-    if item_filter.order_by:
-        ordering_items = filtering_items if not ordering_items else ordering_items
-        ordering_fields = ''.join(item_filter.order_by)
-        default_position = -1
-        if ordering_fields.startswith('-'):
-            default_position = len(ordering_items) + 2
-        data_for_ordering = {v: i for i, v in enumerate(ordering_items, 1)}
-        print('data_for_ordering', data_for_ordering)
-        extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
-    result = await OriginItemService(
-        db_session=session, list_filter=origin_item_filter
-    ).list(
-        limit=limit, offset=offset, extra_ordering=extra_ordering
-    )
-    print('connected to ebms', time.time() - time_start)
-    autoids = [i.autoid for i in result["results"]]
-    items_statistic = await ItemsService(db_session=session).group_by_item_statistics(autoids=autoids)
-    related_items = await ItemsService(db_session=session).get_related_items_by_origin_items(autoids=autoids)
+    async with async_session_maker() as session:
+        time_start = time.time()
+        if ordering:
+            item_filter.order_by = item_filter.remove_invalid_fields(ordering)
+            origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
+        filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
+        extra_ordering = None
+        ordering_items = None
+        if filtering_items:
+            if item_filter.is_exclude:
+                origin_item_filter.autoid__not_in = filtering_items
+                ordering_items = await ItemsService(
+                    db_session=session, list_filter=item_filter
+                ).get_filtering_origin_items_autoids(not_excluded=True)
+            else:
+                origin_item_filter.autoid__in = filtering_items
+        if not item_filter.is_filtering_values and item_filter.order_by:
+            filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
+        if item_filter.order_by:
+            ordering_items = filtering_items if not ordering_items else ordering_items
+            ordering_fields = ''.join(item_filter.order_by)
+            default_position = -1
+            if ordering_fields.startswith('-'):
+                default_position = len(ordering_items) + 2
+            data_for_ordering = {v: i for i, v in enumerate(ordering_items, 1)}
+            extra_ordering = case(data_for_ordering, value=Arinvdet.autoid, else_=default_position)
+        result = await OriginItemService(
+            db_session=session, list_filter=origin_item_filter
+        ).list(
+            limit=limit, offset=offset, extra_ordering=extra_ordering
+        )
+        print('connected to ebms', time.time() - time_start)
+        autoids = [i.autoid for i in result["results"]]
+        items_statistic = await ItemsService(db_session=session).group_by_item_statistics(autoids=autoids)
+        related_items = await ItemsService(db_session=session).get_related_items_by_origin_items(autoids=autoids)
     items_statistic_data = {i.origin_item: i for i in items_statistic}
     items_data = {i.origin_item: i for i in related_items}
     for origin_item in result["results"]:
@@ -273,8 +273,7 @@ async def get_items(
 
 @router.get("/calendar/{year}/{month}/", name="capacities_by_month", response_model=dict[str, dict])
 async def get_capacities_calendar(
-        year: int, month: int,
-        session: AsyncSession = Depends(get_async_session), category_filter: CategoryFilter = FilterDepends(CategoryFilter),
+        year: int, month: int, category_filter: CategoryFilter = FilterDepends(CategoryFilter),
         user: User = Depends(active_user_with_permission),
 ):
     DateValidator.validate_year(year)
@@ -283,14 +282,15 @@ async def get_capacities_calendar(
     context = {}
     for day in list_of_days:
         context[day] = {}
-    categories = await CategoryService(db_session=session, list_filter=category_filter).list()
-    categories_data = {c.autoid: c.prod_type for c in categories}
-    item_objs = await ItemsService(db_session=session).get_autoids_and_production_date_by_month(year=year, month=month)
-    items_data = {i.origin_item: i.production_date for i in item_objs}
-    capacities = await CapacitiesService(db_session=session).list()
-    items_data = items_data if items_data else []
-    total_capacity = await InventryService(
-        db_session=session).count_capacity_by_days(items_data=items_data, list_categories=categories_data.values()) if items_data else []
+    async with async_session_maker() as session:
+        categories = await CategoryService(db_session=session, list_filter=category_filter).list()
+        categories_data = {c.autoid: c.prod_type for c in categories}
+        item_objs = await ItemsService(db_session=session).get_autoids_and_production_date_by_month(year=year, month=month)
+        items_data = {i.origin_item: i.production_date for i in item_objs}
+        capacities = await CapacitiesService(db_session=session).list()
+        items_data = items_data if items_data else []
+        total_capacity = await InventryService(
+            db_session=session).count_capacity_by_days(items_data=items_data, list_categories=categories_data.values()) if items_data else []
     context['capacity_data'] = {categories_data.get(capacity.category_autoid): capacity.per_day for capacity in capacities}
     if context['capacity_data']:
         for capacity in total_capacity:
@@ -303,20 +303,19 @@ async def get_capacities_calendar(
 @router.patch("/items/{autoid}/", response_model=dict)
 async def partial_update_item(
         autoid: str, origin_item: ChangeShipDateSchema,
-        session: AsyncSession = Depends(get_async_session),
         user: User = Depends(active_user_with_permission),
 ):
-    instance = await OriginOrderService(db_session=session).get_object_or_404(autoid=autoid)
-    ebms_api_client = ArinvClient()
-    response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.json())
-    await connection_manager.broadcast("orders", await GetDataForSending(db_session=session).one_origin_order_object(instance.autoid))
+    async with async_session_maker() as session:
+        instance = await OriginOrderService(db_session=session).get_object_or_404(autoid=autoid)
+        ebms_api_client = ArinvClient()
+        response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.json())
     return {"message": response.json()}
 
 
-@router.get("/orderss-api/{autoid}/", response_model=dict)
-async def get_item_by_ebms_api (autoid: str, session: AsyncSession = Depends(get_async_session)):
+@router.get("/orders-api/{autoid}/", response_model=dict)
+async def get_item_by_ebms_api(autoid: str):
     ebms_api_client = ArinvClient()
     response = ebms_api_client.get(ebms_api_client.retrieve_url(autoid))
     return {"data": response.json()}
