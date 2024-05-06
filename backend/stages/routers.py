@@ -363,7 +363,7 @@ async def get_all_flows(
 ):
     async with async_session_maker() as session:
         if flow_filter.category__prod_type:
-            category = await CategoryService(db_session=session).get_category_autoid_by_name(flow_filter.category__prod_type)
+            category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
             flow_filter.category__prod_type = category.autoid or ''
         result = await FlowsService(db_session=session, list_filter=flow_filter).list()
     return result
@@ -377,7 +377,7 @@ async def get_flows(
 ):
     async with async_session_maker() as session:
         if flow_filter.category__prod_type:
-            category = await CategoryService(db_session=session).get_category_autoid_by_name(flow_filter.category__prod_type)
+            category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
             flow_filter.category__prod_type = category.autoid or ''
         result = await FlowsService(db_session=session, list_filter=flow_filter).paginated_list(limit=limit, offset=offset)
     return result
