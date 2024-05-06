@@ -15,7 +15,7 @@ from stages.services import BaseService
 
 
 class CompanyProfileService(BaseService[CompanyProfile, CompanyProfileSchema]):
-    def __init__(self, model: Type[CompanyProfile] = CompanyProfile, db_session: AsyncSession = Depends(get_async_session)):
+    def __init__(self, db_session: AsyncSession,  model: Type[CompanyProfile] = CompanyProfile):
         super(CompanyProfileService, self).__init__(model=model, db_session=db_session)
 
     async def get(self, id: int = None) -> CompanyProfile:
@@ -30,7 +30,7 @@ class CompanyProfileService(BaseService[CompanyProfile, CompanyProfileSchema]):
 
 
 class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
-    def __init__(self, model: Type[UserProfile] = UserProfile, db_session: AsyncSession = Depends(get_async_session)):
+    def __init__(self, db_session: AsyncSession, model: Type[UserProfile] = UserProfile):
         super(UserProfileService, self).__init__(model=model, db_session=db_session)
 
     def get_query(self, limit: int = None, offset: int = None, user_id: int = None) -> Select:

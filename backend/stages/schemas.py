@@ -25,7 +25,7 @@ class CapacitySchemaIn(BaseModel):
 class CommentSchema(BaseModel):
     id: int = Field(default=None)
     user_id: int = Field(default=None, serialization_alias="user")
-    item_id: int = Field(default=None, serialization_alias="item")
+    item_id: int | None = Field(default=None, serialization_alias="item")
     text: str = Field(default=None)
     created_at: datetime = Field(default=None)
 
