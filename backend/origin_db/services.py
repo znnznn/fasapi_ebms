@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Generic, Type, Optional, List, NamedTuple
 
 import sqlalchemy
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column, Select
 from sqlalchemy.exc import NoResultFound
@@ -23,11 +23,10 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
     default_ordering_field = 'recno5'
 
     def __init__(
-            self, model: Type[OriginModelType], db_session: AsyncSession = Depends(get_async_session),
+            self, model: Type[OriginModelType],
             list_filter: Optional[RenameFieldFilter] = None
     ):
         self.model = model
-        self.db_session = db_session
         self.filter = list_filter
 
     def to_sql(self, query: Select | Query) -> str:
@@ -78,21 +77,15 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         except NoResultFound:
             raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
 
-    # async def get(self, autoid: str) -> Optional[OriginModelType]:
-    #     stmt = self.get_query().where(self.model.autoid == autoid)
-    #     result = await self.db_session.scalars(stmt)
-    #     try:
-    #         return result.one()
-    #     except NoResultFound:
-    #         raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
-
     async def list(self, kwargs: Optional[dict] = None) -> Sequence[OriginModelType]:
-        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(self.get_query())
+        async with AsyncSession(ebms_engine) as session:
+            objs: ScalarResult[OriginModelType] = await session.scalars(self.get_query())
         return objs.all()
 
     async def get_listy_by_autoids(self, autoids: List[str] | set) -> Sequence[OriginModelType]:
-        objs: ScalarResult[OriginModelType] = await self.db_session.scalars(select(self.model).where(self.model.autoid.in_(autoids)))
-        return objs.all()
+        async with AsyncSession(ebms_engine) as session:
+            objs: ScalarResult[OriginModelType] = await session.scalars(select(self.model).where(self.model.autoid.in_(autoids)))
+            return objs.all()
 
     async def create(self, obj: InputSchemaType) -> OriginModelType:
         """ Not allowed to create """
@@ -114,10 +107,9 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
 class CategoryService(BaseService[Inprodtype, CategorySchema]):
     def __init__(
             self, model: Type[Inprodtype] = Inprodtype,
-            db_session: AsyncSession = Depends(get_async_session),
             list_filter: Optional[CategoryFilter] = None
     ):
-        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+        super().__init__(model=model, list_filter=list_filter)
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(self.model).where(
@@ -135,20 +127,20 @@ class CategoryService(BaseService[Inprodtype, CategorySchema]):
 
     async def get_category_autoid_by_name(self, name: str) -> Inprodtype:
         smtp = self.get_query().where(self.model.prod_type == name)
-        result = await self.db_session.scalars(smtp)
-        try:
-            return result.one()
-        except NoResultFound:
-            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {name} not found")
+        async with AsyncSession(ebms_engine) as session:
+            result = await session.scalars(smtp)
+            try:
+                return result.one()
+            except NoResultFound:
+                raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {name} not found")
 
 
 class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def __init__(
             self, model: Type[Arinvdet] = Arinvdet,
-            db_session: AsyncSession = Depends(get_async_session),
             list_filter: Optional[Filter] = None
     ):
-        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+        super().__init__(model=model, list_filter=list_filter)
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
@@ -209,10 +201,9 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
 class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def __init__(
             self, model: Type[Arinv] = Arinv,
-            db_session: AsyncSession = Depends(get_async_session),
             list_filter: Optional[Filter] = None
     ):
-        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+        super().__init__(model=model, list_filter=list_filter)
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         # stmt = select(Arinvdet).where(and_(
@@ -282,10 +273,11 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
         async with AsyncSession(ebms_engine) as session:
             count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
+            count = count.scalar()
             data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
             data_all = data.all()
             list_objs = [self.dict_keys_to_lowercase(data._asdict()) for data in data_all]
-            orders_details = await OriginItemService(db_session=session).list_by_orders(autoids=[data['autoid'] for data in list_objs])
+            orders_details = await OriginItemService().list_by_orders(autoids=[data['autoid'] for data in list_objs])
         time_start = time.time()
         details = defaultdict(list)
         for order_detail in orders_details:
@@ -296,7 +288,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             list_objs_as_model.append(self.model(**self.dict_keys_to_lowercase(obj), details=details.get(obj['autoid'], [])))
         print(time.time() - time_start)
         return {
-            "count": count.scalar(),
+            "count": count,
             "results": list_objs_as_model,
         }
 
@@ -305,7 +297,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         sql_text = self.to_sql(query)
         async with AsyncSession(ebms_engine) as session:
             result = await session.execute(text(sql_text))
-            details = await OriginItemService(db_session=session).list_by_orders(autoids=[autoid])
+            details = await OriginItemService().list_by_orders(autoids=[autoid])
         try:
             result = result.one()
             data_details = [Arinvdet(**self.dict_keys_to_lowercase(detail._asdict())) for detail in details]
@@ -327,9 +319,8 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
 class InventryService(BaseService[Inventry, InventrySchema]):
     def __init__(
             self, model: Type[Inventry] = Inventry,
-            db_session: AsyncSession = Depends(get_async_session),
             list_filter: Optional[Filter] = None):
-        super().__init__(model=model, db_session=db_session, list_filter=list_filter)
+        super().__init__(model=model, list_filter=list_filter)
 
     async def count_capacity(self, autoids: list[str]) -> Result:
         """  Return total capacity for an inventory group by prod type """
@@ -347,7 +338,8 @@ class InventryService(BaseService[Inventry, InventrySchema]):
         ).group_by(
             self.model.prod_type
         )
-        return await self.db_session.execute(stmt)
+        async with AsyncSession(ebms_engine) as session:
+            return await session.execute(stmt)
 
     async def count_capacity_by_days(self, items_data: dict, list_categories = None) -> Sequence[Result]:
         """  Return total capacity for an inventory group by prod type with count arinv"""
@@ -381,6 +373,7 @@ class InventryService(BaseService[Inventry, InventrySchema]):
             list_subqueries_alias.c.production_date, list_subqueries_alias.c.total_capacity, list_subqueries_alias.c.prod_type,
             list_subqueries_alias.c.count_orders,
         )
-        objs = await self.db_session.execute(stmt)
-        result = objs.all()
-        return result
+        async with AsyncSession(ebms_engine) as session:
+            objs = await session.execute(stmt)
+            result = objs.all()
+            return result

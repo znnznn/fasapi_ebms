@@ -27,10 +27,7 @@ engines = {
 async_session_maker = async_sessionmaker(binds=engines, expire_on_commit=False)
 ebms_engine = create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
         EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME),
-        pool_size=30, max_overflow=60, pool_pre_ping=True, isolation_level="SERIALIZABLE", pool_recycle=3600,
-        connect_args={"server_settings": {"jit": "off"}}, execution_options={
-        "isolation_level": "REPEATABLE READ"
-    }
+        pool_size=30, max_overflow=60,
     )
 ebms_connection = ebms_engine.connect()
 
