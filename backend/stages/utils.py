@@ -14,7 +14,7 @@ class GetDataForSending:
         self.db_session = db_session
 
     async def one_origin_item_object(self, autoid: str) -> dict:
-        origin_item = await OriginItemService(db_session=self.db_session).get_origin_item_with_item(autoid)
+        origin_item = await OriginItemService().get_origin_item_with_item(autoid)
         items_statistic = await ItemsService(db_session=self.db_session).group_by_item_statistics(autoids=[origin_item.autoid])
         related_items = await ItemsService(db_session=self.db_session).get_related_items_by_origin_items(autoids=[origin_item.autoid])
         items_statistic_data = {i.origin_item: i for i in items_statistic}
@@ -27,7 +27,7 @@ class GetDataForSending:
         return data
 
     async def one_origin_order_object(self, autoid: str) -> dict:
-        result = await OriginOrderService(db_session=self.db_session).get(autoid=autoid)
+        result = await OriginOrderService().get(autoid=autoid)
         autoids = [result.autoid]
         items = await ItemsService(db_session=self.db_session).group_by_order_annotated_statistics(autoids=autoids)
         sales_order = await SalesOrdersService(db_session=self.db_session).list_by_orders(autoids=autoids)
@@ -53,7 +53,7 @@ class GetDataForSending:
         return ArinvRelatedArinvDetSchema.from_orm(result).model_dump()
 
     async def get_items_by_autoids(self, autoids: list) -> list[dict]:
-        origin_items = await OriginItemService(db_session=self.db_session).get_listy_by_autoids(autoids=autoids)
+        origin_items = await OriginItemService().get_listy_by_autoids(autoids=autoids)
         autoids = [i.autoid for i in origin_items]
         items_statistic = await ItemsService(db_session=self.db_session).group_by_item_statistics(autoids=autoids)
         related_items = await ItemsService(db_session=self.db_session).get_related_items_by_origin_items(autoids=autoids)
@@ -67,7 +67,7 @@ class GetDataForSending:
         return [ArinvDetSchema.from_orm(i).model_dump() for i in origin_items]
 
     async def get_orders_by_autoids(self, autoids: list) -> list[dict]:
-        origin_orders = await OriginOrderService(db_session=self.db_session).get_origin_order_by_autoids(autoids=autoids)
+        origin_orders = await OriginOrderService().get_origin_order_by_autoids(autoids=autoids)
         autoids = [i.autoid for i in origin_orders]
         items = await ItemsService(db_session=self.db_session).group_by_order_annotated_statistics(autoids=autoids)
         sales_order = await SalesOrdersService(db_session=self.db_session).list_by_orders(autoids=autoids)
@@ -107,20 +107,20 @@ async def send_data_to_ws(subscribe: str, autoid: str = None, list_autoids: list
 async def send_calendars_data_to_ws(year: int, month: int, item_autoid: str) -> None:
     async with async_session_maker() as session:
         category_filter: CategoryFilter = CategoryFilter()
-        origin_item = await OriginItemService(db_session=session).get(autoid=item_autoid)
+        origin_item = await OriginItemService().get(autoid=item_autoid)
         category_filter.name = origin_item.category
         list_of_days = DateValidator.get_month_days(year=year, month=month)
         context = {}
         for day in list_of_days:
             context[day] = {}
-        categories = await CategoryService(db_session=session, list_filter=category_filter).list()
+        categories = await CategoryService(list_filter=category_filter).list()
         categories_data = {c.autoid: c.prod_type for c in categories}
         item_objs = await ItemsService(db_session=session).get_autoids_and_production_date_by_month(year=year, month=month)
         items_data = {i.origin_item: i.production_date for i in item_objs}
         capacities = await CapacitiesService(db_session=session).list()
         items_data = items_data if items_data else []
-        total_capacity = await InventryService(
-            db_session=session).count_capacity_by_days(items_data=items_data, list_categories=categories_data.values()) if items_data else []
+        total_capacity = await InventryService().count_capacity_by_days(
+            items_data=items_data, list_categories=categories_data.values()) if items_data else []
     context['capacity_data'] = {categories_data.get(capacity.category_autoid): capacity.per_day for capacity in capacities}
     if context['capacity_data']:
         for capacity in total_capacity:

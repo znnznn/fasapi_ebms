@@ -35,6 +35,7 @@ websockets = "*"
 redis = "*"
 broadcaster = "*"
 asyncio-redis = "*"
+gunicorn = "*"
 
 [dev-packages]
 
