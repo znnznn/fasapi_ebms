@@ -80,12 +80,12 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def validate_autoid(self, autoid: str, model):
         if issubclass(model, Inprodtype):
-            return await CategoryService(db_session=self.db_session).get(autoid)
+            return await CategoryService().get(autoid)
         if issubclass(model, Arinvdet):
-            return await OriginItemService(db_session=self.db_session).get(autoid)
+            return await OriginItemService().get(autoid)
         if issubclass(model, Arinv):
-            return await OriginOrderService(db_session=self.db_session).get(autoid)
-        result = await BaseEbmsBaseService(db_session=self.db_session, model=model).get(autoid)
+            return await OriginOrderService().get(autoid)
+        result = await BaseEbmsBaseService(model=model).get(autoid)
         return result
 
     async def count_query_objs(self, query) -> int:
@@ -184,7 +184,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
 class CapacitiesService(BaseService[Capacity, CapacitySchemaIn]):
     def __init__(self, db_session: AsyncSession, model: Type[Capacity] = Capacity):
-        super(CapacitiesService, self).__init__(model=model, db_session=db_session)
+        super().__init__(model=model, db_session=db_session)
 
 
 class FlowsService(BaseService[Flow, FlowSchemaIn]):
@@ -333,7 +333,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 raise HTTPException(status_code=404, detail=f"Stage with id {input_obj.stage_id}  and flow {instance.flow_id} not found")
         if flow_id := getattr(input_obj, "flow_id", None):
             if flow_id != instance.flow_id:
-                origin_item = await OriginItemService(db_session=self.db_session).get(instance.origin_item)
+                origin_item = await OriginItemService().get(instance.origin_item)
                 origin_item_category = origin_item.category if origin_item else False
                 flow = await FlowsService(db_session=self.db_session).get(flow_id)
                 category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
@@ -373,7 +373,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             object_data['stage_id'] = None
             category = await self.db_session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
             category = category.prod_type if category else False
-        origin_items_objs = await OriginItemService(db_session=self.db_session).get_listy_by_autoids(origin_items)
+        origin_items_objs = await OriginItemService().get_listy_by_autoids(origin_items)
         print(origin_items_objs)
         stage = None
         if stage_id := object_data.get("stage_id"):
@@ -547,26 +547,13 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
     ):
         super().__init__(model=model, db_session=db_session, list_filter=list_filter)
 
-    # def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
-    #     query = select(self.model)
-    #     if self.filter:
-    #         query = self.filter.filter(query, **kwargs)
-    #         query = self.filter.sort(query)
-    #     # else:
-    #     #     query = query.order_by(getattr(self.model, self.default_ordering_field))
-    #     if limit:
-    #         query = query.limit(limit)
-    #     if offset:
-    #         query = query.offset(offset)
-    #     return query
-
     async def multiupdate(self, objs: MultiUpdateSalesOrderSchema):
         object_data = objs.model_dump(exclude_unset=True)
         origin_orders = set(object_data.pop("origin_orders", []))
         if production_date := object_data.get("production_date"):
             await self.validate_production_date(production_date)
         sales_orders = await self.db_session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
-        origin_orders = await OriginOrderService(db_session=self.db_session).get_origin_order_by_autoids(origin_orders)
+        origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
         origin_orders_data = {obj.autoid: obj for obj in origin_orders}
         for obj in sales_orders:
             origin_order = origin_orders_data.pop(obj.order, None)
