@@ -112,23 +112,28 @@ class ItemFilter(RenameFieldFilter):
             mode: Literal['json', 'python'] | str = 'python',
             include: IncEx = None,
             exclude: IncEx = None,
+            context: dict[str, Any] | None = None,
             by_alias: bool = False,
             exclude_unset: bool = False,
             exclude_defaults: bool = False,
             exclude_none: bool = False,
             round_trip: bool = False,
-            warnings: bool = True,
+            warnings: bool | Literal['none', 'warn', 'error'] = True,
+            serialize_as_any: bool = False,
     ) -> dict[str, Any]:
         fields = super().model_dump(
             mode=mode,
             include=include,
             exclude=exclude,
+            context=context,
             by_alias=by_alias,
             exclude_unset=exclude_unset,
             exclude_defaults=exclude_defaults,
             exclude_none=exclude_none,
             round_trip=round_trip,
             warnings=warnings,
+            serialize_as_any=serialize_as_any
+
         )
         if date_range := fields.pop('date_range', None):
             try:
@@ -178,23 +183,27 @@ class NestedItemFilter(RenameFieldFilter):
             mode: Literal['json', 'python'] | str = 'python',
             include: IncEx = None,
             exclude: IncEx = None,
+            context: dict[str, Any] | None = None,
             by_alias: bool = False,
             exclude_unset: bool = False,
             exclude_defaults: bool = False,
             exclude_none: bool = False,
             round_trip: bool = False,
-            warnings: bool = True,
+            warnings: bool | Literal['none', 'warn', 'error'] = True,
+            serialize_as_any: bool = False,
     ) -> dict[str, Any]:
         fields = super().model_dump(
             mode=mode,
             include=include,
             exclude=exclude,
+            context=context,
             by_alias=by_alias,
             exclude_unset=exclude_unset,
             exclude_defaults=exclude_defaults,
             exclude_none=exclude_none,
             round_trip=round_trip,
             warnings=warnings,
+            serialize_as_any=serialize_as_any
         )
         if date_range := fields.pop('date_range', None):
             try:
@@ -249,43 +258,3 @@ class SalesOrderFilter(RenameFieldFilter):
             'completed': SalesOrder.items,
         }
         excluded_fields = ('production_date__isnull', 'status',) # 'completed', 'is_scheduled', 'over_due')
-
-
-
-    def model_dump(
-        self,
-        *,
-        mode: Literal['json', 'python'] | str = 'python',
-        include: IncEx = None,
-        exclude: IncEx = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool = True,
-    ) -> dict[str, Any]:
-        fields = super().model_dump(
-            mode=mode,
-            include=include,
-            exclude=exclude,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-        )
-        # is_scheduled = fields.pop('is_scheduled', None)
-        # if is_scheduled:
-        #     fields['production_date__isnull'] = False
-        #     if not is_scheduled:
-        #         fields['production_date__isnull'] = True
-        #         self.Constants.exclude = True
-            # completed = fields.get('completed', None)
-            # if isinstance(completed, bool):
-            #     if not completed:
-            #         fields['completed'] = True
-            #         self.Constants.exclude = True
-        # print(fields)
-        return fields

@@ -5,6 +5,7 @@ import redis.asyncio as aioredis
 from broadcaster import Broadcast
 
 from fastapi import WebSocket
+from starlette.websockets import WebSocketState
 
 from database import redis_pool
 from settings import REDIS_URL
@@ -91,6 +92,8 @@ class ConnectionManager:
 
     async def get_active_connections(self, subscribe: str) -> List[WebSocket]:
         if connections := self.active_connections.get(subscribe):
+            print("---------------------connections----------------------")
+            print(connections)
             return connections
         return []
 
@@ -141,14 +144,16 @@ class ConnectionManager:
         """
         Function to consume a message and send to all connect clients in all processes
         """
+        print("==========_consume_events============")
 
         room_connections = self.active_connections.get(subscribe)
         if room_connections:
             for connection in room_connections:
-                await self._send_message_to_ws_connection(
-                    message=message,
-                    ws_connection=connection,
-                )
+                if connection.client_state == WebSocketState.CONNECTED:
+                    await self._send_message_to_ws_connection(
+                        message=message,
+                        ws_connection=connection,
+                    )
 
     async def send_message_to_room(self, subscribe: str, message: dict):
         # Send events to the room
@@ -160,6 +165,8 @@ class ConnectionManager:
     async def _send_message_to_ws_connection(
             self, message: dict, ws_connection: WebSocket
     ):
+        print("==========_send_message_to_ws_connection============")
+        print(ws_connection)
         await ws_connection.send_json(data=message)
 
 
