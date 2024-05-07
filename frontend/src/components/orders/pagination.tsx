@@ -85,7 +85,7 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                     </SelectContent>
                 </Select>
             </div>
-            <div className='flex w-24 items-center justify-center text-sm font-medium text-left'>
+            <div className='flex w-[105px] items-center justify-center text-sm font-medium text-left'>
                 Page {table.getState().pagination.pageIndex + 1} of{' '}
                 {table.getPageCount() || 0}
             </div>

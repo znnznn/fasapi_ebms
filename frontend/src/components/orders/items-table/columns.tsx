@@ -231,7 +231,9 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'description',
         header: () => (
-            <Button variant='ghost' className='text-left justify-start !w-64'>
+            <Button
+                variant='ghost'
+                className='text-left justify-start !w-72'>
                 Description
             </Button>
         ),
@@ -239,7 +241,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             <div className='w-64 pl-4'>
                 <TooltipCell
                     value={row.original?.description}
-                    truncedValue={trunc(row.original?.description, 36)}
+                    truncedValue={trunc(row.original?.description, 100)}
                 />
             </div>
         )

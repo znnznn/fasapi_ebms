@@ -31,10 +31,13 @@ export function Statuses<TData>({ table, page }: Props<TData>) {
                         <TabsTrigger value='scheduled'>Scheduled</TabsTrigger>
                     </TabsList>
                 </Tabs>
-                <Search />
+                <Search table={table} />
             </div>
 
-            <Pagination table={table} page={page} />
+            <Pagination
+                table={table}
+                page={page}
+            />
         </div>
     )
 }
