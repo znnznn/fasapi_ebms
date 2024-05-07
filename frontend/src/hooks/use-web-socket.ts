@@ -48,8 +48,6 @@ export const useWebSocket = <T extends UseWebsocketProps>({
         websocket.addEventListener('message', (event) => {
             const dataToPatch = JSON.parse(event.data) as OrdersData | EBMSItemsData
 
-            console.log('dataToPatch', dataToPatch)
-
             refetch()
             setDataToRender((prevData) => {
                 const newData = prevData.map((item) => {
@@ -65,6 +63,7 @@ export const useWebSocket = <T extends UseWebsocketProps>({
 
         return () => {
             websocket.close()
+            websocket.removeEventListener('message', () => {})
         }
     }, [])
 

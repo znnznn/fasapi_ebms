@@ -62,7 +62,9 @@ export const LoginForm = () => {
         <div className='h-screen flex justify-center items-center'>
             <div className='w-[300px] mx-auto'>
                 <Form {...form}>
-                    <form className='space-y-5' onSubmit={form.handleSubmit(onSubmit)}>
+                    <form
+                        className='space-y-5'
+                        onSubmit={form.handleSubmit(onSubmit)}>
                         <FormField
                             control={form.control}
                             name='email'
@@ -97,7 +99,10 @@ export const LoginForm = () => {
                                 </FormItem>
                             )}
                         />
-                        <Button className='w-full' type='submit'>
+                        <Button
+                            className='w-full'
+                            disabled={isLoading}
+                            type='submit'>
                             {isLoading ? (
                                 <Loader2 className='h-4 w-4 animate-spin' />
                             ) : (
