@@ -169,11 +169,11 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             />
         )
     },
-    {
-        accessorKey: 'order',
-        header: ({ column }) => createHeader('Order', column, 'w-28'),
-        cell: ({ row }) => <div className='w-28'>{alignCell(row.original.order)}</div>
-    },
+    // {
+    //     accessorKey: 'order',
+    //     header: ({ column }) => createHeader('Order', column, 'w-28'),
+    //     cell: ({ row }) => <div className='w-28'>{alignCell(row.original.order)}</div>
+    // },
     {
         accessorKey: 'quantity',
         header: ({ column }) => createHeader('Ordered', column, 'w-28'),
@@ -198,14 +198,14 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             <div className='w-28'>{alignCell(getValidValue(row.original.profile))}</div>
         )
     },
-    {
-        accessorKey: 'customer',
-        header: ({ column }) =>
-            createHeader('Customer', column, 'text-left justify-start !w-64'),
-        cell: ({ row }) => (
-            <div className='w-64 pl-4'>{getValidValue(row.original.customer)}</div>
-        )
-    },
+    // {
+    //     accessorKey: 'customer',
+    //     header: ({ column }) =>
+    //         createHeader('Customer', column, 'text-left justify-start !w-64'),
+    //     cell: ({ row }) => (
+    //         <div className='w-64 pl-4'>{getValidValue(row.original.customer)}</div>
+    //     )
+    // },
     {
         accessorKey: 'id_inven',
         header: ({ column }) =>
