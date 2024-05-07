@@ -37,13 +37,18 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
     return (
         <div className='rounded-md'>
             <WeekFilters />
-            <Statuses table={table} page='orders' />
+            <Statuses
+                table={table}
+                page='orders'
+            />
 
             <Table>
                 <TableHeader>
                     {isLoading ? (
                         <TableRow className='p-0'>
-                            <TableCell colSpan={colSpan} className='h-[39px] py-1.5'>
+                            <TableCell
+                                colSpan={colSpan}
+                                className='h-[39px] py-1.5'>
                                 <Skeleton className='opacity-50 w-full h-[39px]' />
                             </TableCell>
                         </TableRow>
@@ -52,7 +57,9 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header, i) =>
                                     i === 0 ? (
-                                        <TableHead className='w-10' key={header.id}>
+                                        <TableHead
+                                            className='w-10'
+                                            key={header.id}>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -95,7 +102,9 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                             const originItems = (row.original as OrdersData).origin_items
 
                             return (
-                                <Collapsible key={row?.original?.id} asChild>
+                                <Collapsible
+                                    key={row?.original?.id}
+                                    asChild>
                                     <>
                                         <TableRow
                                             className='odd:bg-secondary/60'
@@ -131,7 +140,9 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                         <TableSkeleton cellCount={columns.length} />
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={colSpan} className='h-24 text-left pl-4'>
+                            <TableCell
+                                colSpan={colSpan}
+                                className='h-24 text-left pl-4'>
                                 No results
                             </TableCell>
                         </TableRow>

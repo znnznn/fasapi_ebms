@@ -2,6 +2,7 @@ import type { Table } from '@tanstack/react-table'
 import { ArrowLeft, ArrowRight, SkipBack, SkipForward } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { selectCategory, setGroupedView } from './store/orders'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -20,6 +21,7 @@ import {
     useAddUsersProfilesMutation,
     useGetUsersProfilesQuery
 } from '@/store/api/profiles/profiles'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/hooks'
 
 interface Props<TData> {
     table: Table<TData>
@@ -29,6 +31,8 @@ interface Props<TData> {
 export function Pagination<TData>({ table, page }: Props<TData>) {
     const { data: usersProfilesData } = useGetUsersProfilesQuery()
     const [addUsersProfiles] = useAddUsersProfilesMutation()
+
+    const dispatch = useAppDispatch()
 
     const profiles = usersProfilesData?.find((profile) => profile.page === page)
     const showColumns = profiles?.show_columns?.split(',')
@@ -60,6 +64,25 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
     }
 
     const isPageCount = !table.getPageCount()
+
+    const [grouped, setGrouped] = useState(true)
+    const [ungrouped, setUngrouped] = useState(false)
+
+    const category = useAppSelector(selectCategory)
+
+    const handleSetGrouped = (value: boolean) => {
+        setGrouped(value)
+        setUngrouped(!value)
+
+        dispatch(setGroupedView(value))
+    }
+
+    const handleSetUngrouped = (value: boolean) => {
+        setUngrouped(value)
+        setGrouped(!value)
+
+        dispatch(setGroupedView(!value))
+    }
 
     return (
         <div className='flex items-center gap-3 py-2'>
@@ -157,6 +180,34 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
                         ))}
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            {category ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant='outline'
+                            className='ml-auto'>
+                            View
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                        <DropdownMenuCheckboxItem
+                            className='capitalize'
+                            checked={grouped}
+                            onCheckedChange={handleSetGrouped}>
+                            Grouped
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                            className='capitalize'
+                            checked={ungrouped}
+                            onCheckedChange={handleSetUngrouped}>
+                            Ungrouped
+                        </DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                ''
+            )}
         </div>
     )
 }

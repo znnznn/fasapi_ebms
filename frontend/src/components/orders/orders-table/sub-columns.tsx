@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { FlowCell } from '../cells/flow-cell'
 import { InputCell } from '../cells/input-cell'
 import { StatusCell } from '../cells/status-cell'
-import { TooltipCell } from '../cells/tooltip-cell'
 import { NotesSidebar } from '../items-table/notes-sidebar'
 import { TimePicker } from '../time-pciker/time-picker'
 import { alignCell, createHeader } from '../utils/columns-helpers'
@@ -24,7 +23,6 @@ import { DatePicker } from '@/components/ui/date-picker'
 import type { OriginItems } from '@/store/api/ebms/ebms.types'
 import { useGetFlowsQuery } from '@/store/api/flows/flows'
 import { getValidValue } from '@/utils/get-valid-value'
-import { trunc } from '@/utils/trunc'
 
 export const subColumns: ColumnDef<OriginItems>[] = [
     {
@@ -224,16 +222,19 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'description',
         header: () => (
-            <Button variant='ghost' className='text-left justify-start !w-[256px]'>
+            <Button
+                variant='ghost'
+                className='text-left justify-start !w-64'>
                 Description
             </Button>
         ),
         cell: ({ row }) => (
             <div className='w-64 pl-4'>
-                <TooltipCell
+                {/* <TooltipCell
                     value={row.original?.description}
-                    truncedValue={trunc(row.original?.description, 36)}
-                />
+                    truncedValue={row.original?.description}
+                /> */}
+                {row.original?.description}
             </div>
         )
     },

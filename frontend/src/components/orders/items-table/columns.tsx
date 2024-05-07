@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { FlowCell } from '../cells/flow-cell'
 import { InputCell } from '../cells/input-cell'
 import { StatusCell } from '../cells/status-cell'
-import { TooltipCell } from '../cells/tooltip-cell'
 import { selectOrders } from '../store/orders'
 import { TimePicker } from '../time-pciker/time-picker'
 import { alignCell, createHeader } from '../utils/columns-helpers'
@@ -17,7 +16,6 @@ import { DatePicker } from '@/components/ui/date-picker'
 import type { EBMSItemsData } from '@/store/api/ebms/ebms.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { getValidValue } from '@/utils/get-valid-value'
-import { trunc } from '@/utils/trunc'
 
 export const columns: ColumnDef<EBMSItemsData>[] = [
     {
@@ -239,10 +237,11 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         ),
         cell: ({ row }) => (
             <div className='w-64 pl-4'>
-                <TooltipCell
+                {/* <TooltipCell
                     value={row.original?.description}
-                    truncedValue={trunc(row.original?.description, 360)}
-                />
+                    truncedValue={row.original?.description}
+                /> */}
+                {row.original?.description}
             </div>
         )
     },
