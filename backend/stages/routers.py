@@ -315,7 +315,6 @@ async def create_salesorder(
     async with async_session_maker() as session:
         instance = await SalesOrdersService(db_session=session).create(salesorder)
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
-    await session.close()
     return instance
 
 
