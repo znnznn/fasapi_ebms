@@ -105,7 +105,8 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                     <Badge
                                                         variant='secondary'
                                                         className='py-2 ml-4 w-full !rounded-none'>
-                                                        {group[0]}
+                                                        {group[0]} |{' '}
+                                                        {group[1][0].original?.customer}
                                                     </Badge>
                                                 </TableCell>
                                             </TableRow>
