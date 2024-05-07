@@ -1,3 +1,4 @@
+import type { Table } from '@tanstack/react-table'
 import { useEffect, useState } from 'react'
 
 import { setSearch } from './store/orders'
@@ -6,7 +7,10 @@ import { useDebounce } from '@/hooks/use-debounce'
 import { useAppDispatch } from '@/store/hooks/hooks'
 import type { InputEvent } from '@/types/common'
 
-export const Search: React.FC = () => {
+interface Props<TData> {
+    table: Table<TData>
+}
+export function Search<TData>({ table }: Props<TData>) {
     const [searchTerm, setSearchTerm] = useState('')
     const debouncedSearchTerm = useDebounce(searchTerm)
 
@@ -14,6 +18,7 @@ export const Search: React.FC = () => {
 
     useEffect(() => {
         dispatch(setSearch(debouncedSearchTerm))
+        table.setPageIndex(0)
     }, [debouncedSearchTerm, dispatch])
 
     useEffect(() => {

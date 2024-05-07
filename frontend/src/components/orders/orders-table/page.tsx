@@ -5,6 +5,7 @@ import { selectOrders, setCurrentQueryParams } from '../store/orders'
 
 import { columns } from './columns'
 import { OrdersTable } from './table'
+import { useCurrentValue } from '@/hooks/use-current-value'
 import { usePagination } from '@/hooks/use-pagination'
 import { useWebSocket } from '@/hooks/use-web-socket'
 import { useGetOrdersQuery } from '@/store/api/ebms/ebms'
@@ -62,9 +63,11 @@ export const OrderTablePage = () => {
         refetch
     })
 
+    const currentCount = useCurrentValue(currentData?.count)
+
     const pageCount = useMemo(
-        () => (currentData?.count ? Math.ceil(currentData?.count! / limit) : 0),
-        [isLoading, limit]
+        () => (currentCount ? Math.ceil(currentCount! / limit) : 0),
+        [isLoading, limit, currentCount]
     )
 
     return (

@@ -49,7 +49,7 @@ export function UsersTable<TValue>({
 
     return (
         <>
-            <Controls />
+            <Controls table={table} />
 
             <Table className='mt-2'>
                 <TableHeader>
@@ -79,7 +79,9 @@ export function UsersTable<TValue>({
                                 className='odd:bg-secondary/60'
                                 data-state={row.getIsSelected() && 'selected'}>
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell className='py-1.5 h-[53px] ' key={cell.id}>
+                                    <TableCell
+                                        className='py-1.5 h-[53px] '
+                                        key={cell.id}>
                                         {flexRender(
                                             cell.column.columnDef.cell,
                                             cell.getContext()

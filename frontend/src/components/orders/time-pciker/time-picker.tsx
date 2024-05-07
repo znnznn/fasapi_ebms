@@ -15,14 +15,14 @@ interface TimePickerProps extends Omit<TimeFieldStateOptions<TimeValue>, 'locale
 }
 
 const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>((props, _) => {
-    const [hour, minute, second] = props?.item?.time?.split(':')?.map(Number) ?? []
+    const [hour, minute] = props?.item?.time?.split(':')?.map(Number) ?? []
 
     const [time, setTime] = useState(
-        props.item?.time ? new Time(hour, minute, second) : undefined
+        props.item?.time ? new Time(hour, minute) : undefined
     )
 
     useEffect(() => {
-        setTime(new Time(hour, minute, second))
+        setTime(new Time(hour, minute))
     }, [props.item?.time])
 
     const [patchItem] = usePatchItemMutation()
@@ -44,14 +44,21 @@ const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>((props, _) => {
     }, 400)
 
     const onChange = (value: TimeValue) => {
-        const [hour, minute, second] = value?.toString().split(':')?.map(Number)
+        const [hour, minute] = value?.toString().split(':')?.map(Number)
 
-        setTime(new Time(hour, minute, second))
+        setTime(new Time(hour, minute))
 
         debouncedRequest(value)
     }
 
-    return <TimeField onChange={onChange} value={time} granularity='second' {...props} />
+    return (
+        <TimeField
+            onChange={onChange}
+            value={time}
+            granularity='minute'
+            {...props}
+        />
+    )
 })
 
 TimePicker.displayName = 'TimePicker'

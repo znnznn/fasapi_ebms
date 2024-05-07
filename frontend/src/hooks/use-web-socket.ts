@@ -63,6 +63,7 @@ export const useWebSocket = <T extends UseWebsocketProps>({
 
         return () => {
             websocket.close()
+            // websocket.removeEventListener('message', () => {})
         }
     }, [])
 

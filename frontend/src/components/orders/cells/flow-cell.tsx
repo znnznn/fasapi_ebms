@@ -108,7 +108,9 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
             </SelectTrigger>
             <SelectContent>
                 {flowsData?.map((flow) => (
-                    <SelectItem key={flow.id} value={String(flow.id)}>
+                    <SelectItem
+                        key={flow.id}
+                        value={String(flow.id)}>
                         {flow.name}
                     </SelectItem>
                 ))}

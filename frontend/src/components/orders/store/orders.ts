@@ -12,6 +12,7 @@ type QueryKeyParams = Partial<OrdersQueryParams | EBMSItemsQueryParams> | {}
 interface State {
     isOrderCompleted: boolean
     category: string | undefined
+    groupedView: boolean
     scheduled: boolean
     overdue: boolean
     date: string
@@ -23,6 +24,7 @@ interface State {
 
 const initialState: State = {
     isOrderCompleted: false,
+    groupedView: true,
     category: '',
     overdue: false,
     scheduled: false,
@@ -62,7 +64,9 @@ export const ordersSlice = createSlice({
         setDate(state, action: PayloadAction<string>) {
             state.date = action.payload
         },
-
+        setGroupedView(state, action: PayloadAction<boolean>) {
+            state.groupedView = action.payload
+        },
         setOverDue(state, action: PayloadAction<boolean>) {
             state.overdue = action.payload
         },
@@ -87,6 +91,7 @@ export const {
     setOrderCompleted,
     setCategory,
     resetAllOrders,
+    setGroupedView,
     setScheduled,
     setDate,
     setSearch,
