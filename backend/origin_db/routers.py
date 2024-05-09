@@ -221,15 +221,18 @@ async def get_items(
             item_filter.order_by = item_filter.remove_invalid_fields(ordering)
             origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
         filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids()
+        print('filtering_items', filtering_items)
         extra_ordering = None
         ordering_items = None
         if filtering_items:
             if item_filter.is_exclude:
+                print("excluded")
                 origin_item_filter.autoid__not_in = filtering_items
                 ordering_items = await ItemsService(
                     db_session=session, list_filter=item_filter
                 ).get_filtering_origin_items_autoids(not_excluded=True)
             else:
+                print("included")
                 origin_item_filter.autoid__in = filtering_items
         if not item_filter.is_filtering_values and item_filter.order_by:
             filtering_items = await ItemsService(db_session=session, list_filter=item_filter).get_filtering_origin_items_autoids(do_ordering=True)
