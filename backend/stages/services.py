@@ -515,7 +515,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def get_filtering_origin_items_autoids(self, do_ordering: bool = False, **kwargs) -> Sequence[str] | None:
         if self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(select(self.model.origin_item), **kwargs)
+            query = self.filter.filter(select(self.model.origin_item).where(self.model.origin_item != None), **kwargs)
             query = self.filter.sort(query, **kwargs)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
@@ -527,7 +527,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
         if self.filter and self.filter.is_filtering_values:
-            query = self.filter.filter(select(self.model.order))
+            query = self.filter.filter(select(self.model.order).where(self.model.order != None))
             query = self.filter.sort(query)
             objs: ScalarResult[str] = await self.db_session.scalars(query)
             return objs.all() or ['-1']
