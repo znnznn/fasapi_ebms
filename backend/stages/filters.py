@@ -236,7 +236,6 @@ class SalesOrderFilter(RenameFieldFilter):
     priority: Optional[int] = None
     is_scheduled: Optional[bool] = None
     over_due: Optional[bool] = None
-    completed: Optional[bool] = None
     status: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
     status_not_in: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
     stage_id__isnull: Optional[NestedItemFilter] = FilterDepends(NestedItemFilter)
