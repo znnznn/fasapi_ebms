@@ -59,7 +59,6 @@ class NestedItemFilter(RenameFieldFilter):
         )
         if completed := fields.pop('completed', None):
             fields['status'] = 'Done'
-            fields['is_scheduled'] = True
         over_due = fields.pop('over_due', None)
         if isinstance(over_due, bool):
             if over_due:

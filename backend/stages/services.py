@@ -444,7 +444,6 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 - completed
         """
         subq = case((and_(
-            self.model.production_date != None,
             Stage.name == "Done",
         ), 1), else_=0).label("completed")
         stmt = select(
@@ -465,7 +464,6 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         subq = select(Item.order).where(
             and_(
                 Item.order.in_(autoids),
-                Item.production_date != None,
                 Item.stage_id != None,
                 Stage.name == "Done",
             )

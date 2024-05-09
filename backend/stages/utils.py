@@ -44,7 +44,7 @@ class GetDataForSending:
             result.sales_order = order
         for detail in result.details:
             if item := items_data.get(detail.autoid):
-                detail.completed = True if item.stage and item.production_date and item.stage.name == 'Done' else False
+                detail.completed = True if item.stage and item.stage.name == 'Done' else False
                 detail.item = item
                 completed.append(detail.completed)
             else:
