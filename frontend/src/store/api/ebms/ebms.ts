@@ -61,7 +61,7 @@ export const embs = api.injectEndpoints({
         }),
         patchEBMSItem: build.mutation<void, EBMSItemPatchData>({
             query: ({ data, id }) => ({
-                url: `ebms/items/${id}/`,
+                url: `ebms/orders/${id}/`,
                 method: 'PATCH',
                 body: data
             }),

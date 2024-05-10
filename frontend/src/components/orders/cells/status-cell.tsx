@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { useLazyGetOrderQuery } from '@/store/api/ebms/ebms'
 import type { Item } from '@/store/api/ebms/ebms.types'
-import { usePatchItemMutation } from '@/store/api/items/items'
+import { usePatchItemMutation, usePatchOrderItemMutation } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
@@ -42,8 +42,6 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
     useEffect(() => {
         setDefaultStatus(stageId ? String(stageId) : '')
     }, [stageId])
-
-    const [patchItem] = usePatchItemMutation()
 
     const isCompleted = useAppSelector(selectOrders).isOrderCompleted
 
@@ -119,9 +117,14 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             description: message
         })
 
+    const [patchItem] = usePatchItemMutation()
+    const [patchOrderItem] = usePatchOrderItemMutation()
+
+    const patchFunction = category ? patchItem : patchOrderItem
+
     const handlePatchItem = async (data: ItemsPatchData) => {
         try {
-            await patchItem(data)
+            await patchFunction(data)
                 .unwrap()
                 .then(() => {
                     if (!category) {

@@ -2,6 +2,7 @@ import { type Table as TableType, flexRender } from '@tanstack/react-table'
 import { Fragment } from 'react'
 
 import { Badge } from '../ui/badge'
+import { Checkbox } from '../ui/checkbox'
 import { Skeleton } from '../ui/skeleton'
 import {
     Table,
@@ -13,6 +14,7 @@ import {
 } from '../ui/table'
 
 import { columns } from './items-table/columns'
+import { MultipatchPopover } from './items-table/multipatch-popover'
 import { Statuses } from './statuses'
 import { TableSkeleton } from './table-skeleton'
 import { groupBy } from './utils/group-by'
@@ -51,7 +53,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                         <TableRow className='p-0'>
                             <TableCell
                                 colSpan={colSpan}
-                                className='h-[41px] py-1.5'>
+                                className='h-[41px] py-1.5 !px-0'>
                                 <Skeleton className='w-full h-[41px]' />
                             </TableCell>
                         </TableRow>
@@ -68,7 +70,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                 header.id !== 'status' &&
                                                 header.id !== 'production_date'
                                             }
-                                            className='w-2 last:w-auto'
+                                            className='w-2 !px-0.5 last:w-auto'
                                             data-column-index={header.index}
                                             onDragStart={onDragStart}
                                             onDragOver={stopEvent}
@@ -98,15 +100,53 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                 group[1].map((row, index) => (
                                     <Fragment key={row.original?.id}>
                                         {index === 0 && (
-                                            <TableRow className='pointer-events-none !p-0'>
+                                            <TableRow className=' !p-0'>
                                                 <TableCell
-                                                    className='!py-0 pl-8'
+                                                    className='!p-0'
                                                     colSpan={colSpan}>
                                                     <Badge
                                                         variant='secondary'
-                                                        className='py-2 ml-4 w-full !rounded-none'>
+                                                        className='py-2 pl-10 w-full !m-0 !rounded-none'>
+                                                        {/* <Checkbox
+                                                            className='mr-4'
+                                                            checked={row.getIsSelected()}
+                                                            value={row.original.id}
+                                                            onCheckedChange={(value) => {
+                                                                const currentGroup =
+                                                                    groupByOrder.filter(
+                                                                        (gr) =>
+                                                                            gr[0] ===
+                                                                            group[0]
+                                                                    )
+
+                                                                // const obj =
+                                                                //     currentGroupIds
+                                                                //         .map((obj) => {
+                                                                //             return {
+                                                                //                 [obj]: true
+                                                                //             }
+                                                                //         })
+                                                                //         .reduce(
+                                                                //             (
+                                                                //                 acc,
+                                                                //                 val
+                                                                //             ) => {
+                                                                //                 return {
+                                                                //                     ...acc,
+                                                                //                     ...val
+                                                                //                 }
+                                                                //             },
+                                                                //             {}
+                                                                //         )
+                                                                // table.setRowSelection(obj)
+                                                            }}
+                                                            aria-label='Select row'
+                                                        /> */}
                                                         {group[0]} |{' '}
                                                         {group[1][0].original?.customer}
+                                                        {/* <MultipatchPopover
+                                                            table={table}
+                                                        /> */}
                                                     </Badge>
                                                 </TableCell>
                                             </TableRow>
@@ -119,7 +159,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                             }>
                                             {row.getVisibleCells().map((cell) => (
                                                 <TableCell
-                                                    className='py-1.5 h-[53px]'
+                                                    className='py-1.5 h-[53px] !px-0.5'
                                                     key={cell.id}>
                                                     {flexRender(
                                                         cell.column.columnDef.cell,
@@ -140,7 +180,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                         data-state={row.getIsSelected() && 'selected'}>
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell
-                                                className='py-1.5 h-[53px]'
+                                                className='py-1.5 h-[53px] !px-0.5'
                                                 key={cell.id}>
                                                 {flexRender(
                                                     cell.column.columnDef.cell,

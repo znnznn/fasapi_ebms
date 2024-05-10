@@ -30,13 +30,13 @@ export interface Stage {
 export interface ItemsAddData {
     order: string
     origin_item: string
-    flow: number
-    priority: number
+    flow?: number
+    priority?: number
     time?: string
-    location: number
-    packages: number
-    production_date: string | null
-    stage: number
+    location?: number
+    packages?: number
+    production_date?: string | null
+    stage?: number
     flowName?: string
 }
 

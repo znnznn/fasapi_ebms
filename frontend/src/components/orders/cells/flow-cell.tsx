@@ -34,7 +34,7 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
 
     // const defalueValue = flowId ? String(flowId) : ''
 
-    const [defalueValue, setDefaultValue] = useState(flowId ? String(flowId) : '')
+    const [defalutValue, setDefaultValue] = useState(flowId ? String(flowId) : '')
 
     useEffect(() => {
         setDefaultValue(flowId ? String(flowId) : '')
@@ -77,7 +77,8 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
 
         const data = {
             flow: +value,
-            flowName
+            flowName,
+            order: orderId
         }
 
         setDefaultValue(value)
@@ -100,8 +101,8 @@ export const FlowCell: React.FC<Props> = ({ item, orderId, id, flowsData }) => {
     return (
         <Select
             // key={defalueValue}
-            defaultValue={defalueValue}
-            value={defalueValue}
+            defaultValue={defalutValue}
+            value={defalutValue}
             onValueChange={onValueChange}>
             <SelectTrigger className='w-40 text-left'>
                 <SelectValue placeholder='Select flow' />

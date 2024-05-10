@@ -65,14 +65,18 @@ export const WeekFilters = () => {
     }, [scheduled, defaultDate])
 
     return (category === 'Rollforming' || category === 'Trim') && scheduled ? (
-        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 overflow-x-scroll'>
+        <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 overflow-x-scroll p-0.5'>
             <ToggleGroup
                 key={defaultDate}
+                className=''
                 defaultValue={defaultDate}
                 onValueChange={onValueChange}
                 type='single'>
                 {currentWeeksDates.map((date) => (
-                    <WeekFilter key={date.date} {...date} />
+                    <WeekFilter
+                        key={date.date}
+                        {...date}
+                    />
                 ))}
             </ToggleGroup>
         </div>

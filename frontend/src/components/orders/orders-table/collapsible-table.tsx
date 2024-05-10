@@ -48,47 +48,34 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                         <TableRow className='p-0'>
                             <TableCell
                                 colSpan={colSpan}
-                                className='h-[39px] py-1.5'>
+                                className='h-[39px] py-1.5 !px-0'>
                                 <Skeleton className='opacity-50 w-full h-[39px]' />
                             </TableCell>
                         </TableRow>
                     ) : (
                         table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header, i) =>
-                                    i === 0 ? (
-                                        <TableHead
-                                            className='w-10'
-                                            key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef.header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    ) : (
-                                        <TableHead
-                                            className='px-0.5 w-2 last:w-auto'
-                                            draggable={
-                                                !table.getState().columnSizingInfo
-                                                    .isResizingColumn
-                                            }
-                                            data-column-index={header.index}
-                                            onDragStart={onDragStart}
-                                            onDragOver={stopEvent}
-                                            onDrop={onDrop}
-                                            colSpan={header.colSpan}
-                                            key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef.header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    )
-                                )}
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead
+                                        className='px-0.5 w-2 last:w-auto'
+                                        draggable={
+                                            !table.getState().columnSizingInfo
+                                                .isResizingColumn
+                                        }
+                                        data-column-index={header.index}
+                                        onDragStart={onDragStart}
+                                        onDragOver={stopEvent}
+                                        onDrop={onDrop}
+                                        colSpan={header.colSpan}
+                                        key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                  header.column.columnDef.header,
+                                                  header.getContext()
+                                              )}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))
                     )}
@@ -113,7 +100,7 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                                             }>
                                             {row.getVisibleCells().map((cell) => (
                                                 <TableCell
-                                                    className='py-1.5 [&:not(:first-child)]:px-0.5 first:w-10 [&div]:h-[53px]'
+                                                    className='py-1.5 px-0.5 first:w-10 [&div]:h-[53px]'
                                                     key={cell.id}>
                                                     {flexRender(
                                                         cell.column.columnDef.cell,

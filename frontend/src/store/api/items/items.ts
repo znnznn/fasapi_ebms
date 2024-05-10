@@ -118,8 +118,8 @@ export const items = api.injectEndpoints({
                                     name: data?.flowName!,
                                     stages: []
                                 },
-                                time: '',
-                                production_date: '',
+                                time: data.time!,
+                                production_date: data?.production_date!,
                                 priority: data?.priority!,
                                 packages: data?.packages!,
                                 location: data?.location!,
@@ -179,22 +179,29 @@ export const items = api.injectEndpoints({
                                 stages: []
                             }
 
-                            if (data.flowName && item?.item) {
-                                Object.assign(item?.item, {
-                                    ...data,
-                                    flow: flowToPatch,
+                            if (stageName && stageColor) {
+                                Object.assign(data, {
                                     stage: {
                                         id: data.stage!,
                                         name: stageName!,
                                         color: stageColor!
                                     }
                                 })
-                            } else if (item?.item) {
+                            }
+
+                            if (data.flowName && item?.item) {
                                 Object.assign(item?.item, {
                                     ...data,
+                                    flow: flowToPatch,
                                     stage: null
                                 })
                             }
+                            // else if (item?.item) {
+                            //     Object.assign(item?.item, {
+                            //         ...data,
+                            //         stage: null
+                            //     })
+                            // }
                         }
                     )
                 )
@@ -205,7 +212,7 @@ export const items = api.injectEndpoints({
                     patchResult.undo()
                 }
             },
-            invalidatesTags: ['Items', 'Orders', 'EBMSItems']
+            invalidatesTags: ['Items', 'Orders', 'EBMSItems', 'Categories', 'Capacities']
         }),
         patchItem: build.mutation<ItemsData, ItemsPatchData>({
             query: ({ data, id }) => ({
@@ -254,11 +261,12 @@ export const items = api.injectEndpoints({
                                     flow: flowToPatch,
                                     stage: null
                                 })
-                            } else if (item?.item) {
-                                Object.assign(item?.item, {
-                                    ...dataToPatch
-                                })
                             }
+                            // else if (item?.item) {
+                            //     Object.assign(item?.item, {
+                            //         ...dataToPatch
+                            //     })
+                            // }
                         }
                     )
                 )
@@ -269,7 +277,7 @@ export const items = api.injectEndpoints({
                     patchResult.undo()
                 }
             },
-            invalidatesTags: ['Items', 'Orders', 'EBMSItems']
+            invalidatesTags: ['Items', 'Orders', 'EBMSItems', 'Categories', 'Capacities']
         }),
         removeItem: build.mutation<void, number>({
             query: (id) => ({

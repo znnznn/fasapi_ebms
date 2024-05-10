@@ -87,7 +87,7 @@ export const NotesSidebar: React.FC<Props> = ({ notes, itemId, orderId }) => {
         <Sheet>
             <SheetTrigger asChild>
                 <Button
-                    className='w-36'
+                    className='w-32'
                     variant='outline'>
                     {notesLength ? (
                         <div className='flex items-center justify-center w-full gap-x-10'>

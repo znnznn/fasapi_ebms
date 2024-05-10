@@ -56,7 +56,14 @@ export const multiupdate = api.injectEndpoints({
                     patchResult.undo()
                 }
             },
-            invalidatesTags: ['Items', 'Orders', 'EBMSItems', 'Items']
+            invalidatesTags: [
+                'Items',
+                'Orders',
+                'EBMSItems',
+                'Items',
+                'Categories',
+                'Capacities'
+            ]
         }),
         multiPatchOrders: build.mutation<MultiPatchOrdersData, MultiPatchOrdersData>({
             query: (data) => ({
@@ -102,7 +109,14 @@ export const multiupdate = api.injectEndpoints({
                     patchResult.undo()
                 }
             },
-            invalidatesTags: ['Items', 'Orders', 'EBMSItems', 'Items']
+            invalidatesTags: [
+                'Items',
+                'Orders',
+                'EBMSItems',
+                'Items',
+                'Categories',
+                'Capacities'
+            ]
         })
     })
 })
