@@ -1,24 +1,26 @@
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon, RotateCcw } from 'lucide-react'
 import * as React from 'react'
+import { useEffect } from 'react'
 import type { Matcher } from 'react-day-picker'
 import { toast } from 'sonner'
 
-import { selectOrders } from '../orders/store/orders'
+import { selectCategory, selectOrders } from '../orders/store/orders'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { datesFormat } from '@/config/app'
-import { usePatchItemMutation } from '@/store/api/items/items'
-import type { ItemsPatchData } from '@/store/api/items/items.types'
+import { useAddItemMutation, usePatchItemMutation } from '@/store/api/items/items'
+import type { ItemsAddData, ItemsPatchData } from '@/store/api/items/items.types'
 import { useGetCompanyProfilesQuery } from '@/store/api/profiles/profiles'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { cn } from '@/utils/cn'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
 interface Props {
+    originItem: string
     date: Date | undefined
     itemId: number | undefined
     orderId: string
@@ -32,6 +34,7 @@ export const DatePicker: React.FC<Props> = ({
     itemId,
     defaultDate = null,
     disabled = false,
+    originItem,
     orderId
 }) => {
     const [open, setOpen] = React.useState(false)
@@ -39,8 +42,10 @@ export const DatePicker: React.FC<Props> = ({
     const close = () => setOpen(false)
 
     const [patchItem] = usePatchItemMutation()
+    const [addItem] = useAddItemMutation()
 
     const isScheduled = useAppSelector(selectOrders).scheduled
+    const category = useAppSelector(selectCategory)
 
     const successToast = (date: string | null) => {
         const isDateNull = date === null
@@ -52,15 +57,17 @@ export const DatePicker: React.FC<Props> = ({
 
         const scheduledDescription = !isDateNull
             ? dateMessage
-            : 'Production date has been reset. Order moved to Unscheduled'
+            : 'Production date has been reset. Item moved to Unscheduled'
 
         const unscheduledDescription = isDateNull
             ? dateMessage
-            : 'Production date has been updated. Order moved to Scheduled'
+            : 'Production date has been updated. Item moved to Scheduled'
 
         const description = isScheduled ? scheduledDescription : unscheduledDescription
 
-        toast.success(`Item ${itemId}`, { description })
+        toast.success(`Item ${itemId}`, {
+            description: category ? description : dateMessage
+        })
     }
 
     const errorToast = (message: string) => {
@@ -68,6 +75,18 @@ export const DatePicker: React.FC<Props> = ({
             description: message
         })
     }
+
+    const handleAddItem = async (data: ItemsAddData) => {
+        try {
+            await addItem(data)
+                .unwrap()
+                .then(() => successToast(data.production_date!))
+        } catch (error) {
+            const isErrorMessage = isErrorWithMessage(error)
+            errorToast(isErrorMessage ? error.data.detail : 'Something went wrong')
+        }
+    }
+
     const handlePatchItem = async (data: ItemsPatchData) => {
         try {
             await patchItem(data)
@@ -80,17 +99,22 @@ export const DatePicker: React.FC<Props> = ({
     }
 
     const handleSetDate = () => {
-        const productionDate = format(date!, datesFormat.dashes)
-
         const data = {
-            production_date: productionDate,
+            production_date: format(date!, datesFormat.dashes),
             order: orderId
         }
 
-        handlePatchItem({
-            id: itemId!,
-            data
-        })
+        if (itemId) {
+            handlePatchItem({
+                id: itemId,
+                data
+            })
+        } else {
+            handleAddItem({
+                ...data,
+                origin_item: originItem
+            })
+        }
 
         close()
     }
@@ -115,14 +139,16 @@ export const DatePicker: React.FC<Props> = ({
 
     const [disabledDays, setDisabledDays] = React.useState<Matcher[]>([])
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!isWorkingWeekend) {
             setDisabledDays([{ dayOfWeek: [0, 6] }])
         }
     }, [isWorkingWeekend])
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -146,10 +172,15 @@ export const DatePicker: React.FC<Props> = ({
                 <div
                     className='flex items-center justify-start gap-x-3 p-3 pt-0 w-full
             '>
-                    <Button className='flex-1' onClick={handleSetDate}>
+                    <Button
+                        className='flex-1'
+                        onClick={handleSetDate}>
                         Set Date
                     </Button>
-                    <Button onClick={close} className='flex-1' variant='secondary'>
+                    <Button
+                        onClick={close}
+                        className='flex-1'
+                        variant='secondary'>
                         Cancel
                     </Button>
                     <TooltipProvider>
@@ -160,7 +191,7 @@ export const DatePicker: React.FC<Props> = ({
                                     onClick={handleResetDate}
                                     size='icon'
                                     variant='destructive'>
-                                    <RotateCcw className='w-4 h-4' />
+                                    <RotateCcw className='w-4 h-4 flex-shrink-0' />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>

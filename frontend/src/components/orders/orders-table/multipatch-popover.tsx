@@ -32,9 +32,9 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
 
     const originOrdersIds = selectedRows.map((row) => row.original.id)
 
-    const orderItemsWithoutFlow = orderItems.filter(
-        (item) => !item?.item?.flow?.id
-    ).length
+    // const orderItemsWithoutFlow = orderItems.filter(
+    //     (item) => !item?.item?.flow?.id
+    // ).length
 
     const [currentRows, setCurrentRows] = useState(selectedRows)
 
@@ -44,24 +44,24 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
         }
     }, [selectedRows])
 
-    const removeItemsWithoutFlow = () => {
-        const rowsWithFlow = selectedRows.filter(
-            (row) => row?.original?.origin_items?.every((item) => item?.item?.flow?.id)
-        )
+    // const removeItemsWithoutFlow = () => {
+    //     const rowsWithFlow = selectedRows.filter(
+    //         (row) => row?.original?.origin_items?.every((item) => item?.item?.flow?.id)
+    //     )
 
-        table.resetRowSelection()
+    //     table.resetRowSelection()
 
-        const obj = rowsWithFlow
-            .map((obj) => {
-                return { [obj.id]: true }
-            })
-            .reduce((acc, val) => {
-                return { ...acc, ...val }
-            }, {})
+    //     const obj = rowsWithFlow
+    //         .map((obj) => {
+    //             return { [obj.id]: true }
+    //         })
+    //         .reduce((acc, val) => {
+    //             return { ...acc, ...val }
+    //         }, {})
 
-        table.setRowSelection(obj)
-        setCurrentRows(rowsWithFlow)
-    }
+    //     table.setRowSelection(obj)
+    //     setCurrentRows(rowsWithFlow)
+    // }
 
     const handleRowReset = () => table.resetRowSelection()
 
@@ -171,7 +171,9 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
     const isSaveDisabled = flow === -1 && !date
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={setOpen}>
             <PopoverTrigger className='fixed left-1/2 bottom-20 -translate-x-1/2 z-10'></PopoverTrigger>
             <PopoverContent className='w-96'>
                 <div className='grid gap-4'>
@@ -184,7 +186,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                         </h4>
                     </div>
 
-                    {orderItemsWithoutFlow ? (
+                    {/* {orderItemsWithoutFlow ? (
                         <p className='text-sm text-gray-500'>
                             <span className='font-bold'>{orderItemsWithoutFlow} </span>
                             line item(s) have no flow, please select flow for all items or{' '}
@@ -197,7 +199,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                             </Button>{' '}
                             orders with these items from selection to set date
                         </p>
-                    ) : null}
+                    ) : null} */}
 
                     {completed ? (
                         <p className='text-sm text-gray-500'>
@@ -208,7 +210,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                         <DatePicker
                             date={date}
                             setDate={setDate}
-                            disabled={completed || !!orderItemsWithoutFlow}
+                            disabled={completed}
                         />
                     </div>
                     <div className='flex items-center gap-x-2 justify-between'>
@@ -222,7 +224,10 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                                 'Save'
                             )}
                         </Button>
-                        <Button onClick={close} className='flex-1' variant='secondary'>
+                        <Button
+                            onClick={close}
+                            className='flex-1'
+                            variant='secondary'>
                             Cancel
                         </Button>
                     </div>

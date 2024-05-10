@@ -58,8 +58,8 @@ export const subColumns: ColumnDef<OriginItems>[] = [
         header: ({ column }) => createHeader('Status', column, '!w-40'),
         cell: ({ row }) => (
             <StatusCell
-                key={row?.original?.id + row?.original?.item?.stage?.name}
-                item={row.original.item}
+                key={row?.original?.id}
+                item={row.original?.item}
                 invoice={row.original?.order}
                 originOrderId={row.original?.origin_order}
             />
@@ -134,10 +134,14 @@ export const subColumns: ColumnDef<OriginItems>[] = [
 
             return (
                 <DatePicker
+                    key={row.original?.id}
                     date={date}
+                    originItem={row.original.id}
                     setDate={setDate}
+                    defaultDate={row.original.item?.production_date}
                     itemId={row.original?.item?.id}
-                    disabled={!row.original.item?.flow?.id || row.original.completed}
+                    // disabled={!row.original.item?.flow?.id || row.original.completed}
+                    disabled={row.original.completed}
                     orderId={row.original?.origin_order}
                 />
             )
@@ -146,24 +150,24 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'time',
         sortingFn: timeFn,
-        header: ({ column }) => createHeader('Due by time', column, '!w-40'),
+        header: ({ column }) => createHeader('Time', column, '!w-24'),
         cell: ({ row }) => {
             return (
                 <TimePicker
                     item={row?.original?.item}
                     originItemId={row.original?.id}
-                    // key={row?.original?.item?.id + row?.original?.item?.time!}
-                    isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    // isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    isDisabled={row.original.completed}
                     orderId={row.original?.origin_order}
                 />
             )
         }
     },
-    {
-        accessorKey: 'order',
-        header: ({ column }) => createHeader('Order', column, '!w-28'),
-        cell: ({ row }) => alignCell(row.original.order)
-    },
+    // {
+    //     accessorKey: 'order',
+    //     header: ({ column }) => createHeader('Order', column, '!w-28'),
+    //     cell: ({ row }) => alignCell(row.original.order)
+    // },
     {
         accessorKey: 'quantity',
         header: ({ column }) => createHeader('Ordered', column, '!w-28'),
@@ -241,7 +245,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'comments',
         sortingFn: notesFn,
-        header: ({ column }) => createHeader('Notes', column, '!w-36'),
+        header: ({ column }) => createHeader('Notes', column, '!w-32'),
         cell: ({ row }) => (
             <NotesSidebar
                 notes={row.original?.item?.comments!}

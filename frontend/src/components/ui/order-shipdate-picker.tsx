@@ -102,7 +102,9 @@ export const OrderShipDatePicker: React.FC<Props> = ({
     }, [isWorkingWeekend])
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -111,7 +113,7 @@ export const OrderShipDatePicker: React.FC<Props> = ({
                         'w-full justify-center text-left font-normal !p-0',
                         !date && 'text-muted-foreground'
                     )}>
-                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    <CalendarIcon className='mr-2 h-4 w-4 flex-shrink-0' />
                     {date ? format(date, 'dd.MM.yyyy EEE') : <span>Pick a date</span>}
                 </Button>
             </PopoverTrigger>
@@ -126,10 +128,15 @@ export const OrderShipDatePicker: React.FC<Props> = ({
                 <div
                     className='flex items-center justify-start gap-x-3 p-3 pt-0 w-full
             '>
-                    <Button className='flex-1' onClick={handleSetDate}>
+                    <Button
+                        className='flex-1'
+                        onClick={handleSetDate}>
                         Set Date
                     </Button>
-                    <Button onClick={close} className='flex-1' variant='secondary'>
+                    <Button
+                        onClick={close}
+                        className='flex-1'
+                        variant='secondary'>
                         Cancel
                     </Button>
                     {/* <TooltipProvider>

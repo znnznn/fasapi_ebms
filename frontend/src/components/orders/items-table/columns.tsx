@@ -57,13 +57,15 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             const flowsData = useAppSelector(selectOrders).flowsData ?? []
 
             return (
-                <FlowCell
-                    key={row?.original?.id}
-                    id={row?.original?.id}
-                    flowsData={flowsData}
-                    item={row.original.item!}
-                    orderId={row.original.origin_order}
-                />
+                <div className='!pl-4'>
+                    <FlowCell
+                        key={row?.original?.id}
+                        id={row?.original?.id}
+                        flowsData={flowsData}
+                        item={row.original.item!}
+                        orderId={row.original.origin_order}
+                    />
+                </div>
             )
         }
     },
@@ -73,7 +75,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         cell: ({ row }) => (
             <StatusCell
                 key={row?.original?.id}
-                item={row.original.item}
+                item={row.original?.item}
                 originOrderId={row.original.origin_order}
             />
         )
@@ -98,12 +100,14 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
 
             return (
                 <DatePicker
-                    key={row.original?.id}
+                    // key={row.original?.id}
                     date={date}
                     setDate={setDate}
+                    originItem={row.original.id}
                     defaultDate={row.original.item?.production_date}
                     itemId={row.original?.item?.id}
-                    disabled={!row.original.item?.flow?.id || row.original.completed}
+                    // disabled={!row.original.item?.flow?.id || row.original.completed}
+                    disabled={row.original.completed}
                     orderId={row.original.origin_order}
                 />
             )
@@ -111,11 +115,12 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'time',
-        header: ({ column }) => createHeader('Due by time', column, '!w-40'),
+        header: ({ column }) => createHeader('Time', column, '!w-20'),
         cell: ({ row }) => {
             return (
                 <TimePicker
-                    isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    // isDisabled={!row.original.item?.flow?.id || row.original.completed}
+                    isDisabled={row.original.completed}
                     item={row?.original?.item}
                     originItemId={row.original?.id}
                     orderId={row.original.origin_order}
@@ -209,8 +214,8 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'id_inven',
         header: ({ column }) =>
-            createHeader('ID', column, 'text-left justify-start !w-28'),
-        cell: ({ row }) => <div className='w-28 pl-4'>{row.original?.id_inven}</div>
+            createHeader('ID', column, 'text-left justify-start !w-24'),
+        cell: ({ row }) => <div className='w-24 pl-4'>{row.original?.id_inven}</div>
     },
     {
         accessorKey: 'weight',
@@ -228,13 +233,18 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'description',
-        header: () => (
-            <Button
-                variant='ghost'
-                className='text-left justify-start !w-64'>
-                Description
-            </Button>
-        ),
+        header: () => {
+            const groupedView = useAppSelector((store) => store.orders.groupedView)
+            const category = !!useAppSelector((store) => store.orders.category)
+            return (
+                <Button
+                    disabled={groupedView && category}
+                    variant='ghost'
+                    className='text-left justify-start !w-64'>
+                    Description
+                </Button>
+            )
+        },
         cell: ({ row }) => (
             <div className='w-64 pl-4'>
                 {/* <TooltipCell
@@ -247,7 +257,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'comments',
-        header: ({ column }) => createHeader('Notes', column, 'w-36'),
+        header: ({ column }) => createHeader('Notes', column, 'w-32'),
         cell: ({ row }) => (
             <NotesSidebar
                 notes={row.original?.item?.comments!}

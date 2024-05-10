@@ -39,7 +39,9 @@ export const SubTable: React.FC<Props> = ({ data }) => {
                 {subTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                         {headerGroup.headers.map((header) => (
-                            <TableHead key={header.id}>
+                            <TableHead
+                                key={header.id}
+                                className='py-1.5 px-0.5'>
                                 {header.isPlaceholder
                                     ? null
                                     : flexRender(
@@ -54,9 +56,11 @@ export const SubTable: React.FC<Props> = ({ data }) => {
 
             <TableBody>
                 {originItemsRows.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow key={row?.original?.id}>
                         {row.getVisibleCells().map((cell) => (
-                            <TableCell className='py-1.5' key={cell.id}>
+                            <TableCell
+                                className='py-1.5 px-0.5'
+                                key={cell.id}>
                                 {flexRender(
                                     cell.column.columnDef.cell,
                                     cell.getContext()

@@ -38,9 +38,9 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
 
     const [currentRows, setCurrentRows] = useState(rows)
 
-    const itemsWithoutFlow = currentRows.filter((row) => !row?.item?.flow?.id).length
+    // const itemsWithoutFlow = currentRows.filter((row) => !row?.item?.flow?.id).length
 
-    const isItemsWithoutFlow = itemsWithoutFlow > 0
+    // const isItemsWithoutFlow = itemsWithoutFlow > 0
 
     useEffect(() => {
         if (JSON.stringify(rows) !== JSON.stringify(currentRows)) {
@@ -48,24 +48,24 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
         }
     }, [rows])
 
-    const removeItemsWithoutFlow = () => {
-        const rowsWithFlow = table
-            .getSelectedRowModel()
-            .rows.filter((row) => row?.original?.item?.flow?.id)
+    // const removeItemsWithoutFlow = () => {
+    //     const rowsWithFlow = table
+    //         .getSelectedRowModel()
+    //         .rows.filter((row) => row?.original?.item?.flow?.id)
 
-        table.resetRowSelection()
+    //     table.resetRowSelection()
 
-        const obj = rowsWithFlow
-            .map((obj) => {
-                return { [obj.id]: true }
-            })
-            .reduce((acc, val) => {
-                return { ...acc, ...val }
-            }, {})
+    //     const obj = rowsWithFlow
+    //         .map((obj) => {
+    //             return { [obj.id]: true }
+    //         })
+    //         .reduce((acc, val) => {
+    //             return { ...acc, ...val }
+    //         }, {})
 
-        table.setRowSelection(obj)
-        setCurrentRows(rowsWithFlow.map((row) => row.original))
-    }
+    //     table.setRowSelection(obj)
+    //     setCurrentRows(rowsWithFlow.map((row) => row.original))
+    // }
 
     const category = useAppSelector(selectOrders).category
     const scheduled = !useAppSelector(selectOrders).scheduled
@@ -157,7 +157,9 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
     const isSaveDisabled = flow === -1 && !date
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={setOpen}>
             <PopoverTrigger className='fixed left-1/2 bottom-20 -translate-x-1/2 z-10'></PopoverTrigger>
             <PopoverContent className='w-96'>
                 <div className='grid gap-4'>
@@ -170,7 +172,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                         </h4>
                     </div>
 
-                    {isItemsWithoutFlow ? (
+                    {/* {isItemsWithoutFlow ? (
                         <p className='text-sm text-gray-500'>
                             <span className='font-bold'>{itemsWithoutFlow} </span>
                             item(s) have no flow, please select flow for all items or{' '}
@@ -183,7 +185,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                             </Button>{' '}
                             this item(s) from selection to set date
                         </p>
-                    ) : null}
+                    ) : null} */}
                     {completed ? (
                         <p className='text-sm text-gray-500'>
                             You can't update date for completed orders
@@ -191,7 +193,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                     ) : null}
                     <div className='flex items-center gap-x-2'>
                         <DatePicker
-                            disabled={isItemsWithoutFlow || completed}
+                            disabled={completed}
                             date={date}
                             setDate={setDate}
                         />
@@ -201,7 +203,9 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                             </SelectTrigger>
                             <SelectContent>
                                 {flowsData?.map((flow) => (
-                                    <SelectItem key={flow.id} value={String(flow.id)}>
+                                    <SelectItem
+                                        key={flow.id}
+                                        value={String(flow.id)}>
                                         {flow.name}
                                     </SelectItem>
                                 ))}
@@ -219,7 +223,10 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                                 'Save'
                             )}
                         </Button>
-                        <Button onClick={close} className='flex-1' variant='secondary'>
+                        <Button
+                            onClick={close}
+                            className='flex-1'
+                            variant='secondary'>
                             Cancel
                         </Button>
                     </div>
