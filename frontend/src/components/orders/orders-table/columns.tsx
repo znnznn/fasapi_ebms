@@ -22,6 +22,7 @@ export const columns: ColumnDef<OrdersData>[] = [
             return (
                 <>
                     <Checkbox
+                        className='!ml-2'
                         checked={
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && 'indeterminate')
@@ -37,6 +38,7 @@ export const columns: ColumnDef<OrdersData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
+                className='!ml-2'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {
@@ -50,7 +52,9 @@ export const columns: ColumnDef<OrdersData>[] = [
     },
     {
         header: () => (
-            <Button variant='ghost' className='w-full'>
+            <Button
+                variant='ghost'
+                className='w-full'>
                 <div className='h-4 w-4 flex-shrink-0' />
             </Button>
         ),
@@ -61,7 +65,9 @@ export const columns: ColumnDef<OrdersData>[] = [
                 asChild
                 className='data-[state=open]:-rotate-90 transition-transform duration-15 '
                 disabled={!row.original?.origin_items?.length}>
-                <Button variant='ghost' size='icon'>
+                <Button
+                    variant='ghost'
+                    size='icon'>
                     <ChevronDown
                         className={cn(
                             'w-4 h-4 transition-transform duration-15',

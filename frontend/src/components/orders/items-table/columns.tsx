@@ -24,6 +24,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             return (
                 <>
                     <Checkbox
+                        className='!ml-2'
                         checked={
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && 'indeterminate')
@@ -39,6 +40,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
+                className='!ml-2'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {
