@@ -298,7 +298,7 @@ async def get_capacities_calendar(
     return JSONResponse(content=context)
 
 
-@router.patch("/items/{autoid}/", response_model=dict)
+@router.patch("/orders/{autoid}/", response_model=dict)
 async def partial_update_item(
         autoid: str, origin_item: ChangeShipDateSchema,
         user: User = Depends(active_user_with_permission),
