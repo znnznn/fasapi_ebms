@@ -129,4 +129,4 @@ class ChangeShipDateSchema(BaseModel):
     @field_validator('ship_date')
     @classmethod
     def validate_ship_date(cls, v: date):
-        return v.strftime("%Y-%m-%d")
+        return v.strftime("%m/%d/%Y")
