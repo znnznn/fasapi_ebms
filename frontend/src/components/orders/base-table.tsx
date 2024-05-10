@@ -2,7 +2,6 @@ import { type Table as TableType, flexRender } from '@tanstack/react-table'
 import { Fragment } from 'react'
 
 import { Badge } from '../ui/badge'
-import { Checkbox } from '../ui/checkbox'
 import { Skeleton } from '../ui/skeleton'
 import {
     Table,
@@ -14,7 +13,6 @@ import {
 } from '../ui/table'
 
 import { columns } from './items-table/columns'
-import { MultipatchPopover } from './items-table/multipatch-popover'
 import { Statuses } from './statuses'
 import { TableSkeleton } from './table-skeleton'
 import { groupBy } from './utils/group-by'
