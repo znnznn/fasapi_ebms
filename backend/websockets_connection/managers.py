@@ -188,21 +188,19 @@ class ConnectionManager:
         Function to consume a message and send to all connect clients in all processes
         """
         print("==========_consume_events============")
-        print(self.active_connections)
 
         room_connections = self.active_connections.get(subscribe)
         if room_connections:
-            try:
-                for connection in room_connections:
+            for connection in room_connections:
+                try:
                     await self._send_message_to_ws_connection(
                         message=message,
                         ws_connection=connection,
                     )
-            except Exception as exc:
-                print("error")
-                print(exc)
-                await self.disconnect(websocket=connection, subscribe=subscribe)
-
+                except Exception as exc:
+                    print("error")
+                    print(exc)
+                    await self.disconnect(websocket=connection, subscribe=subscribe)
 
     async def send_message_to_room(self, subscribe: str, message: dict):
         # Send events to the room
