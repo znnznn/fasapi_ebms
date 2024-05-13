@@ -6,6 +6,7 @@ import redis.asyncio as aioredis
 from broadcaster import Broadcast
 
 from fastapi import WebSocket
+from starlette import status
 from starlette.websockets import WebSocketState
 
 from database import redis_pool
@@ -196,11 +197,10 @@ class ConnectionManager:
             for connection in room_connections:
                 print('connection 0000')
                 print(connection)
-                if connection.client_state == WebSocketState.CONNECTED:
-                    await self._send_message_to_ws_connection(
-                        message=message,
-                        ws_connection=connection,
-                    )
+                await self._send_message_to_ws_connection(
+                    message=message,
+                    ws_connection=connection,
+                )
 
     async def send_message_to_room(self, subscribe: str, message: dict):
         # Send events to the room
@@ -217,7 +217,11 @@ class ConnectionManager:
     ):
         print("==========_send_message_to_ws_connection============")
         print(ws_connection)
-        await ws_connection.send_json(data=message)
+        if ws_connection.client_state == WebSocketState.CONNECTED and ws_connection.application_state == WebSocketState.CONNECTED:
+            await ws_connection.send_json(data=message)
+        else:
+            print("Connection not available")
+            await ws_connection.close(code=status.WS_1008_POLICY_VIOLATION)
 
 
 connection_manager = ConnectionManager()

@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "start": "node --max_old_space_size=8192 ./node_modules/vite/bin/vite --port 3000",
+        "start": "node server.mjs",
         "build": "tsc && vite build",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"
