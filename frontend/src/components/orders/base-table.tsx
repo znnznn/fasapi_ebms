@@ -1,7 +1,8 @@
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 
 import { Badge } from '../ui/badge'
+import { Checkbox } from '../ui/checkbox'
 import { Skeleton } from '../ui/skeleton'
 import {
     Table,
@@ -37,6 +38,10 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
     const groupByOrder = groupBy(table?.getRowModel()?.rows, 'original')
 
     const groupedView = useAppSelector((state) => state.orders.groupedView)
+
+    useEffect(() => {
+        table.setRowSelection({ TIDBOKSIBT2NF130: true })
+    }, [])
 
     return (
         <div className='rounded-md'>
@@ -95,79 +100,106 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                     ) : table.getRowModel().rows?.length ? (
                         groupedView ? (
                             groupByOrder.map((group) =>
-                                group[1].map((row, index) => (
-                                    <Fragment key={row.original?.id}>
-                                        {index === 0 && (
-                                            <TableRow className=' !p-0'>
-                                                <TableCell
-                                                    className='!p-0'
-                                                    colSpan={colSpan}>
-                                                    <Badge
-                                                        variant='secondary'
-                                                        className='py-2 pl-10 w-full !m-0 !rounded-none'>
-                                                        {/* <Checkbox
-                                                            className='mr-4'
-                                                            checked={row.getIsSelected()}
-                                                            value={row.original.id}
-                                                            onCheckedChange={(value) => {
-                                                                const currentGroup =
-                                                                    groupByOrder.filter(
-                                                                        (gr) =>
-                                                                            gr[0] ===
-                                                                            group[0]
-                                                                    )
+                                group[1].map((row, index) => {
+                                    const isIndeterminate = group[1].some((row) =>
+                                        row.getIsSelected()
+                                    )
+                                        ? group[1].every((row) => row.getIsSelected())
+                                            ? true
+                                            : 'indeterminate'
+                                        : false
 
-                                                                // const obj =
-                                                                //     currentGroupIds
-                                                                //         .map((obj) => {
-                                                                //             return {
-                                                                //                 [obj]: true
-                                                                //             }
-                                                                //         })
-                                                                //         .reduce(
-                                                                //             (
-                                                                //                 acc,
-                                                                //                 val
-                                                                //             ) => {
-                                                                //                 return {
-                                                                //                     ...acc,
-                                                                //                     ...val
-                                                                //                 }
-                                                                //             },
-                                                                //             {}
-                                                                //         )
-                                                                // table.setRowSelection(obj)
-                                                            }}
-                                                            aria-label='Select row'
-                                                        /> */}
-                                                        {group[0]} |{' '}
-                                                        {group[1][0].original?.customer}
-                                                        {/* <MultipatchPopover
-                                                            table={table}
-                                                        /> */}
-                                                    </Badge>
-                                                </TableCell>
+                                    return (
+                                        <Fragment key={row.original?.id}>
+                                            {index === 0 && (
+                                                <TableRow className=' !p-0'>
+                                                    <TableCell
+                                                        className='!p-0'
+                                                        colSpan={colSpan}>
+                                                        <Badge
+                                                            variant='secondary'
+                                                            className='py-2 pl-10 w-full !m-0 !rounded-none'>
+                                                            <Checkbox
+                                                                className='mr-4'
+                                                                checked={isIndeterminate}
+                                                                value={row.id}
+                                                                onCheckedChange={(
+                                                                    value
+                                                                ) => {
+                                                                    const currentGroup =
+                                                                        groupByOrder.filter(
+                                                                            (gr) =>
+                                                                                gr[0] ===
+                                                                                group[0]
+                                                                        )
+
+                                                                    const currentGroupIds =
+                                                                        currentGroup[0][1].map(
+                                                                            (obj) =>
+                                                                                obj.id
+                                                                        )
+
+                                                                    const obj =
+                                                                        currentGroupIds
+                                                                            .map(
+                                                                                (obj) => {
+                                                                                    return {
+                                                                                        [obj]: true
+                                                                                    }
+                                                                                }
+                                                                            )
+                                                                            .reduce(
+                                                                                (
+                                                                                    acc,
+                                                                                    val
+                                                                                ) => {
+                                                                                    return {
+                                                                                        ...acc,
+                                                                                        ...val
+                                                                                    }
+                                                                                },
+                                                                                {}
+                                                                            )
+
+                                                                    if (value) {
+                                                                        table.setRowSelection(
+                                                                            obj
+                                                                        )
+                                                                    } else {
+                                                                        table.resetRowSelection()
+                                                                    }
+                                                                }}
+                                                                aria-label='Select row'
+                                                            />
+                                                            {group[0]} |{' '}
+                                                            {
+                                                                group[1][0].original
+                                                                    ?.customer
+                                                            }
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                            <TableRow
+                                                key={row.original?.id}
+                                                className='odd:bg-secondary/60'
+                                                data-state={
+                                                    row.getIsSelected() && 'selected'
+                                                }>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell
+                                                        className='py-1.5 h-[53px] !px-0.5'
+                                                        key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
                                             </TableRow>
-                                        )}
-                                        <TableRow
-                                            key={row.original?.id}
-                                            className='odd:bg-secondary/60'
-                                            data-state={
-                                                row.getIsSelected() && 'selected'
-                                            }>
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell
-                                                    className='py-1.5 h-[53px] !px-0.5'
-                                                    key={cell.id}>
-                                                    {flexRender(
-                                                        cell.column.columnDef.cell,
-                                                        cell.getContext()
-                                                    )}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    </Fragment>
-                                ))
+                                        </Fragment>
+                                    )
+                                })
                             )
                         ) : (
                             table.getRowModel().rows.map((row) => {

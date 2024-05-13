@@ -10,12 +10,11 @@ export default defineConfig({
         }
     },
     server: {
-		host: true,
-		port: 3000,
+        host: true,
+        port: 3000,
 
-		// add the next lines if you're using windows and hot reload doesn't work
-		watch: {
-			usePolling: true
-		}
-	},
+        watch: {
+            usePolling: true
+        }
+    }
 })

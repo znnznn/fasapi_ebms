@@ -2,7 +2,7 @@ import { RequireAuthProvider } from '@/providers/require-auth-provider'
 
 export const SuspenseWihAuth = (
     // Component: React.LazyExoticComponent<any>,
-    Component: any,
+    Component: React.FC,
     requireAuth = true
 ) =>
     // <Suspense fallback={<PageLoader />}>
