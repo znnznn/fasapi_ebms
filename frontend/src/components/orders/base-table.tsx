@@ -166,7 +166,21 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                                             obj
                                                                         )
                                                                     } else {
-                                                                        table.resetRowSelection()
+                                                                        table
+                                                                            .getSelectedRowModel()
+                                                                            .rows.filter(
+                                                                                (row) =>
+                                                                                    currentGroupIds.includes(
+                                                                                        row.id
+                                                                                    )
+                                                                            )
+                                                                            .forEach(
+                                                                                (row) => {
+                                                                                    row.toggleSelected(
+                                                                                        false
+                                                                                    )
+                                                                                }
+                                                                            )
                                                                     }
                                                                 }}
                                                                 aria-label='Select row'
