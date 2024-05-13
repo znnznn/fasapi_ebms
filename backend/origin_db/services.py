@@ -148,7 +148,8 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
             select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer'),
             select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('category'),
             select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('profile'),
-            select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
+            select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color'),
+            select(Arinv.status).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('order_status'),
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
@@ -158,6 +159,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
                 self.model.category != 'Vents',
                 self.model.inven != None,
                 self.model.inven != '',
+                self.model.order_status == 'U'
             ),
         ).join(Arinvdet.order).options(
             selectinload(self.model.rel_inventry),
@@ -234,7 +236,10 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 Arinvdet
             ).scalar_subquery().label('count_items')
         ).where(
-            and_(self.model.inv_date >= FILTERING_DATA_STARTING_YEAR)
+            and_(
+                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                self.model.status == 'U',
+            )
         ).join(
             # sbq, sbq.doc_aid == self.model.autoid
             Arinvdet, and_(

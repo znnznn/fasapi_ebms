@@ -20,11 +20,11 @@ class ErrorResponse(BaseModel):
     errors: Optional[List[str]]
 
 
-@asynccontextmanager
-async def websocketlifespan(app: FastAPI):
-    await connection_manager.connect_broadcaster()
-    yield
-    await connection_manager.disconnect_broadcaster()
+# @asynccontextmanager
+# async def websocketlifespan(app: FastAPI):
+#     await connection_manager.connect_broadcaster()
+#     yield
+#     await connection_manager.disconnect_broadcaster()
 
 
 app = FastAPI(
@@ -40,8 +40,22 @@ app = FastAPI(
     redoc_url='/redoc',
     openapi_url='/openapi.json',
     swagger_ui_parameters={"deepLinking": False},
-    lifespan=websocketlifespan
+    # lifespan=websocketlifespan
 )
+
+
+@app.on_event("startup")
+async def startup():
+    print("Conneting to redis")
+    await connection_manager.connect_broadcaster()
+    print("Connected to redis")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    print("Disconnecting from redis")
+    await connection_manager.disconnect_broadcaster()
+    print("Disconnected from redis")
 
 
 origins = [

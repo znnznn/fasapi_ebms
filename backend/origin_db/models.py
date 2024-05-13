@@ -282,6 +282,7 @@ class Arinvdet(Base):
     _category = None
     _profile = None
     _color = None
+    _order_status = None
 
     @hybrid_property
     def category(self):
@@ -330,6 +331,18 @@ class Arinvdet(Base):
     @customer.setter
     def customer(self, value):
         self._customer = value
+
+    @hybrid_property
+    def order_status(self):
+        return self._order_status
+
+    @order_status.expression
+    def order_status(cls):
+        return select(Arinv.status).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('order_status')
+
+    @order_status.setter
+    def order_status(self, value):
+        self._order_status = value
 
     @hybrid_property
     def item(self):
