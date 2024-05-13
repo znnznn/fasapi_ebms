@@ -104,7 +104,6 @@ class ConnectionManager:
         #     return
         if self.active_connections.get(subscribe):
             print("active_connections")
-            print(self.active_connections)
             self.active_connections[subscribe].append(websocket)
         else:
             print("not active_connections")
@@ -128,7 +127,6 @@ class ConnectionManager:
             [subscribe_n_listen_task, wait_for_subscribe_task],
             return_when=asyncio.FIRST_COMPLETED,
         )
-        print(self.active_connections)
 
     async def disconnect_all(self, subscribe: str):
         self.active_connections[subscribe] = []
@@ -190,17 +188,19 @@ class ConnectionManager:
         Function to consume a message and send to all connect clients in all processes
         """
         print("==========_consume_events============")
-        print(self.active_connections)
 
         room_connections = self.active_connections.get(subscribe)
         if room_connections:
             for connection in room_connections:
-                print('connection 0000')
-                print(connection)
-                await self._send_message_to_ws_connection(
-                    message=message,
-                    ws_connection=connection,
-                )
+                try:
+                    await self._send_message_to_ws_connection(
+                        message=message,
+                        ws_connection=connection,
+                    )
+                except Exception as exc:
+                    print("error")
+                    print(exc)
+                    await self.disconnect(websocket=connection, subscribe=subscribe)
 
     async def send_message_to_room(self, subscribe: str, message: dict):
         # Send events to the room
@@ -215,13 +215,11 @@ class ConnectionManager:
     async def _send_message_to_ws_connection(
             self, message: dict, ws_connection: WebSocket
     ):
-        print("==========_send_message_to_ws_connection============")
-        print(ws_connection)
         if ws_connection.client_state == WebSocketState.CONNECTED and ws_connection.application_state == WebSocketState.CONNECTED:
             await ws_connection.send_json(data=message)
         else:
             print("Connection not available")
-            await ws_connection.close(code=status.WS_1008_POLICY_VIOLATION)
+            await self.disconnect(websocket=ws_connection, subscribe="orders")
 
 
 connection_manager = ConnectionManager()
