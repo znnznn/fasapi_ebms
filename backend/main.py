@@ -7,6 +7,7 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+
 from origin_db.routers import router as origin_router
 from stages.routers import router as stages_router
 from profiles.routers import router as profiles_router
@@ -49,6 +50,7 @@ async def startup():
     print("Conneting to redis")
     await connection_manager.connect_broadcaster()
     print("Connected to redis")
+    print("Connecting to EBMS")
 
 
 @app.on_event("shutdown")

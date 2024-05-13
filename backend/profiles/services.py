@@ -8,30 +8,31 @@ from starlette import status
 from starlette.responses import JSONResponse, Response
 
 from common.constants import ModelType, InputSchemaType
-from database import get_async_session
+from database import get_async_session, get_default_engine
 from profiles.models import CompanyProfile, UserProfile
 from profiles.schemas import CompanyProfileSchema, UserProfileSchema, UserProfileCreateSchema
 from stages.services import BaseService
 
 
 class CompanyProfileService(BaseService[CompanyProfile, CompanyProfileSchema]):
-    def __init__(self, db_session: AsyncSession,  model: Type[CompanyProfile] = CompanyProfile):
-        super(CompanyProfileService, self).__init__(model=model, db_session=db_session)
+    def __init__(self, model: Type[CompanyProfile] = CompanyProfile):
+        super().__init__(model=model)
 
     async def get(self, id: int = None) -> CompanyProfile:
-        stmt = select(self.model)
-        company_profile = await self.db_session.scalars(stmt)
-        company_profile = company_profile.first()
-        if company_profile:
-            return company_profile
-        stmt = CompanyProfileSchema(working_weekend=False)
-        obj = self.create(stmt)
-        return await obj
+        async with AsyncSession(get_default_engine()) as session:
+            stmt = select(self.model)
+            company_profile = await session.scalars(stmt)
+            company_profile = company_profile.first()
+            if company_profile:
+                return company_profile
+            stmt = CompanyProfileSchema(working_weekend=False)
+            obj = self.create(stmt)
+            return await obj
 
 
 class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
-    def __init__(self, db_session: AsyncSession, model: Type[UserProfile] = UserProfile):
-        super(UserProfileService, self).__init__(model=model, db_session=db_session)
+    def __init__(self, model: Type[UserProfile] = UserProfile):
+        super().__init__(model=model)
 
     def get_query(self, limit: int = None, offset: int = None, user_id: int = None) -> Select:
         query = select(self.model).where(self.model.creator == user_id)
@@ -44,9 +45,10 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         return query
 
     async def list(self, user_id: int = None, limit: int = None, offset: int = None) -> ScalarResult[ModelType]:
-        query = self.get_query(limit=limit, offset=offset, user_id=user_id)
-        result = await self.db_session.scalars(query)
-        return result
+        async with AsyncSession(get_default_engine()) as session:
+            query = self.get_query(limit=limit, offset=offset, user_id=user_id)
+            result = await session.scalars(query)
+            return result
 
     async def create(self, obj: InputSchemaType, user_id: int = None) -> ModelType:
         user_profile_settings = await self.list(user_id=user_id)
@@ -57,7 +59,8 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         return await super().create(obj)
 
     async def delete(self, id: int) -> None | Response:
-        stmt = delete(self.model).where(self.model.creator == id)
-        await self.db_session.execute(stmt)
-        await self.db_session.commit()
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        async with AsyncSession(get_default_engine()) as session:
+            stmt = delete(self.model).where(self.model.creator == id)
+            await session.execute(stmt)
+            await session.commit()
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
