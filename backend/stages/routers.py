@@ -4,7 +4,6 @@ from fastapi import Depends, APIRouter, BackgroundTasks
 from fastapi_filter import FilterDepends
 
 from common.constants import Role
-from database import async_session_maker
 from origin_db.services import CategoryService
 from stages.filters import ItemFilter, StageFilter, FlowFilter, SalesOrderFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
@@ -22,10 +21,8 @@ router = APIRouter()
 
 
 @router.post("/capacities/", response_model=CapacitySchema, tags=["capacity"])
-async def create_capacity(
-        store: CapacitySchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).create(store)
+async def create_capacity(store: CapacitySchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
+    result = await CapacitiesService().create(store)
     return result
 
 
@@ -34,15 +31,13 @@ async def get_capacities(
         limit: int = 10, offset: int = 0,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN)),
 ):
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).paginated_list(limit=limit, offset=offset)
+    result = await CapacitiesService().paginated_list(limit=limit, offset=offset)
     return result
 
 
 @router.get("/capacities/{id}/", tags=["capacity"], response_model=CapacitySchema)
 async def get_capacity(id: int, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).get(id)
+    result = await CapacitiesService().get(id)
     return result
 
 
@@ -51,8 +46,7 @@ async def update_capacity(
         id: int, capacity: CapacitySchemaIn,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).update(id, capacity)
+    result = await CapacitiesService().update(id, capacity)
     return result
 
 
@@ -62,8 +56,7 @@ async def partial_update_capacity(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     capacity = capacity.model_dump(exclude_unset=True)
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).partial_update(id, capacity)
+    result = await CapacitiesService().partial_update(id, capacity)
     return result
 
 
@@ -71,8 +64,7 @@ async def partial_update_capacity(
 async def delete_capacity(
         id: int, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        result = await CapacitiesService(db_session=session).delete(id)
+    result = await CapacitiesService().delete(id)
     return result
 
 
@@ -82,42 +74,36 @@ async def get_stages(
         user: User = Depends(active_user_with_permission),
         stage_filter: StageFilter = FilterDepends(StageFilter),
 ):
-    async with async_session_maker() as session:
-        result = await StagesService(db_session=session, list_filter=stage_filter).paginated_list(limit=limit, offset=offset)
+    result = await StagesService(list_filter=stage_filter).paginated_list(limit=limit, offset=offset)
     return result
 
 
 @router.get("/stages/{id}/", tags=["stage"], response_model=StageSchema)
 async def get_stage(id: int, user: User = Depends(active_user_with_permission)):
-    async with async_session_maker() as session:
-        return await StagesService(db_session=session).get(id)
+    return await StagesService().get(id)
 
 
 @router.post("/stages/", tags=["stage"], response_model=StageSchema)
 async def create_stage(
         stage: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        return await StagesService(db_session=session).create(stage)
+    return await StagesService().create(stage)
 
 
 @router.put("/stages/{id}/", tags=["stage"], response_model=StageSchema)
 async def update_stage(id: int, stage: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    async with async_session_maker() as session:
-        return await StagesService(db_session=session).update(id, stage)
+    return await StagesService().update(id, stage)
 
 
 @router.patch("/stages/{id}/", tags=["stage"], response_model=StageSchema)
 async def partial_update_stage(id: int, data: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
     stage = data.model_dump(exclude_unset=True)
-    async with async_session_maker() as session:
-        return await StagesService(db_session=session).partial_update(id, stage)
+    return await StagesService().partial_update(id, stage)
 
 
 @router.delete("/stages/{id}/", tags=["stage"])
 async def delete_stage(id: int, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
-    async with async_session_maker() as session:
-        return await StagesService(db_session=session).delete(id)
+    return await StagesService().delete(id)
 
 
 @router.get("/comments/", tags=["comments"], response_model=CommentPaginatedSchema)
@@ -125,15 +111,13 @@ async def get_comments(
         limit: int = 10, offset: int = 0,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    async with async_session_maker() as session:
-        result = await CommentsService(db_session=session).paginated_list(limit=limit, offset=offset)
+    result = await CommentsService().paginated_list(limit=limit, offset=offset)
     return result
 
 
 @router.get("/comments/{id}/", tags=["comments"], response_model=CommentSchema)
 async def get_comment(id: int, user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))):
-    async with async_session_maker() as session:
-        return await CommentsService(db_session=session).get(id)
+    return await CommentsService().get(id)
 
 
 @router.post("/comments/", tags=["comments"], response_model=CommentSchema)
@@ -142,9 +126,8 @@ async def create_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await CommentsService(db_session=session).create(comment)
-        item = await ItemsService(db_session=session).get(instance.item_id)
+    instance = await CommentsService().create(comment)
+    item = await ItemsService().get(instance.item_id)
     background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders")
     return instance
@@ -156,9 +139,8 @@ async def update_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await CommentsService(db_session=session).update(id, comment)
-        item = await ItemsService(db_session=session).get(instance.item_id)
+    instance = await CommentsService().update(id, comment)
+    item = await ItemsService().get(instance.item_id)
     background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders")
     return instance
@@ -170,10 +152,9 @@ async def partial_update_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        comment = comment.model_dump(exclude_unset=True)
-        instance = await CommentsService(db_session=session).partial_update(id, comment)
-        item = await ItemsService(db_session=session).get(instance.item_id)
+    comment = comment.model_dump(exclude_unset=True)
+    instance = await CommentsService().partial_update(id, comment)
+    item = await ItemsService().get(instance.item_id)
     background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders")
     return instance
@@ -185,10 +166,9 @@ async def delete_comment(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await CommentsService(db_session=session).get(id)
-        result = await CommentsService(db_session=session).delete(id)
-        item = await ItemsService(db_session=session).get(instance.item_id)
+    instance = await CommentsService().get(id)
+    result = await CommentsService().delete(id)
+    item = await ItemsService().get(instance.item_id)
     background_tasks.add_task(send_data_to_ws, autoid=item.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=item.order, subscribe="orders")
     return result
@@ -200,8 +180,7 @@ async def get_items(
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    async with async_session_maker() as session:
-        result = await ItemsService(db_session=session, list_filter=item_filter).paginated_list(limit=limit, offset=offset)
+    result = await ItemsService(list_filter=item_filter).paginated_list(limit=limit, offset=offset)
     return result
 
 
@@ -210,8 +189,7 @@ async def get_item(
         id: int,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER))
 ):
-    async with async_session_maker() as session:
-        return await ItemsService(db_session=session).get(id)
+    return await ItemsService().get(id)
 
 
 @router.post("/items/", tags=["items"], response_model=ItemSchemaOut)
@@ -220,8 +198,7 @@ async def create_item(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await ItemsService(db_session=session).create(item)
+    instance = await ItemsService().create(item)
     background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     if item.production_date:
@@ -237,9 +214,8 @@ async def update_item(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await ItemsService(db_session=session).update(id, item)
-        instance = await ItemsService(db_session=session).get(instance.id)
+    instance = await ItemsService().update(id, item)
+    instance = await ItemsService().get(instance.id)
     background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     if item.production_date:
@@ -256,9 +232,8 @@ async def partial_update_item(
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     item_data = item.model_dump(exclude_unset=True)
-    async with async_session_maker() as session:
-        instance = await ItemsService(db_session=session).partial_update(id, item_data)
-        instance = await ItemsService(db_session=session).get(instance.id)
+    instance = await ItemsService().partial_update(id, item_data)
+    instance = await ItemsService().get(instance.id)
     background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     if item.production_date:
@@ -274,8 +249,7 @@ async def delete_item(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await ItemsService(db_session=session).get(id)
+    instance = await ItemsService().get(id)
     background_tasks.add_task(send_data_to_ws, autoid=instance.origin_item, subscribe="items")
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     if instance.production_date:
@@ -283,7 +257,7 @@ async def delete_item(
             send_calendars_data_to_ws, year=instance.production_date.year, month=instance.production_date.month,
             item_autoid=instance.origin_item,
         )
-    return await ItemsService(db_session=session).delete(id)
+    return await ItemsService().delete(id)
 
 
 @router.get("/sales-orders/", tags=["sales-orders"], response_model=SalesPaginatedSchema)
@@ -292,8 +266,7 @@ async def get_salesorders(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         salesorder_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter)
 ):
-    async with async_session_maker() as session:
-        result = await SalesOrdersService(db_session=session).paginated_list(limit=limit, offset=offset)
+    result = await SalesOrdersService().paginated_list(limit=limit, offset=offset)
     return result
 
 
@@ -302,8 +275,7 @@ async def get_salesorder(
         id: int,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER))
 ):
-    async with async_session_maker() as session:
-        return await SalesOrdersService(db_session=session).get(id)
+    return await SalesOrdersService().get(id)
 
 
 @router.post("/sales-orders/", tags=["sales-orders"], response_model=SalesOrderSchema)
@@ -312,8 +284,7 @@ async def create_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await SalesOrdersService(db_session=session).create(salesorder)
+    instance = await SalesOrdersService().create(salesorder)
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     return instance
 
@@ -324,8 +295,7 @@ async def update_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await SalesOrdersService(db_session=session).update(id, salesorder)
+    instance = await SalesOrdersService().update(id, salesorder)
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     return instance
 
@@ -336,9 +306,8 @@ async def partial_update_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        salesorder = salesorder.model_dump(exclude_unset=True)
-        instance = await SalesOrdersService(db_session=session).partial_update(id, salesorder)
+    salesorder = salesorder.model_dump(exclude_unset=True)
+    instance = await SalesOrdersService().partial_update(id, salesorder)
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
     return instance
 
@@ -349,10 +318,9 @@ async def delete_salesorder(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        instance = await SalesOrdersService(db_session=session).get(id)
+    instance = await SalesOrdersService().get(id)
     background_tasks.add_task(send_data_to_ws, autoid=instance.order, subscribe="orders")
-    return await SalesOrdersService(db_session=session).delete(id)
+    return await SalesOrdersService().delete(id)
 
 
 @router.get("/flows/all/", tags=["flows"], response_model=List[FlowSchemaOut])
@@ -360,11 +328,10 @@ async def get_all_flows(
         user: User = Depends(active_user_with_permission),
         flow_filter: FlowFilter = FilterDepends(FlowFilter),
 ):
-    async with async_session_maker() as session:
-        if flow_filter.category__prod_type:
-            category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
-            flow_filter.category__prod_type = category.autoid or ''
-        result = await FlowsService(db_session=session, list_filter=flow_filter).list()
+    if flow_filter.category__prod_type:
+        category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
+        flow_filter.category__prod_type = category.autoid or ''
+    result = await FlowsService(list_filter=flow_filter).list()
     return result
 
 
@@ -374,11 +341,10 @@ async def get_flows(
         user: User = Depends(active_user_with_permission),
         flow_filter: FlowFilter = FilterDepends(FlowFilter),
 ):
-    async with async_session_maker() as session:
-        if flow_filter.category__prod_type:
-            category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
-            flow_filter.category__prod_type = category.autoid or ''
-        result = await FlowsService(db_session=session, list_filter=flow_filter).paginated_list(limit=limit, offset=offset)
+    if flow_filter.category__prod_type:
+        category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
+        flow_filter.category__prod_type = category.autoid or ''
+    result = await FlowsService(list_filter=flow_filter).paginated_list(limit=limit, offset=offset)
     return result
 
 
@@ -387,8 +353,7 @@ async def get_flow(
         id: int,
         user: User = Depends(active_user_with_permission)
 ):
-    async with async_session_maker() as session:
-        return await FlowsService(db_session=session).get(id)
+    return await FlowsService().get(id)
 
 
 @router.post("/flows/", tags=["flows"], response_model=FlowSchemaOut)
@@ -396,8 +361,7 @@ async def create_flow(
         flow: FlowSchemaIn,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        return await FlowsService(db_session=session).create(flow)
+    return await FlowsService().create(flow)
 
 
 @router.put("/flows/{id}/", tags=["flows"], response_model=FlowSchemaOut)
@@ -405,8 +369,7 @@ async def update_flow(
         id: int, flow: FlowSchemaIn,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        return await FlowsService(db_session=session).update(id, flow)
+    return await FlowsService().update(id, flow)
 
 
 @router.patch("/flows/{id}/", tags=["flows"], response_model=FlowSchemaOut)
@@ -414,9 +377,8 @@ async def partial_update_flow(
         id: int, flow: FlowSchemaIn,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        flow = flow.model_dump(exclude_unset=True)
-        return await FlowsService(db_session=session).partial_update(id, flow)
+    flow = flow.model_dump(exclude_unset=True)
+    return await FlowsService().partial_update(id, flow)
 
 
 @router.delete("/flows/{id}/", tags=["flows"])
@@ -424,8 +386,7 @@ async def delete_flow(
         id: int,
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
-    async with async_session_maker() as session:
-        return await FlowsService(db_session=session).delete(id)
+    return await FlowsService().delete(id)
 
 
 @router.post("/multiupdate/items/", tags=["multiupdate"], response_model=MultiUpdateItemSchema)
@@ -434,9 +395,8 @@ async def multiupdate_items(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        response = await ItemsService(db_session=session).multiupdate(items)
-        orders_autoids = await ItemsService(db_session=session).get_orders_autoids_by_origin_items(items.origin_items)
+    response = await ItemsService().multiupdate(items)
+    orders_autoids = await ItemsService().get_orders_autoids_by_origin_items(items.origin_items)
     background_tasks.add_task(send_data_to_ws, subscribe="orders", list_autoids=orders_autoids)
     background_tasks.add_task(send_data_to_ws, subscribe="items", list_autoids=items.origin_items)
     return response
@@ -448,8 +408,7 @@ async def multiupdate_salesorders(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    async with async_session_maker() as session:
-        response = await SalesOrdersService(db_session=session).multiupdate(salesorders)
+    response = await SalesOrdersService().multiupdate(salesorders)
     background_tasks.add_task(send_data_to_ws, subscribe="orders", list_autoids=salesorders.origin_orders)
     return response
 

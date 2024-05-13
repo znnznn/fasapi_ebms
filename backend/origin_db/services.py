@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload, Query, contains_eager
 
 from common.constants import InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
-from database import get_async_session, get_ebms_session, ebms_connection, ebms_engine
+from database import get_async_session, get_ebms_session, ebms_connection, ebms_engine, get_ebms_engine
 from origin_db.filters import CategoryFilter
 from origin_db.models import Inprodtype, Arinvdet, Arinv, Inventry
 from origin_db.schemas import CategorySchema, ArinvDetSchema, ArinvRelatedArinvDetSchema, InventrySchema
@@ -276,7 +276,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
-        async with AsyncSession(ebms_engine) as session:
+        async with AsyncSession(get_ebms_engine()) as session:
             count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
             count = count.scalar()
             data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
