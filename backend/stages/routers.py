@@ -11,7 +11,7 @@ from stages.schemas import (
     CapacitySchema, CapacitySchemaIn, StageSchema, StageSchemaIn, CommentSchemaIn, CommentSchema, ItemSchema, ItemSchemaIn,
     SalesOrderSchema, SalesOrderSchemaIn, FlowSchema, FlowSchemaIn, FlowSchemaOut, ItemSchemaOut, FlowPaginatedSchema, SalesPaginatedSchema,
     PaginatedItemSchema, CommentPaginatedSchema, StagePaginatedSchema, CapacityPaginatedSchema, MultiUpdateItemSchema,
-    MultiUpdateSalesOrderSchema
+    MultiUpdateSalesOrderSchema, StageSchemaOut
 )
 from stages.utils import send_data_to_ws, send_calendars_data_to_ws
 from users.mixins import IsAuthenticatedAs, active_user_with_permission
@@ -78,24 +78,24 @@ async def get_stages(
     return result
 
 
-@router.get("/stages/{id}/", tags=["stage"], response_model=StageSchema)
+@router.get("/stages/{id}/", tags=["stage"], response_model=StageSchemaOut)
 async def get_stage(id: int, user: User = Depends(active_user_with_permission)):
     return await StagesService().get(id)
 
 
-@router.post("/stages/", tags=["stage"], response_model=StageSchema)
+@router.post("/stages/", tags=["stage"], response_model=StageSchemaOut)
 async def create_stage(
         stage: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))
 ):
     return await StagesService().create(stage)
 
 
-@router.put("/stages/{id}/", tags=["stage"], response_model=StageSchema)
+@router.put("/stages/{id}/", tags=["stage"], response_model=StageSchemaOut)
 async def update_stage(id: int, stage: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
     return await StagesService().update(id, stage)
 
 
-@router.patch("/stages/{id}/", tags=["stage"], response_model=StageSchema)
+@router.patch("/stages/{id}/", tags=["stage"], response_model=StageSchemaOut)
 async def partial_update_stage(id: int, data: StageSchemaIn, user: User = Depends(IsAuthenticatedAs(Role.ADMIN))):
     stage = data.model_dump(exclude_unset=True)
     return await StagesService().partial_update(id, stage)
