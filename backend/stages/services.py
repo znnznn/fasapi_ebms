@@ -18,10 +18,10 @@ from database import get_async_session, get_default_engine
 from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
 from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService, CategoryService
 from profiles.models import CompanyProfile
-from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder
+from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder, UsedStage
 from stages.schemas import (
     FlowSchemaIn, CapacitySchemaIn, StageSchemaIn, CommentSchemaIn, ItemSchemaIn, SalesOrderSchemaIn, MultiUpdateItemSchema,
-    MultiUpdateSalesOrderSchema
+    MultiUpdateSalesOrderSchema, UsedStageSchema
 )
 
 
@@ -338,6 +338,22 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
     ):
         super().__init__(model=model, list_filter=list_filter)
 
+    async def add_used_stages(self, instance: ModelType) -> ModelType:
+        used_stage = await UsedStagesService().create(UsedStageSchema(item_id=instance.id, stage_id=instance.stage_id))
+        return instance
+
+    async def update(self, id: int, obj: ItemSchemaIn) -> ModelType:
+        instance = await super().update(id, obj)
+        return await self.add_used_stages(instance)
+
+    async def partial_update(self, id: int, obj: dict) -> Optional[ModelType]:
+        instance = await super().partial_update(id, obj)
+        return await self.add_used_stages(instance)
+
+    async def create(self, obj: ItemSchemaIn) -> ModelType:
+        instance = await super().create(obj)
+        return await self.add_used_stages(instance)
+
     async def validate_instance(self, instance: Item, input_obj: ItemSchemaIn) -> tuple[Item, ItemSchemaIn]:
         async with AsyncSession(get_default_engine()) as session:
             if stage_id := getattr(input_obj, "stage_id", None):
@@ -363,7 +379,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         query = select(self.model).options(
             selectinload(self.model.stage),
             selectinload(self.model.comments),
-            selectinload(self.model.flow).selectinload(Flow.stages),
+            selectinload(self.model.flow).selectinload(Flow.stages).selectinload(Stage.used_stages),
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
@@ -389,7 +405,6 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 category = await session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
                 category = category.prod_type if category else False
             origin_items_objs = await OriginItemService().get_listy_by_autoids(origin_items)
-            print(origin_items_objs)
             stage = None
             if stage_id := object_data.get("stage_id"):
                 stage = await session.scalar(select(Stage).where(Stage.id == stage_id).options(selectinload(Stage.flow)))
@@ -401,7 +416,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             origin_items_data = {item.autoid: item for item in origin_items_objs}
             stmt = select(self.model).where(self.model.origin_item.in_(origin_items))
             objs = await session.scalars(stmt)
-            existing_items = set()
+            used_stages = []
             items = objs.all()
             for item in items:
                 origin_item = origin_items_data.pop(item.origin_item, None)
@@ -418,9 +433,11 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                     )
                 for key, value in object_data.items():
                     setattr(item, key, value)
-                existing_items.add(item.origin_item)
+                if stage_id:
+                    used_stages.append(UsedStage(item_id=item.id, stage_id=stage_id))
             await self.add_all(items)
             created_items = []
+            added_origin_items_for_used_stages = []
             for origin_item in origin_items_data.values():
                 if flow_id and category is not None:
                     if origin_item.category != category:
@@ -429,9 +446,17 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                         )
                 if stage_id and stage:
                     object_data["flow_id"] = stage.flow_id
+                    added_origin_items_for_used_stages.append(origin_item.autoid)
                 created_items.append(Item(origin_item=origin_item.autoid, order=origin_item.doc_aid, **object_data))
             if created_items:
                 await self.add_all(created_items)
+            if added_origin_items_for_used_stages:
+                stmt = select(self.model).where(self.model.origin_item.in_(added_origin_items_for_used_stages))
+                objs = await session.scalars(stmt)
+                for obj in objs.all():
+                    used_stages.append(UsedStage(item_id=obj.id, stage_id=stage_id))
+            if used_stages:
+                await self.add_all(used_stages)
             return obj
 
     async def get_autoid_by_production_date(self, production_date: date | None):
@@ -513,7 +538,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         stmt = select(self.model).where(self.model.order.in_(autoids)).options(
             selectinload(self.model.stage),
             selectinload(self.model.comments),
-            selectinload(self.model.flow).selectinload(Flow.stages),
+            selectinload(self.model.flow).selectinload(Flow.stages).selectinload(Stage.used_stages),
         )
         async with AsyncSession(get_default_engine()) as session:
             objs = await session.scalars(stmt)
@@ -523,7 +548,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         stmt = select(self.model).where(self.model.origin_item.in_(autoids)).options(
             selectinload(self.model.stage),
             selectinload(self.model.comments),
-            selectinload(self.model.flow).selectinload(Flow.stages),
+            selectinload(self.model.flow).selectinload(Flow.stages).selectinload(Stage.used_stages),
         )
         async with AsyncSession(get_default_engine()) as session:
             objs = await session.scalars(stmt)
@@ -617,3 +642,12 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
                 objs: ScalarResult[str] = await session.scalars(query, **kwargs)
                 return objs.all()
             return None
+
+
+class UsedStagesService(BaseService[UsedStage, UsedStageSchema]):
+    def __init__(
+            self, model: Type[UsedStage] = UsedStage,
+            list_filter: Optional[Filter] = None
+    ):
+        super().__init__(model=model, list_filter=list_filter)
+

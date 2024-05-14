@@ -35,6 +35,7 @@ class Stage(DefaultBase):
     flow_id: Mapped[int] = mapped_column(ForeignKey('flow.id', ondelete="CASCADE"), nullable=True)
     flow = relationship("Flow", back_populates="stages")
     items = relationship("Item", back_populates="stage", primaryjoin='Stage.id == Item.stage_id', innerjoin=True)
+    used_stages = relationship("UsedStage", back_populates="stage", primaryjoin='Stage.id == UsedStage.stage_id', innerjoin=True)
 
     @hybrid_property
     def status(self):
@@ -43,6 +44,10 @@ class Stage(DefaultBase):
     @status.expression
     def status(cls):
         return select(Stage.name).where(Stage.id == Item.stage_id).correlate_except(Stage).scalar_subquery()
+
+    @hybrid_property
+    def item_ids(self):
+        return {used_stage.item_id for used_stage in self.used_stages}
 
 
 class Item(DefaultBase):
@@ -55,11 +60,12 @@ class Item(DefaultBase):
     packages: Mapped[POSITIVE_INT_OR_ZERO]
     location: Mapped[POSITIVE_INT_OR_ZERO]
     stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('stage.id', ondelete="SET NULL"), nullable=True)
-    flow = relationship("Flow", back_populates="items")
+    flow = relationship("Flow", back_populates="items", primaryjoin='Flow.id == Item.flow_id', innerjoin=True)
     comments = relationship("Comment", back_populates="item", innerjoin=True, primaryjoin='Item.id == Comment.item_id', order_by="Comment.created_at")
     stage = relationship("Stage", back_populates="items")
     sales_order = relationship(
         'SalesOrder', back_populates="items", primaryjoin='Item.order == SalesOrder.order', foreign_keys=order)
+    used_items = relationship("UsedStage", back_populates="item", primaryjoin='Item.id == UsedStage.item_id', innerjoin=True)
 
     @hybrid_property
     def over_due(self):
@@ -184,3 +190,11 @@ class SalesOrder(DefaultBase):
     @is_scheduled.expression
     def is_scheduled(cls):
         return cls.production_date != None
+
+
+class UsedStage(DefaultBase):
+    item_id: Mapped[int] = mapped_column(ForeignKey('item.id', ondelete="CASCADE"), nullable=True)
+    stage_id: Mapped[int] = mapped_column(ForeignKey('stage.id', ondelete="CASCADE"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now)
+    item = relationship("Item", back_populates="used_items")
+    stage = relationship("Stage", back_populates="used_stages")
