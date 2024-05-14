@@ -168,6 +168,16 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
 
     const isDisabled = !isFlow || flow.stages.length === 0
 
+    const hexToRGBA = (hex: string, opacity: number = 10) => {
+        const r = parseInt(hex.substring(1, 3), 16)
+        const g = parseInt(hex.substring(3, 5), 16)
+        const b = parseInt(hex.substring(5, 7), 16)
+
+        const alpha = opacity / 100
+
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`
+    }
+
     return (
         <Select
             onValueChange={onValueChange}
@@ -181,22 +191,27 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             </SelectTrigger>
             <SelectContent>
                 {statuses?.map((status) => {
+                    const wasSelected = status.item_ids.includes(item?.id!)
                     return (
                         <SelectItem
+                            style={{
+                                backgroundColor: wasSelected
+                                    ? hexToRGBA(status.color, 10)
+                                    : ''
+                            }}
                             className='first:mt-0 mt-1'
                             key={status.id}
                             value={String(status.id)}>
-                            <div
-                                className={cn(
-                                    'flex items-center gap-x-1.5',
-                                    status.item_ids.includes(item?.id!) && 'font-bold'
-                                )}>
+                            <div className='flex items-center gap-x-1.5'>
                                 <div
                                     className='w-3 h-3 rounded-sm'
                                     style={{
                                         backgroundColor: status.color
                                     }}></div>
                                 {trunc(status.name, 14)}
+                                {wasSelected ? (
+                                    <div className='w-1 h-1 rounded-full bg-foreground'></div>
+                                ) : null}
                             </div>
                         </SelectItem>
                     )
