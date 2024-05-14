@@ -74,13 +74,15 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'status',
         header: ({ column }) => createHeader('Status', column, '!w-40'),
-        cell: ({ row }) => (
-            <StatusCell
-                key={row?.original?.id}
-                item={row.original?.item}
-                originOrderId={row.original.origin_order}
-            />
-        )
+        cell: ({ row }) => {
+            return (
+                <StatusCell
+                    key={row?.original?.id}
+                    item={row.original?.item}
+                    originOrderId={row.original.origin_order}
+                />
+            )
+        }
     },
     {
         accessorKey: 'production_date',

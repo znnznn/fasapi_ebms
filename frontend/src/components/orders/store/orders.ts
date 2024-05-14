@@ -25,7 +25,7 @@ interface State {
 const initialState: State = {
     isOrderCompleted: false,
     groupedView: true,
-    category: 'Accessories',
+    category: '',
     overdue: false,
     scheduled: false,
     date: '',
