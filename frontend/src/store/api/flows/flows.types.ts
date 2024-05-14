@@ -1,3 +1,5 @@
+import type { Stage } from '../items/items.types'
+
 import type { BaseQueryParams, PatchData, Response } from '@/types/api'
 
 export interface FlowsData {
@@ -7,6 +9,7 @@ export interface FlowsData {
     position: number
     category: number
     created_at: string
+    stages: Stage[]
 }
 
 export interface FlowsAddData {

@@ -47,6 +47,7 @@ export function ItemsTable<TData, TValue>({
         enableHiding: true,
         state: {
             sorting,
+            // rowSelection: { TIDBOKSIBT2NF130: true },
             columnVisibility,
             columnOrder,
             pagination: {

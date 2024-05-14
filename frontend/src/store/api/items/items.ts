@@ -66,6 +66,8 @@ export const items = api.injectEndpoints({
                                     id: Math.random() * 1000,
                                     name: '',
                                     position: 1,
+                                    item_ids: [],
+                                    flow: 1,
                                     color: ''
                                 }
                             }

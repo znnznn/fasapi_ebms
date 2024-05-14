@@ -25,6 +25,9 @@ export interface Stage {
     name: string
     position: number
     color: string
+    flow: number
+    default?: boolean
+    item_ids: number[]
 }
 
 export interface ItemsAddData {

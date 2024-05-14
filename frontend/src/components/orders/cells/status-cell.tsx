@@ -15,6 +15,7 @@ import type { Item } from '@/store/api/ebms/ebms.types'
 import { usePatchItemMutation, usePatchOrderItemMutation } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
+import { cn } from '@/utils/cn'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 import { trunc } from '@/utils/trunc'
 
@@ -179,21 +180,27 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                 <SelectValue placeholder='Select status' />
             </SelectTrigger>
             <SelectContent>
-                {statuses?.map((status) => (
-                    <SelectItem
-                        className='first:mt-0 mt-1'
-                        key={status.id}
-                        value={String(status.id)}>
-                        <div className='flex items-center gap-x-1.5'>
+                {statuses?.map((status) => {
+                    return (
+                        <SelectItem
+                            className='first:mt-0 mt-1'
+                            key={status.id}
+                            value={String(status.id)}>
                             <div
-                                className='w-3 h-3 rounded-sm'
-                                style={{
-                                    backgroundColor: status.color
-                                }}></div>
-                            {trunc(status.name, 14)}
-                        </div>
-                    </SelectItem>
-                ))}
+                                className={cn(
+                                    'flex items-center gap-x-1.5',
+                                    status.item_ids.includes(item?.id!) && 'font-bold'
+                                )}>
+                                <div
+                                    className='w-3 h-3 rounded-sm'
+                                    style={{
+                                        backgroundColor: status.color
+                                    }}></div>
+                                {trunc(status.name, 14)}
+                            </div>
+                        </SelectItem>
+                    )
+                })}
             </SelectContent>
         </Select>
     )

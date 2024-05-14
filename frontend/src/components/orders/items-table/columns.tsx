@@ -24,6 +24,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             return (
                 <>
                     <Checkbox
+                        className='!ml-2'
                         checked={
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && 'indeterminate')
@@ -39,6 +40,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
+                className='!ml-2'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {
@@ -72,13 +74,15 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     {
         accessorKey: 'status',
         header: ({ column }) => createHeader('Status', column, '!w-40'),
-        cell: ({ row }) => (
-            <StatusCell
-                key={row?.original?.id}
-                item={row.original?.item}
-                originOrderId={row.original.origin_order}
-            />
-        )
+        cell: ({ row }) => {
+            return (
+                <StatusCell
+                    key={row?.original?.id}
+                    item={row.original?.item}
+                    originOrderId={row.original.origin_order}
+                />
+            )
+        }
     },
     {
         accessorKey: 'production_date',

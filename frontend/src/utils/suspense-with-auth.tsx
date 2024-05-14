@@ -1,19 +1,16 @@
-import { Suspense } from 'react'
-
-import { PageLoader } from '@/components/ui/page-loader'
 import { RequireAuthProvider } from '@/providers/require-auth-provider'
 
 export const SuspenseWihAuth = (
-    Component: React.LazyExoticComponent<any>,
+    // Component: React.LazyExoticComponent<any>,
+    Component: React.FC,
     requireAuth = true
-) => (
-    <Suspense fallback={<PageLoader />}>
-        {requireAuth ? (
-            <RequireAuthProvider>
-                <Component />
-            </RequireAuthProvider>
-        ) : (
+) =>
+    // <Suspense fallback={<PageLoader />}>
+    requireAuth ? (
+        <RequireAuthProvider>
             <Component />
-        )}
-    </Suspense>
-)
+        </RequireAuthProvider>
+    ) : (
+        <Component />
+    )
+// </Suspense>
