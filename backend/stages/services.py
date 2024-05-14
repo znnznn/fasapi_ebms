@@ -339,6 +339,8 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         super().__init__(model=model, list_filter=list_filter)
 
     async def add_used_stages(self, instance: ModelType) -> ModelType:
+        if not instance.stage_id:
+            return instance
         used_stage = await UsedStagesService().create(UsedStageSchema(item_id=instance.id, stage_id=instance.stage_id))
         return instance
 
