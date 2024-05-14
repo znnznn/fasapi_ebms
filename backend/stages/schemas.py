@@ -102,9 +102,19 @@ class StageSchema(StageSchemaIn):
         allow_population_by_field_name = True
 
 
+class StageSchemaOut(StageSchemaIn):
+    id: int
+    flow_id: int | None = Field(default=None, serialization_alias="flow")
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+        allow_population_by_field_name = True
+
+
 class StagePaginatedSchema(BaseModel):
     count: int
-    results: List[StageSchema]
+    results: List[StageSchemaOut]
 
 
 class FlowSchema(BaseModel):
