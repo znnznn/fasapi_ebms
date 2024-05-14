@@ -46,7 +46,6 @@ def get_ebms_engine():
     return ebms_engine
 
 
-@lru_cache(maxsize=None)
 def get_default_engine():
     return default_engine
 
