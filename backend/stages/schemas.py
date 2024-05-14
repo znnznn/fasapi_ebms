@@ -1,9 +1,14 @@
 from datetime import datetime, date, time as datetime_time
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, root_validator, model_validator, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from users.schemas import UserReadShortSchema
+
+
+class UsedStageSchema(BaseModel):
+    stage_id: int
+    item_id: int
 
 
 class CapacitySchema(BaseModel):
@@ -88,6 +93,7 @@ class StageSchemaIn(BaseModel):
 
 class StageSchema(StageSchemaIn):
     id: int = Field(default=None)
+    item_ids: List[int] | None
     flow_id: int | None = Field(default=None, serialization_alias="flow")
 
     class Config:
