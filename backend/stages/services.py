@@ -206,7 +206,7 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         super().__init__(model=model, list_filter=list_filter)
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
-        query = select(self.model).options(selectinload(Flow.stages))
+        query = select(self.model).options(selectinload(Flow.stages).selectinload(Stage.used_stages))
         if self.filter:
             query = self.filter.filter(query, **kwargs)
             query = self.filter.sort(query)
@@ -244,7 +244,7 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
             return new_flow
 
     async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
-        stmt = select(self.model).options(selectinload(Flow.stages))
+        stmt = select(self.model).options(selectinload(Flow.stages).selectinload(Stage.used_stages))
         if self.filter:
             stmt = self.filter.filter(stmt, **kwargs)
             stmt = stmt.order_by(self.model.id)
