@@ -413,6 +413,14 @@ async def multiupdate_salesorders(
     return response
 
 
+@router.delete("/items/{id}/rest-stages/", tags=["items"])
+async def delete_rest_stages(
+        id: int,
+        user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.WORKER, Role.MANAGER)),
+):
+    return await ItemsService().delete_used_stages(id)
+
+
 @router.get("/healthcheck/", tags=["healthcheck"])
 async def healthcheck():
     return {"status": "ok"}

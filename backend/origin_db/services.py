@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload, Query, contains_eager
 
 from common.constants import InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
-from database import get_async_session, get_ebms_session, ebms_connection, ebms_engine, get_ebms_engine
+from database import get_async_session, get_ebms_session, ebms_engine, get_ebms_engine
 from origin_db.filters import CategoryFilter
 from origin_db.models import Inprodtype, Arinvdet, Arinv, Inventry
 from origin_db.schemas import CategorySchema, ArinvDetSchema, ArinvRelatedArinvDetSchema, InventrySchema

@@ -4,7 +4,7 @@ from typing import Generic, Type, Optional, Sequence, Iterable
 
 from fastapi import Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update
+from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query
@@ -226,11 +226,9 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
             default_stages = await session.scalars(stmt)
             default_stages = [stage.obj_copy() for stage in default_stages.all()]
             if not default_stages:
-                stage_1 = await StagesService(
-                    db_session=session).create(StageSchemaIn(name="Unscheduled", default=True, position=0, color='#E3E8EF'))
+                stage_1 = await StagesService().create(StageSchemaIn(name="Unscheduled", default=True, position=0, color='#E3E8EF'))
                 default_stages = [stage_1.obj_copy()]
-                stage_2 = await StagesService(
-                    db_session=session).create(StageSchemaIn(name="Done", default=True, position=1, color='#C8E3D7'))
+                stage_2 = await StagesService().create(StageSchemaIn(name="Done", default=True, position=1, color='#C8E3D7'))
                 default_stages.append(stage_2.obj_copy())
             created_stages = []
             for index, stage in enumerate(default_stages):
@@ -240,7 +238,6 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
                 created_stages.append(Stage(**stage))
             session.add_all(created_stages)
             await session.commit()
-            await session.refresh(new_flow)
             return new_flow
 
     async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
@@ -587,6 +584,14 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 objs: ScalarResult[str] = await session.scalars(query)
                 return objs.all()
             return None
+
+    async def delete_used_stages(self, id: int) -> dict:
+        instance = await self.get(id)
+        stmt = delete(UsedStage).where(UsedStage.item_id == id)
+        async with AsyncSession(get_default_engine()) as session:
+            await session.execute(stmt)
+            await session.commit()
+        return {"message": "success"}
 
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
