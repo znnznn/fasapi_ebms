@@ -33,12 +33,17 @@ ebms_engine = create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Dr
 
 default_engine = create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
         Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME),
-        pool_size=70, max_overflow=30, pool_recycle=3600, pool_pre_ping=True,
+        pool_size=30, max_overflow=60, pool_recycle=3600, pool_pre_ping=True,
         connect_args={"server_settings": {"jit": "off"}},
     )
-ebms_connection = ebms_engine.connect()
+
+
+default_engine.connect()
+ebms_engine.connect()
 
 ebms_session_maker = async_sessionmaker(bind=ebms_engine, expire_on_commit=False, autoflush=False, autocommit=False)
+
+default_session_maker = async_sessionmaker(bind=default_engine, expire_on_commit=False, autoflush=False, autocommit=False)
 
 
 @lru_cache(maxsize=None)
@@ -46,6 +51,7 @@ def get_ebms_engine():
     return ebms_engine
 
 
+@lru_cache(maxsize=None)
 def get_default_engine():
     return default_engine
 
@@ -60,12 +66,13 @@ async def get_ebms_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+async def get_default_session() -> AsyncGenerator[AsyncSession, None]:
+    async with default_session_maker() as session:
+        yield session
+
+
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield UserService(session, User)
-
-
-async def get_embs_connection() -> AsyncGenerator[AsyncSession, None]:
-    yield ebms_connection
 
 
 def create_redis_pool():

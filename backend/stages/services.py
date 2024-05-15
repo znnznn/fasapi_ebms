@@ -4,7 +4,7 @@ from typing import Generic, Type, Optional, Sequence, Iterable
 
 from fastapi import Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update
+from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query
@@ -584,6 +584,14 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 objs: ScalarResult[str] = await session.scalars(query)
                 return objs.all()
             return None
+
+    async def delete_used_stages(self, id: int) -> dict:
+        instance = await self.get(id)
+        stmt = delete(UsedStage).where(UsedStage.item_id == id)
+        async with AsyncSession(get_default_engine()) as session:
+            await session.execute(stmt)
+            await session.commit()
+        return {"message": "success"}
 
 
 class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
