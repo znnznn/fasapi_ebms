@@ -15,7 +15,6 @@ import type { Item } from '@/store/api/ebms/ebms.types'
 import { usePatchItemMutation, usePatchOrderItemMutation } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
-import { cn } from '@/utils/cn'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 import { trunc } from '@/utils/trunc'
 
