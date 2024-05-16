@@ -18,8 +18,7 @@ import type { Item } from '@/store/api/ebms/ebms.types'
 import {
     usePatchItemMutation,
     usePatchOrderItemMutation,
-    useResetItemStagesMutation,
-    useResetOrderItemStagesMutation
+    useResetItemStagesMutation
 } from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
@@ -188,15 +187,12 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
     const [open, setOpen] = useState(false)
 
     const [resetStages] = useResetItemStagesMutation()
-    const [resetOrderStages] = useResetOrderItemStagesMutation()
-
-    const resetFunction = category ? resetStages : resetOrderStages
 
     const handleResetStages = async () => {
         setOpen(false)
 
         try {
-            await resetFunction(item?.id!)
+            await resetStages(item?.id!)
                 .unwrap()
                 .then(() =>
                     toast.success(
@@ -219,7 +215,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             disabled={isDisabled}
             // key={flowId}
         >
-            <SelectTrigger className='max-w-40'>
+            <SelectTrigger className='max-w-40 [&>span]:block [&>span]:w-full [&>span]:pr-2.5'>
                 <SelectValue placeholder='Select status' />
             </SelectTrigger>
             <SelectContent>
@@ -235,7 +231,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                             className='first:mt-0 mt-1 hover:!bg-accent transition-all duration-150 ease-in-out'
                             key={status.id}
                             value={String(status.id)}>
-                            <div className='flex items-center justify-between !w-full gap-x-1.5'>
+                            <div className='flex items-center justify-between gap-x-1.5'>
                                 <div className='flex items-center justify-between gap-x-1.5'>
                                     <div
                                         className='w-3 h-3 rounded-sm'
@@ -254,6 +250,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                 <Separator className='my-1' />
 
                 <Button
+                    disabled={item?.stage?.item_ids.length === 0}
                     onClick={handleResetStages}
                     className='h-8 w-full font-normal'
                     variant='ghost'>
