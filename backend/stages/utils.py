@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.utils import DateValidator
-from database import async_session_maker
 from origin_db.filters import CategoryFilter
 from origin_db.schemas import ArinvDetSchema, ArinvRelatedArinvDetSchema, ArinvDetPaginateSchema
 from origin_db.services import OriginItemService, OriginOrderService, CategoryService, InventryService
