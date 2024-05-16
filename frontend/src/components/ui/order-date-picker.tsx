@@ -162,10 +162,11 @@ export const OrderDatePicker: React.FC<Props> = ({
                     disabled={disabled}
                     variant='outline'
                     className={cn(
-                        'w-full justify-center text-left font-normal !p-0',
+                        'w-full justify-ve text-left font-normal !p-0',
                         !date && 'text-muted-foreground'
                     )}>
-                    <CalendarIcon className='mr-2 h-4 w-4 flex-shrink-0' />
+                    <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
+
                     {date ? format(date, 'dd.MM.yyyy EEE') : <span>Pick a date</span>}
                 </Button>
             </PopoverTrigger>

@@ -107,7 +107,7 @@ export const SalesOrderCell: React.FC<Props> = ({
     }
 
     return (
-        <div className='w-[112px]'>
+        <div className='w-20'>
             <DebounceInput
                 element={Input as any}
                 value={currentValue}

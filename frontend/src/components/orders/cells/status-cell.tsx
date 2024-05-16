@@ -1,8 +1,10 @@
+import { RefreshCcw } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { selectCategory, selectOrders } from '../store/orders'
 
+import { Button } from '@/components/ui/button'
 import {
     Select,
     SelectContent,
@@ -10,9 +12,14 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { useLazyGetOrderQuery } from '@/store/api/ebms/ebms'
 import type { Item } from '@/store/api/ebms/ebms.types'
-import { usePatchItemMutation, usePatchOrderItemMutation } from '@/store/api/items/items'
+import {
+    usePatchItemMutation,
+    usePatchOrderItemMutation,
+    useResetItemStagesMutation
+} from '@/store/api/items/items'
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
@@ -177,15 +184,38 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
         return `rgba(${r}, ${g}, ${b}, ${alpha})`
     }
 
+    const [open, setOpen] = useState(false)
+
+    const [resetStages] = useResetItemStagesMutation()
+
+    const handleResetStages = async () => {
+        setOpen(false)
+
+        try {
+            await resetStages(item?.id!)
+                .unwrap()
+                .then(() =>
+                    toast.success(
+                        `Statuses of Item ${item?.id} have been successfully reset`,
+                        {
+                            description: 'All statuses have been removed from the item'
+                        }
+                    )
+                )
+        } catch {}
+    }
+
     return (
         <Select
+            open={open}
+            onOpenChange={setOpen}
             onValueChange={onValueChange}
             defaultValue={defaultStatus}
             value={defaultStatus}
             disabled={isDisabled}
             // key={flowId}
         >
-            <SelectTrigger className='max-w-40'>
+            <SelectTrigger className='max-w-40 [&>span]:block [&>span]:w-full [&>span]:pr-2.5'>
                 <SelectValue placeholder='Select status' />
             </SelectTrigger>
             <SelectContent>
@@ -198,16 +228,18 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                                     ? hexToRGBA(status.color, 10)
                                     : ''
                             }}
-                            className='first:mt-0 mt-1'
+                            className='first:mt-0 mt-1 hover:!bg-accent transition-all duration-150 ease-in-out'
                             key={status.id}
                             value={String(status.id)}>
-                            <div className='flex items-center gap-x-1.5'>
-                                <div
-                                    className='w-3 h-3 rounded-sm'
-                                    style={{
-                                        backgroundColor: status.color
-                                    }}></div>
-                                {trunc(status.name, 14)}
+                            <div className='flex items-center justify-between gap-x-1.5'>
+                                <div className='flex items-center justify-between gap-x-1.5'>
+                                    <div
+                                        className='w-3 h-3 rounded-sm'
+                                        style={{
+                                            backgroundColor: status.color
+                                        }}></div>
+                                    {trunc(status.name, 14)}
+                                </div>
                                 {wasSelected ? (
                                     <div className='w-1 h-1 rounded-full bg-foreground'></div>
                                 ) : null}
@@ -215,6 +247,16 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                         </SelectItem>
                     )
                 })}
+                <Separator className='my-1' />
+
+                <Button
+                    disabled={item?.stage?.item_ids.length === 0}
+                    onClick={handleResetStages}
+                    className='h-8 w-full font-normal'
+                    variant='ghost'>
+                    <RefreshCcw className='mr-2 w-3 h-3' />
+                    Reset Statuses
+                </Button>
             </SelectContent>
         </Select>
     )

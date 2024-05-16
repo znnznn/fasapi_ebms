@@ -67,7 +67,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'priority',
-        header: ({ column }) => createHeader('Priority', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Prio.', column, 'w-20'),
         sortingFn: priorityFn,
         cell: ({ row }) => (
             <InputCell
@@ -83,7 +83,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     },
     {
         accessorKey: 'packages',
-        header: ({ column }) => createHeader('Packages', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Pckgs', column, 'w-20'),
         sortingFn: packagesFn,
         cell: ({ row }) => (
             <InputCell
@@ -100,7 +100,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'location',
         sortingFn: packagesFn,
-        header: ({ column }) => createHeader('Location', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Loc.', column, 'w-20'),
         cell: ({ row }) => (
             <InputCell
                 key={row.original?.id}

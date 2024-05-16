@@ -118,7 +118,7 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                         colSpan={colSpan}>
                                                         <Badge
                                                             variant='secondary'
-                                                            className='py-2 pl-10 w-full !m-0 !rounded-none'>
+                                                            className='py-2 w-full !m-0 !rounded-none'>
                                                             <Checkbox
                                                                 className='mr-4'
                                                                 checked={isIndeterminate}
@@ -185,11 +185,13 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                                 }}
                                                                 aria-label='Select row'
                                                             />
-                                                            {group[0]} |{' '}
-                                                            {
-                                                                group[1][0].original
-                                                                    ?.customer
-                                                            }
+                                                            <div className='pl-4'>
+                                                                {group[0]} |{' '}
+                                                                {
+                                                                    group[1][0].original
+                                                                        ?.customer
+                                                                }
+                                                            </div>
                                                         </Badge>
                                                     </TableCell>
                                                 </TableRow>

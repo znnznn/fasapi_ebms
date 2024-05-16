@@ -157,7 +157,7 @@ export const DatePicker: React.FC<Props> = ({
                         'w-40 justify-start text-left font-normal',
                         !date && 'text-muted-foreground'
                     )}>
-                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
                     {date ? format(date, 'dd.MM.yyyy EEE') : <span>Pick a date</span>}
                 </Button>
             </PopoverTrigger>
