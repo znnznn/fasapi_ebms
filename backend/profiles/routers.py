@@ -3,7 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from common.constants import Role
-from database import async_session_maker
 from profiles.schemas import CompanyProfileSchema, UserProfileSchema
 from profiles.services import CompanyProfileService, UserProfileService
 from users.mixins import active_user_with_permission, IsAuthenticatedAs
