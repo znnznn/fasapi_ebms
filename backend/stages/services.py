@@ -587,7 +587,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
 
     async def delete_used_stages(self, id: int) -> dict:
         instance = await self.get(id)
-        stmt = delete(UsedStage).where(UsedStage.item_id == id)
+        stmt = delete(UsedStage).where(UsedStage.item_id == id, UsedStage.stage_id != instance.stage_id)
         async with AsyncSession(get_default_engine()) as session:
             await session.execute(stmt)
             await session.commit()
