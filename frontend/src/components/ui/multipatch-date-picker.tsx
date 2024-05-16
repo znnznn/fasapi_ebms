@@ -31,7 +31,9 @@ export const DatePicker: React.FC<Props> = ({ date, setDate, disabled = false })
     }, [isWorkingWeekend])
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -40,7 +42,8 @@ export const DatePicker: React.FC<Props> = ({ date, setDate, disabled = false })
                         'w-40 justify-start text-left font-normal flex-1',
                         !date && 'text-muted-foreground'
                     )}>
-                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
+
                     {date ? format(date, 'dd.MM.yyyy EEE') : <span>Pick a date</span>}
                 </Button>
             </PopoverTrigger>
@@ -55,10 +58,15 @@ export const DatePicker: React.FC<Props> = ({ date, setDate, disabled = false })
                 <div
                     className='flex items-center justify-start gap-x-3 p-3 pt-0 w-full
             '>
-                    <Button className='flex-1' onClick={close}>
+                    <Button
+                        className='flex-1'
+                        onClick={close}>
                         Set Date
                     </Button>
-                    <Button onClick={close} className='flex-1' variant='secondary'>
+                    <Button
+                        onClick={close}
+                        className='flex-1'
+                        variant='secondary'>
                         Cancel
                     </Button>
                 </div>

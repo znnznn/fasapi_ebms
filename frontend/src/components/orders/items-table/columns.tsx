@@ -40,7 +40,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
-                className='!ml-2'
+                className='!ml-2 data-[state=checked]:bg-muted-foreground border border-muted-foreground'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {
@@ -134,7 +134,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'priority',
-        header: ({ column }) => createHeader('Priority', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Prio.', column, '!w-20'),
         cell: ({ row }) => (
             <InputCell
                 key={row.original?.id}
@@ -150,7 +150,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'packages',
-        header: ({ column }) => createHeader('Packages', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Pckgs.', column, '!w-20'),
         cell: ({ row }) => (
             <InputCell
                 key={row.original?.id}
@@ -165,7 +165,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'location',
-        header: ({ column }) => createHeader('Location', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Loc.', column, '!w-20'),
         cell: ({ row }) => (
             <InputCell
                 key={row.original?.id}

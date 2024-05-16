@@ -26,7 +26,10 @@ export const ProductionCategories = () => {
             {isLoading ? (
                 <FlowsSkeleton />
             ) : (
-                <Accordion type='single' collapsible className='w-full'>
+                <Accordion
+                    type='single'
+                    collapsible
+                    className='w-full'>
                     {data?.results?.map((category) => {
                         const currentFlows = flowsData?.filter(
                             (flow) => flow.category === category.id
@@ -80,7 +83,10 @@ export const ProductionCategories = () => {
                                         <AddFlowDialog categoryId={category.id} />
                                     </AccordionItem>
                                     {currentFlows?.map((flow) => (
-                                        <FlowAccordion flow={flow} key={flow.id} />
+                                        <FlowAccordion
+                                            flow={flow}
+                                            key={flow.id}
+                                        />
                                     ))}
                                 </AccordionContent>
                             </AccordionItem>

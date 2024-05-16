@@ -287,6 +287,78 @@ export const items = api.injectEndpoints({
                 method: 'DELETE'
             }),
             invalidatesTags: ['Items']
+        }),
+        resetItemStages: build.mutation<void, number>({
+            query: (id) => ({
+                url: `items/${id}/rest-stages/`,
+                method: 'DELETE'
+            }),
+            async onQueryStarted(id, { dispatch, queryFulfilled }) {
+                const queryKeyParams = store.getState().orders.currentQueryParams
+
+                const patchResult = dispatch(
+                    embs.util.updateQueryData(
+                        'getItems',
+                        queryKeyParams as EBMSItemsQueryParams,
+                        (draft) => {
+                            const item = draft.results.find(
+                                (item) => item.item?.id === id
+                            )
+
+                            if (item?.item) {
+                                Object.assign(item?.item, {
+                                    stage: null
+                                })
+                            }
+                        }
+                    )
+                )
+
+                try {
+                    await queryFulfilled
+                } catch {
+                    patchResult.undo()
+                }
+            },
+            invalidatesTags: ['Items', 'EBMSItems', 'Orders']
+        }),
+        resetOrderItemStages: build.mutation<void, number>({
+            query: (id) => ({
+                url: `items/${id}/rest-stages/`,
+                method: 'DELETE'
+            }),
+            async onQueryStarted(id, { dispatch, queryFulfilled }) {
+                const queryKeyParams = store.getState().orders.currentQueryParams
+
+                const patchResult = dispatch(
+                    embs.util.updateQueryData(
+                        'getOrders',
+                        queryKeyParams as EBMSItemsQueryParams,
+                        (draft) => {
+                            const order = draft.results.find((order) =>
+                                order.origin_items.find((item) => item.item.id === id)
+                            )
+
+                            const item = order?.origin_items.find(
+                                (item) => item.item.id === id
+                            )
+
+                            if (item?.item) {
+                                Object.assign(item?.item, {
+                                    stage: null
+                                })
+                            }
+                        }
+                    )
+                )
+
+                try {
+                    await queryFulfilled
+                } catch {
+                    patchResult.undo()
+                }
+            },
+            invalidatesTags: ['Items', 'EBMSItems', 'Orders']
         })
     })
 })
@@ -298,5 +370,7 @@ export const {
     usePatchOrderItemMutation,
     useAddOrderItemMutation,
     usePatchItemMutation,
+    useResetItemStagesMutation,
+    useResetOrderItemStagesMutation,
     useRemoveItemMutation
 } = items

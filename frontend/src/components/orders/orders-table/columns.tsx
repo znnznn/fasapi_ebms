@@ -98,7 +98,7 @@ export const columns: ColumnDef<OrdersData>[] = [
     },
     {
         accessorKey: 'priority',
-        header: ({ column }) => createHeader('Priority', column, 'w-[112px]'),
+        header: ({ column }) => createHeader('Prio.', column, '!w-20]'),
         cell: ({ row }) => (
             <SalesOrderCell
                 key={row.original?.id}

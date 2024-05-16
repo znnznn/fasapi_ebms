@@ -101,19 +101,31 @@ export const FlowAccordion: React.FC<Props> = ({ flow }) => {
     const unscheduledStage = currentStages.find((stage) => stage.name === 'Unscheduled')
 
     return (
-        <Accordion type='single' collapsible key={flow.id} className='w-full'>
-            <AccordionItem className='border-none' value='item-1'>
+        <Accordion
+            type='single'
+            collapsible
+            key={flow.id}
+            className='w-full'>
+            <AccordionItem
+                className='border-none'
+                value='item-1'>
                 <Card>
                     <AccordionTrigger className='px-4'>
                         <CardHeader className='p-1 pr-4 flex flex-row items-center justify-between gap-x-4 w-full'>
                             <CardTitle className='text-lg'>{flow.name}</CardTitle>
-                            <FlowActions id={flow.id} name={flow.name} />
+                            <FlowActions
+                                id={flow.id}
+                                name={flow.name}
+                            />
                         </CardHeader>
                     </AccordionTrigger>
 
                     <AccordionContent>
                         <CardContent className='flex flex-col gap-y-3'>
-                            <AddStatusDialog flowId={flow.id} statuses={currentStages} />
+                            <AddStatusDialog
+                                flowId={flow.id}
+                                statuses={currentStages}
+                            />
 
                             <Card>
                                 <CardHeader>
@@ -145,7 +157,10 @@ export const FlowAccordion: React.FC<Props> = ({ flow }) => {
                                     {items.map((stage) =>
                                         stage.name !== 'Done' &&
                                         stage.name !== 'Unscheduled' ? (
-                                            <SortableCard key={stage.id} stage={stage} />
+                                            <SortableCard
+                                                key={stage.id}
+                                                stage={stage}
+                                            />
                                         ) : null
                                     )}
                                 </SortableContext>
@@ -195,7 +210,11 @@ const SortableCard: React.FC<SortableCardProps> = ({ stage }) => {
     }
 
     return (
-        <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        <Card
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}>
             <CardHeader>
                 <CardTitle className='flex items-center justify-between gap-x-4'>
                     <div className='flex items-center gap-x-2 text-lg'>

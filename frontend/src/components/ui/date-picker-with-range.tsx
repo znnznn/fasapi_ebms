@@ -20,10 +20,10 @@ export const DatePickerWithRange: React.FC<Props> = ({ className, date, setDate 
             <Popover>
                 <PopoverTrigger asChild>
                     <ToggleGroupItem
-                        className='w-60 bg-secondary text-secondary-foreground'
+                        className='w-60 bg-secondary text-secondary-foreground '
                         value='4'
                         key='4'>
-                        <CalendarIcon className='mr-2 h-4 w-4' />
+                        <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
                         {date?.from ? (
                             date.to ? (
                                 <>
@@ -38,7 +38,9 @@ export const DatePickerWithRange: React.FC<Props> = ({ className, date, setDate 
                         )}
                     </ToggleGroupItem>
                 </PopoverTrigger>
-                <PopoverContent className='w-auto p-0' align='start'>
+                <PopoverContent
+                    className='w-auto p-0'
+                    align='start'>
                     <Calendar
                         initialFocus
                         mode='range'
