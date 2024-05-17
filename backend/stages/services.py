@@ -434,7 +434,6 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                     setattr(item, key, value)
                 if stage_id:
                     used_stages.append(UsedStage(item_id=item.id, stage_id=stage_id))
-            await self.add_all(items)
             created_items = []
             added_origin_items_for_used_stages = []
             for origin_item in origin_items_data.values():
@@ -447,16 +446,17 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                     object_data["flow_id"] = stage.flow_id
                     added_origin_items_for_used_stages.append(origin_item.autoid)
                 created_items.append(Item(origin_item=origin_item.autoid, order=origin_item.doc_aid, **object_data))
-            if created_items:
-                await self.add_all(created_items)
             if added_origin_items_for_used_stages:
                 stmt = select(self.model).where(self.model.origin_item.in_(added_origin_items_for_used_stages))
                 objs = await session.scalars(stmt)
                 for obj in objs.all():
                     used_stages.append(UsedStage(item_id=obj.id, stage_id=stage_id))
-            if used_stages:
-                await self.add_all(used_stages)
-            return obj
+        await self.add_all(items)
+        if created_items:
+            await self.add_all(created_items)
+        if used_stages:
+            await self.add_all(used_stages)
+        return obj
 
     async def get_autoid_by_production_date(self, production_date: date | None):
         async with AsyncSession(get_default_engine()) as session:
@@ -610,17 +610,17 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
             sales_orders = await session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
             origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
             origin_orders_data = {obj.autoid: obj for obj in origin_orders}
-            for obj in sales_orders:
-                origin_order = origin_orders_data.pop(obj.order, None)
-                for k, v in object_data.items():
-                    setattr(obj, k, v)
-            await self.add_all(sales_orders)
-            if origin_orders_data:
-                new_sales_orders = []
-                for obj in origin_orders_data.values():
-                    new_sales_orders.append(SalesOrder(order=obj.autoid, **object_data))
-                await self.add_all(new_sales_orders)
-            return objs
+        for obj in sales_orders:
+            origin_order = origin_orders_data.pop(obj.order, None)
+            for k, v in object_data.items():
+                setattr(obj, k, v)
+        await self.add_all(sales_orders)
+        if origin_orders_data:
+            new_sales_orders = []
+            for obj in origin_orders_data.values():
+                new_sales_orders.append(SalesOrder(order=obj.autoid, **object_data))
+            await self.add_all(new_sales_orders)
+        return objs
 
     async def list_by_orders(self, autoids: list[str]):
         async with AsyncSession(get_default_engine()) as session:
