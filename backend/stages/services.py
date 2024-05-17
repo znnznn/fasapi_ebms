@@ -390,11 +390,11 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         return query
 
     async def multiupdate(self, obj: MultiUpdateItemSchema) -> Optional[MultiUpdateItemSchema]:
+        object_data = obj.model_dump(exclude_unset=True)
+        if production_date := object_data.get("production_date"):
+            await self.validate_production_date(production_date)
         async with AsyncSession(get_default_engine()) as session:
-            object_data = obj.model_dump(exclude_unset=True)
             origin_items = set(object_data.pop("origin_items", []))
-            if production_date := object_data.get("production_date"):
-                await self.validate_production_date(production_date)
             category = None
             if flow_id := object_data.get("flow_id"):
                 flow = await session.scalar(select(Flow).where(Flow.id == flow_id))
@@ -602,11 +602,11 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         super().__init__(model=model, list_filter=list_filter)
 
     async def multiupdate(self, objs: MultiUpdateSalesOrderSchema):
+        object_data = objs.model_dump(exclude_unset=True)
+        if production_date := object_data.get("production_date"):
+            await self.validate_production_date(production_date)
         async with AsyncSession(get_default_engine()) as session:
-            object_data = objs.model_dump(exclude_unset=True)
             origin_orders = set(object_data.pop("origin_orders", []))
-            if production_date := object_data.get("production_date"):
-                await self.validate_production_date(production_date)
             sales_orders = await session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
             origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
             origin_orders_data = {obj.autoid: obj for obj in origin_orders}
