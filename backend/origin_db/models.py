@@ -124,8 +124,8 @@ class Arinv(Base):
     cntct_aid: Mapped[str] = mapped_column("CNTCT_AID", String)
     ccntct_aid: Mapped[str] = mapped_column("CCNTCT_AID", String)
     man_usetax: Mapped[bool] = mapped_column("MAN_USETAX", Boolean)
-    externalid: Mapped[str] = mapped_column("EXTERNALID", String)
-    p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL)
+    # externalid: Mapped[str] = mapped_column("EXTERNALID", String) # included in test mirror db
+    # p_rounddif: Mapped[float] = mapped_column("P_ROUNDDIF", DECIMAL) # included in test mirror db
     details = relationship('Arinvdet', back_populates="order", innerjoin=True, order_by='Arinvdet.autoid', primaryjoin="""and_(Arinv.autoid == Arinvdet.doc_aid, Arinv.autoid == Arinvdet.doc_aid, Arinvdet.category != '', Arinvdet.category != 'Vents', Arinvdet.par_time == '', Arinvdet.inven != None, Arinvdet.inven != '')""")
     _sales_order = None
     _count_items = None
