@@ -401,7 +401,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 if not flow:
                     raise HTTPException(status_code=404, detail=f"Flow with id {flow_id} not found")
                 object_data['stage_id'] = None
-                category = await session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
+                category = await CategoryService().get(flow.category_autoid)
                 category = category.prod_type if category else False
             origin_items_objs = await OriginItemService().get_listy_by_autoids(origin_items)
             stage = None
@@ -410,7 +410,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 if not stage:
                     raise HTTPException(status_code=404, detail=f"Stage with id {stage_id} not found")
                 flow_id = stage.flow_id
-                category = await session.scalar(select(Inprodtype).where(Inprodtype.autoid == stage.flow.category_autoid))
+                category = await CategoryService().get(flow.category_autoid)
                 category = category.prod_type if category else False
             origin_items_data = {item.autoid: item for item in origin_items_objs}
             stmt = select(self.model).where(self.model.origin_item.in_(origin_items))
