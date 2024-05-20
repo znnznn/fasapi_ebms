@@ -365,7 +365,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                     origin_item = await OriginItemService().get(instance.origin_item)
                     origin_item_category = origin_item.category if origin_item else False
                     flow = await FlowsService().get(flow_id)
-                    category = await session.scalar(select(Inprodtype).where(Inprodtype.autoid == flow.category_autoid))
+                    category = await CategoryService().get(flow.category_autoid)
                     category = category.prod_type if category else False
                     if category != origin_item_category:
                         raise HTTPException(
