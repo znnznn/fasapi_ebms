@@ -215,7 +215,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             disabled={isDisabled}
             // key={flowId}
         >
-            <SelectTrigger className='max-w-40 [&>span]:block [&>span]:w-full [&>span]:pr-2.5'>
+            <SelectTrigger className='!w-40 [&>span]:block [&>span]:w-full [&>span]:pr-2.5'>
                 <SelectValue placeholder='Select status' />
             </SelectTrigger>
             <SelectContent>
@@ -228,7 +228,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                                     ? hexToRGBA(status.color, 10)
                                     : ''
                             }}
-                            className='first:mt-0 mt-1 hover:!bg-accent transition-all duration-150 ease-in-out'
+                            className='first:mt-0 !block mt-1 hover:!bg-accent transition-all duration-150 ease-in-out'
                             key={status.id}
                             value={String(status.id)}>
                             <div className='flex items-center justify-between gap-x-1.5'>

@@ -1,5 +1,5 @@
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
-import { Fragment, useEffect } from 'react'
+import { Fragment } from 'react'
 
 import { Badge } from '../ui/badge'
 import { Checkbox } from '../ui/checkbox'
@@ -39,9 +39,31 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
 
     const groupedView = useAppSelector((state) => state.orders.groupedView)
 
-    useEffect(() => {
-        table.setRowSelection({ TIDBOKSIBT2NF130: true })
-    }, [])
+    const onCheckedChange = (value: boolean, group: any[]) => {
+        const currentGroup = groupByOrder.filter((gr) => gr[0] === group[0])
+        const currentGroupIds = currentGroup[0][1].map((obj) => obj.id)
+
+        const obj = currentGroupIds
+            .map((obj) => ({ [obj]: true }))
+            .reduce((acc, val) => ({ ...acc, ...val }), {})
+
+        if (value) {
+            table.setRowSelection((prev) => ({
+                ...prev,
+                ...obj
+            }))
+        } else {
+            table.setRowSelection((prev) => {
+                const newSelection = { ...prev }
+                currentGroupIds.forEach((id) => {
+                    if (newSelection[id]) {
+                        delete newSelection[id]
+                    }
+                })
+                return newSelection
+            })
+        }
+    }
 
     return (
         <div className='rounded-md'>
@@ -126,62 +148,10 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                                 onCheckedChange={(
                                                                     value
                                                                 ) => {
-                                                                    const currentGroup =
-                                                                        groupByOrder.filter(
-                                                                            (gr) =>
-                                                                                gr[0] ===
-                                                                                group[0]
-                                                                        )
-
-                                                                    const currentGroupIds =
-                                                                        currentGroup[0][1].map(
-                                                                            (obj) =>
-                                                                                obj.id
-                                                                        )
-
-                                                                    const obj =
-                                                                        currentGroupIds
-                                                                            .map(
-                                                                                (obj) => {
-                                                                                    return {
-                                                                                        [obj]: true
-                                                                                    }
-                                                                                }
-                                                                            )
-                                                                            .reduce(
-                                                                                (
-                                                                                    acc,
-                                                                                    val
-                                                                                ) => {
-                                                                                    return {
-                                                                                        ...acc,
-                                                                                        ...val
-                                                                                    }
-                                                                                },
-                                                                                {}
-                                                                            )
-
-                                                                    if (value) {
-                                                                        table.setRowSelection(
-                                                                            obj
-                                                                        )
-                                                                    } else {
-                                                                        table
-                                                                            .getSelectedRowModel()
-                                                                            .rows.filter(
-                                                                                (row) =>
-                                                                                    currentGroupIds.includes(
-                                                                                        row.id
-                                                                                    )
-                                                                            )
-                                                                            .forEach(
-                                                                                (row) => {
-                                                                                    row.toggleSelected(
-                                                                                        false
-                                                                                    )
-                                                                                }
-                                                                            )
-                                                                    }
+                                                                    onCheckedChange(
+                                                                        !!value,
+                                                                        group
+                                                                    )
                                                                 }}
                                                                 aria-label='Select row'
                                                             />

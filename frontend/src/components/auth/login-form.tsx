@@ -66,6 +66,7 @@ export const LoginForm = () => {
                         className='space-y-5'
                         onSubmit={form.handleSubmit(onSubmit)}>
                         <FormField
+                            disabled={isLoading}
                             control={form.control}
                             name='email'
                             render={({ field }) => (
@@ -82,6 +83,7 @@ export const LoginForm = () => {
                             )}
                         />
                         <FormField
+                            disabled={isLoading}
                             control={form.control}
                             name='password'
                             render={({ field }) => (
@@ -114,6 +116,7 @@ export const LoginForm = () => {
                 <div className='flex justify-between mt-5'>
                     <div className='flex items-center space-x-2'>
                         <Checkbox
+                            disabled={isLoading}
                             id='terms'
                             aria-label='Remember me'
                             onClick={onRememberMe}
@@ -125,7 +128,7 @@ export const LoginForm = () => {
                         </label>
                     </div>
 
-                    <ForgetPasswordModal />
+                    <ForgetPasswordModal disabled={isLoading} />
                 </div>
             </div>
         </div>

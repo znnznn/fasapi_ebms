@@ -20,7 +20,7 @@ export const columns: ColumnDef<OrdersData>[] = [
         id: 'select',
         header: ({ table }) => {
             return (
-                <>
+                <div className='!w-10'>
                     <Checkbox
                         className='!ml-2'
                         checked={
@@ -33,7 +33,7 @@ export const columns: ColumnDef<OrdersData>[] = [
                         aria-label='Select all'
                     />
                     <MultipatchPopover table={table} />
-                </>
+                </div>
             )
         },
         cell: ({ row }) => (

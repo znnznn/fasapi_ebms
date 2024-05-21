@@ -69,7 +69,7 @@ export const Filters = () => {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
-                        className='h-[43px]'
+                        className='h-[45px]'
                         variant='outline'>
                         Filters
                     </Button>
