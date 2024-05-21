@@ -155,13 +155,13 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                                                                 }}
                                                                 aria-label='Select row'
                                                             />
-                                                            {/* <div className='pl-4'> */}
-                                                            {group[0]} |{' '}
-                                                            {
-                                                                group[1][0].original
-                                                                    ?.customer
-                                                            }
-                                                            {/* </div> */}
+                                                            <div className='pl-4'>
+                                                                {group[0]} |{' '}
+                                                                {
+                                                                    group[1][0].original
+                                                                        ?.customer
+                                                                }
+                                                            </div>
                                                         </Badge>
                                                     </TableCell>
                                                 </TableRow>
