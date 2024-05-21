@@ -29,7 +29,11 @@ import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
 type FormData = zodInfer<typeof emailSchema>
 
-export const ForgetPasswordModal = () => {
+interface ForgetPasswordModalProps {
+    disabled: boolean
+}
+
+export const ForgetPasswordModal: React.FC<ForgetPasswordModalProps> = ({ disabled }) => {
     const [open, setOpen] = useState(false)
     const handleClose = () => setOpen(false)
 
@@ -68,8 +72,12 @@ export const ForgetPasswordModal = () => {
     const onSubmit: SubmitHandler<FormData> = (formData) => handlePasswordReset(formData)
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger className='text-sm text-neutral-400 hover:text-neutral-600 transition-colors'>
+        <Dialog
+            open={open}
+            onOpenChange={setOpen}>
+            <DialogTrigger
+                disabled={disabled}
+                className='text-sm text-neutral-400 hover:text-neutral-600 transition-colors'>
                 Forgot password?
             </DialogTrigger>
             <DialogContent className='rounded-md mx-2'>
@@ -97,7 +105,9 @@ export const ForgetPasswordModal = () => {
                             )}
                         />
 
-                        <Button className='w-full' type='submit'>
+                        <Button
+                            className='w-full'
+                            type='submit'>
                             {isLoading ? (
                                 <Loader2 className='h-4 w-4 animate-spin' />
                             ) : (

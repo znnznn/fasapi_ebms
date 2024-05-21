@@ -29,9 +29,9 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && 'indeterminate')
                         }
-                        onCheckedChange={(value) =>
+                        onCheckedChange={(value) => {
                             table.toggleAllPageRowsSelected(!!value)
-                        }
+                        }}
                         aria-label='Select all'
                     />
                     <MultipatchPopover table={table} />
@@ -40,7 +40,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
-                className='!ml-2 data-[state=checked]:bg-muted-foreground border border-muted-foreground'
+                className='!ml-2 mr-4 data-[state=checked]:bg-muted-foreground border border-muted-foreground'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {
@@ -59,15 +59,13 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
             const flowsData = useAppSelector(selectOrders).flowsData ?? []
 
             return (
-                <div className='!pl-4'>
-                    <FlowCell
-                        key={row?.original?.id}
-                        id={row?.original?.id}
-                        flowsData={flowsData}
-                        item={row.original.item!}
-                        orderId={row.original.origin_order}
-                    />
-                </div>
+                <FlowCell
+                    key={row?.original?.id}
+                    id={row?.original?.id}
+                    flowsData={flowsData}
+                    item={row.original.item!}
+                    orderId={row.original.origin_order}
+                />
             )
         }
     },
@@ -185,8 +183,8 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     // },
     {
         accessorKey: 'quantity',
-        header: ({ column }) => createHeader('Ordered', column, 'w-28'),
-        cell: ({ row }) => <div className='w-28'>{alignCell(row.original.quantity)}</div>
+        header: ({ column }) => createHeader('Ordered', column, '!w-28'),
+        cell: ({ row }) => <div className='!w-28'>{alignCell(row.original.quantity)}</div>
     },
     {
         accessorKey: 'shipped',
@@ -219,7 +217,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
         accessorKey: 'id_inven',
         header: ({ column }) =>
             createHeader('ID', column, 'text-left justify-start !w-24'),
-        cell: ({ row }) => <div className='w-24 pl-4'>{row.original?.id_inven}</div>
+        cell: ({ row }) => <div className='!w-24 pl-4'>{row.original?.id_inven}</div>
     },
     {
         accessorKey: 'weight',
@@ -249,19 +247,11 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => (
-            <div className='w-64 pl-4'>
-                {/* <TooltipCell
-                    value={row.original?.description}
-                    truncedValue={row.original?.description}
-                /> */}
-                {row.original?.description}
-            </div>
-        )
+        cell: ({ row }) => <div className='!w-64 pl-4'>{row.original?.description}</div>
     },
     {
         accessorKey: 'comments',
-        header: ({ column }) => createHeader('Notes', column, 'w-32'),
+        header: ({ column }) => createHeader('Notes', column, '!w-32'),
         cell: ({ row }) => (
             <NotesSidebar
                 notes={row.original?.item?.comments!}
