@@ -13,6 +13,12 @@ import {
     SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger
+} from '@/components/ui/tooltip'
 import { useLazyGetOrderQuery } from '@/store/api/ebms/ebms'
 import type { Item } from '@/store/api/ebms/ebms.types'
 import {
@@ -238,10 +244,23 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                                         style={{
                                             backgroundColor: status.color
                                         }}></div>
-                                    {trunc(status.name, 14)}
+                                    {status.name.length > 11 ? (
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <span> {trunc(status.name, 11)}</span>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{status.name}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    ) : (
+                                        <span>{status.name}</span>
+                                    )}
                                 </div>
                                 {wasSelected ? (
-                                    <div className='w-1 h-1 rounded-full bg-foreground'></div>
+                                    <div className='w-1 h-1 rounded-full bg-foreground pl-1'></div>
                                 ) : null}
                             </div>
                         </SelectItem>
@@ -255,7 +274,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                     className='h-8 w-full font-normal'
                     variant='ghost'>
                     <RefreshCcw className='mr-2 w-3 h-3' />
-                    Reset Statuses
+                    Reset history
                 </Button>
             </SelectContent>
         </Select>

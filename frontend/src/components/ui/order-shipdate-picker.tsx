@@ -16,7 +16,6 @@ import type { EBMSItemPatchData } from '@/store/api/ebms/ebms.types'
 import { useGetCompanyProfilesQuery } from '@/store/api/profiles/profiles'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { cn } from '@/utils/cn'
-import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
 interface Props {
     date: Date | undefined
@@ -59,7 +58,7 @@ export const OrderShipDatePicker: React.FC<Props> = ({
     }
 
     const errorToast = (message: string) => {
-        toast.error(`Order ${orderId}`, {
+        toast.error(`Order ${orderId} ship date`, {
             description: message
         })
     }
@@ -69,9 +68,10 @@ export const OrderShipDatePicker: React.FC<Props> = ({
             await patchSalesOrder(data)
                 .unwrap()
                 .then(() => successToast(data.data.ship_date!))
-        } catch (error) {
-            const isErrorMessage = isErrorWithMessage(error)
-            errorToast(isErrorMessage ? error.data.detail : 'Something went wrong')
+        } catch {
+            // const isErrorMessage = isErrorWithMessage(error)
+            // errorToast(isErrorMessage ? error?.data?.detail : 'Something went wrong')
+            errorToast('Something went wrong')
         }
     }
 
@@ -110,7 +110,7 @@ export const OrderShipDatePicker: React.FC<Props> = ({
                     disabled={disabled}
                     variant='outline'
                     className={cn(
-                        'w-full justify-center text-left font-normal !p-0',
+                        'w-full text-left font-normal justify-start',
                         !date && 'text-muted-foreground'
                     )}>
                     <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
@@ -140,22 +140,6 @@ export const OrderShipDatePicker: React.FC<Props> = ({
                         variant='secondary'>
                         Cancel
                     </Button>
-                    {/* <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    disabled={!date}
-                                    onClick={handleResetDate}
-                                    size='icon'
-                                    variant='destructive'>
-                                    <RotateCcw className='w-4 h-4' />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <span>Reset date</span>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider> */}
                 </div>
             </PopoverContent>
         </Popover>
