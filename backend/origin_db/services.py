@@ -153,13 +153,13 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 self.model.par_time == '',
-                self.model.category != '',
-                self.model.category != 'Vents',
+                # self.model.category != '',
+                # self.model.category != 'Vents',
                 self.model.inven != None,
                 self.model.inven != '',
-                self.model.order_status == 'U'
+                Arinv.status == 'U'
             ),
         ).join(Arinvdet.order).options(
             selectinload(self.model.rel_inventry),
@@ -252,8 +252,8 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 Arinvdet.inven != None,
                 Arinvdet.inven != '',
             )
-        # ).join(
-        #     Inventry
+        ).join(
+            Inventry
         ).options(
             # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
             selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),

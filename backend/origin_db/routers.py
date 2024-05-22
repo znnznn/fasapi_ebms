@@ -90,14 +90,8 @@ async def orders(
             else:
                 completed.append(False)
         i.completed = all(completed)
-    origin_order_filter.Constants.do_ordering = None
-    origin_order_filter.Constants.exclude = None
-    origin_order_filter.Constants.joins = set()
-    origin_order_filter.Constants.only_exclude = True
-    sales_order_filter.Constants.do_ordering = None
-    sales_order_filter.Constants.exclude = None
-    sales_order_filter.Constants.joins = set()
-    sales_order_filter.Constants.only_exclude = True
+    origin_order_filter.reset_constants()
+    sales_order_filter.reset_constants()
     print(time.time() - time_start)
     return result
 
@@ -155,14 +149,8 @@ async def get_categories(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
-    category_filter.Constants.do_ordering = None
-    category_filter.Constants.exclude = None
-    category_filter.Constants.joins = set()
-    category_filter.Constants.only_exclude = True
-    item_filter.Constants.do_ordering = None
-    item_filter.Constants.exclude = None
-    item_filter.Constants.joins = set()
-    item_filter.Constants.only_exclude = True
+    category_filter.reset_constants()
+    item_filter.reset_constants()
     return result
 
 
@@ -189,14 +177,8 @@ async def get_categories_all(
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
             category.total_capacity = category_total_capacity
-    category_filter.Constants.do_ordering = None
-    category_filter.Constants.exclude = None
-    category_filter.Constants.joins = set()
-    category_filter.Constants.only_exclude = True
-    item_filter.Constants.do_ordering = None
-    item_filter.Constants.exclude = None
-    item_filter.Constants.joins = set()
-    item_filter.Constants.only_exclude = True
+    category_filter.reset_constants()
+    item_filter.reset_constants()
     return result
 
 
@@ -210,10 +192,8 @@ async def get_items(
     time_start = time.time()
     if ordering:
         item_filter.order_by = item_filter.remove_invalid_fields(ordering)
-        print(item_filter.model_dump(exclude_unset=True))
         origin_item_filter.order_by = origin_item_filter.remove_invalid_fields(ordering)
     filtering_items = await ItemsService(list_filter=item_filter).get_filtering_origin_items_autoids()
-    print('filtering_items', filtering_items)
     extra_ordering = None
     ordering_items = None
     if filtering_items:
@@ -248,14 +228,8 @@ async def get_items(
             origin_item.completed = item.completed
         if item := items_data.get(origin_item.autoid):
             origin_item.item = item
-    origin_item_filter.Constants.do_ordering = None
-    origin_item_filter.Constants.exclude = None
-    origin_item_filter.Constants.joins = set()
-    origin_item_filter.Constants.only_exclude = True
-    item_filter.Constants.do_ordering = None
-    item_filter.Constants.exclude = None
-    item_filter.Constants.only_exclude = True
-    item_filter.Constants.joins = set()
+    origin_item_filter.reset_constants()
+    item_filter.reset_constants()
     print(time.time() - time_start)
     return result
 
