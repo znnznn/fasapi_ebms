@@ -259,3 +259,9 @@ class RenameFieldFilter(Filter):
                 symbol = '-'
             return symbol + field
         return [get_field(term) for term in fields if term_valid(term)]
+
+    def reset_constants(self):
+        self.Constants.do_ordering = None
+        self.Constants.exclude = None
+        self.Constants.joins = set()
+        self.Constants.only_exclude = True
