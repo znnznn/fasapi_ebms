@@ -12,12 +12,21 @@ interface Props<TData> {
 }
 export function Statuses<TData>({ table, page }: Props<TData>) {
     const dispatch = useAppDispatch()
-    const onValueChange = (tab: string) => dispatch(setScheduled(Boolean(tab)))
+    const onValueChange = (tab: string) => dispatch(setScheduled(tab))
 
     const category = useAppSelector(selectCategory)
     const scheduled = useAppSelector((state) => state.orders.scheduled)
 
-    const defaultValue = scheduled ? 'scheduled' : ''
+    const getDefaultValue = () => {
+        switch (scheduled) {
+            case 'false':
+                return 'unscheduled'
+            case 'true':
+                return 'scheduled'
+            default:
+                return 'all'
+        }
+    }
 
     return (
         <div className='flex items-start justify-between flex-wrap gap-5 w-full py-2 border-t border-t-input'>
@@ -25,9 +34,10 @@ export function Statuses<TData>({ table, page }: Props<TData>) {
                 <Tabs
                     key={category}
                     onValueChange={onValueChange}
-                    defaultValue={defaultValue}>
+                    defaultValue={getDefaultValue()}>
                     <TabsList className='bg-secondary'>
-                        <TabsTrigger value=''>Unscheduled</TabsTrigger>
+                        <TabsTrigger value='all'>All</TabsTrigger>
+                        <TabsTrigger value='unscheduled'>Unscheduled</TabsTrigger>
                         <TabsTrigger value='scheduled'>Scheduled</TabsTrigger>
                     </TabsList>
                 </Tabs>

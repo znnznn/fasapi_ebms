@@ -38,7 +38,7 @@ export const columns: ColumnDef<OrdersData>[] = [
         },
         cell: ({ row }) => (
             <Checkbox
-                className='!ml-2'
+                className='!ml-2 mt-[3px]'
                 checked={row.getIsSelected()}
                 value={row.original.id}
                 onCheckedChange={(value) => {

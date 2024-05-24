@@ -13,7 +13,7 @@ interface State {
     isOrderCompleted: boolean
     category: string | undefined
     groupedView: boolean
-    scheduled: boolean
+    scheduled: string | undefined
     overdue: boolean
     date: string
     searchTerm: string
@@ -27,7 +27,7 @@ const initialState: State = {
     groupedView: true,
     category: '',
     overdue: false,
-    scheduled: false,
+    scheduled: undefined,
     date: '',
     searchTerm: '',
     flowsData: [],
@@ -58,8 +58,18 @@ export const ordersSlice = createSlice({
         setSearch(state, action: PayloadAction<string>) {
             state.searchTerm = action.payload
         },
-        setScheduled(state, action: PayloadAction<boolean>) {
-            state.scheduled = action.payload
+        setScheduled(state, action: PayloadAction<string>) {
+            switch (action.payload) {
+                case 'scheduled':
+                    state.scheduled = 'true'
+                    break
+                case 'unscheduled':
+                    state.scheduled = 'false'
+                    break
+                default:
+                    state.scheduled = undefined
+                    break
+            }
         },
         setDate(state, action: PayloadAction<string>) {
             state.date = action.payload
