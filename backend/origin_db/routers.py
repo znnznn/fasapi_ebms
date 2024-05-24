@@ -271,7 +271,7 @@ async def partial_update_item(
     ebms_api_client = ArinvClient()
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.json())
+        raise HTTPException(status_code=response.status_code, detail=response.text)
     return {"message": response.json()}
 
 

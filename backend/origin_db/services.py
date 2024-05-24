@@ -161,7 +161,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
                 self.model.inven != '',
                 Arinv.status == 'U'
             ),
-        ).join(Arinvdet.order).options(
+        ).join(Arinvdet.order).join(Arinvdet.rel_inventry).options(
             selectinload(self.model.rel_inventry),
             selectinload(self.model.order),
         ).group_by(
@@ -221,14 +221,14 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         query = select(
             self.model,
             select(
-                func.count(Arinvdet.doc_aid).label('count_items')
-            ).where(
+                func.count(Arinvdet.doc_aid).label('count_items'),
+            ).join(Inventry).where(
                 Arinvdet.doc_aid == self.model.autoid,
                 Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
                 # Arinvdet.category != None,
-                Arinvdet.category != '',
-                Arinvdet.category != 'Vents',
-                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                # Arinvdet.category != '',
+                # Arinvdet.category != 'Vents',
+                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 Arinvdet.par_time == '',
                 Arinvdet.inven != None,
                 Arinvdet.inven != '',
@@ -240,23 +240,23 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
                 self.model.status == 'U',
             )
-        ).join(
-            # sbq, sbq.doc_aid == self.model.autoid
-            Arinvdet, and_(
-                Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                # Arinvdet.category != None,
-                Arinvdet.category != '',
-                Arinvdet.category != 'Vents',
-                # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-                Arinvdet.par_time == '',
-                Arinvdet.inven != None,
-                Arinvdet.inven != '',
-            )
-        ).join(
-            Inventry
-        ).options(
+        # ).join(
+        #     # sbq, sbq.doc_aid == self.model.autoid
+        #     Arinvdet, and_(
+        #         Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+        #         Arinvdet.category != None,
+        #         Arinvdet.category != '',
+        #         Arinvdet.category != 'Vents',
+        #         # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+        #         Arinvdet.par_time == '',
+        #         Arinvdet.inven != None,
+        #         Arinvdet.inven != '',
+        #     )
+        # ).join(
+        #     Inventry
+        # ).options(
             # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
-            selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
+            # selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
             self.model,
         )
