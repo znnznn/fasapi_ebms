@@ -313,7 +313,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
         async with AsyncSession(get_ebms_engine()) as session:
-            count = await session.execute(text(self.to_sql(select(func.count('*')).select_from(self.get_query().subquery()))))
+            count = await session.execute(text(self.to_sql(self.get_query_for_count(**kwargs))))
             count = count.scalar()
             data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
             data_all = data.all()
