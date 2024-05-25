@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query
 from starlette import status
 from starlette.exceptions import HTTPException
@@ -14,8 +13,8 @@ from starlette.responses import JSONResponse, Response
 
 from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
-from database import get_async_session, get_default_engine
-from origin_db.models import Inprodtype, Arinv, Arinvdet, Inventry
+from database import default_session_maker
+from origin_db.models import Inprodtype, Arinv, Arinvdet
 from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService, CategoryService
 from profiles.models import CompanyProfile
 from stages.models import Flow, Capacity, Stage, Comment, Item, SalesOrder, UsedStage
@@ -37,7 +36,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def add_all(self, instances: Iterable[object], doing='update') -> None:
         try:
-            async with AsyncSession(get_default_engine()) as session:
+            async with default_session_maker() as session:
                 session.add_all(instances)
                 await session.commit()
         except IntegrityError as e:
@@ -58,7 +57,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return instance, input_obj
 
     async def validate_production_date(self, production_date: date):
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             company_working_weekend = await session.scalars(select(CompanyProfile))
             company_working_weekend = company_working_weekend.first()
         company_working_weekend = company_working_weekend.working_weekend if company_working_weekend else False
@@ -90,11 +89,11 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         return result
 
     async def count_query_objs(self, query) -> int:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             return await session.scalar(select(func.count()).select_from(query.subquery()))
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             count = await session.scalar(select(func.count()).select_from(self.get_query().subquery()))
             objs: ScalarResult[OriginModelType] = await session.scalars(self.get_query(limit=limit, offset=offset, **kwargs))
             return {
@@ -104,7 +103,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def get(self, id: int) -> Optional[ModelType]:
         stmt = self.get_query().where(self.model.id == id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             result = await session.scalars(stmt)
             try:
                 return result.one()
@@ -112,12 +111,12 @@ class BaseService(Generic[ModelType, InputSchemaType]):
                 raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
 
     async def list(self, **kwargs: Optional[dict]) -> Sequence[OriginModelType]:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs: ScalarResult[OriginModelType] = await session.scalars(self.get_query(**kwargs))
             return objs.all()
 
     async def get_filtering_origin_items_autoids(self) -> Sequence[str] | None:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if self.filter and self.filter.is_filtering_values:
                 query = self.filter.filter(select(self.model.origin_item))
                 objs: ScalarResult[str] = await session.scalars(query)
@@ -125,7 +124,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
             return None
 
     async def get_filtering_origin_orders_autoids(self, **kwargs) -> Sequence[str] | None:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if self.filter and self.filter.is_filtering_values:
                 query = self.filter.filter(select(self.model.order), **kwargs)
                 objs: ScalarResult[str] = await session.scalars(query)
@@ -136,7 +135,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         obj = await self.root_validator(obj)
         try:
             stmt = self.model(**obj.model_dump(exclude_none=True, exclude_unset=True))
-            async with AsyncSession(get_default_engine()) as session:
+            async with default_session_maker() as session:
                 session.add(stmt)
                 await session.commit()
                 await session.refresh(stmt)
@@ -147,7 +146,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
     async def update(self, id: int, obj: InputSchemaType) -> Optional[ModelType]:
         obj = await self.root_validator(obj)
         stmt = select(self.model).where(self.model.id == id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             instance = await session.scalar(stmt)
             if not instance:
                 raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
@@ -166,7 +165,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
         baseschema = type('BaseModel', (), obj)
         await self.root_validator(baseschema)
         stmt = select(self.model).where(self.model.id == id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             instance = await session.scalar(stmt)
             if not instance:
                 raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
@@ -184,7 +183,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def delete(self, id: int) -> None | Response:
         stmt = select(self.model).where(self.model.id == id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             instance = await session.scalar(stmt)
             if not instance:
                 raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {id} not found")
@@ -217,7 +216,7 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         return query
 
     async def create(self, obj: InputSchemaType) -> Optional[ModelType]:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if getattr(obj, "position", None):
                 stmt = update(Flow).where(Flow.position >= obj.position).values(position=Flow.position + 1)
                 await session.execute(stmt)
@@ -245,12 +244,12 @@ class FlowsService(BaseService[Flow, FlowSchemaIn]):
         if self.filter:
             stmt = self.filter.filter(stmt, **kwargs)
             stmt = stmt.order_by(self.model.id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs: ScalarResult[ModelType] = await session.scalars(stmt)
             return objs.all()
 
     async def group_by_category(self) -> dict:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             flows = await session.execute(
                 select(
                     func.count(Flow.category_autoid).cast(Integer).label("flow_count"), Flow.category_autoid
@@ -267,7 +266,7 @@ class StagesService(BaseService[Stage, StageSchemaIn]):
         super().__init__(model=model, list_filter=list_filter)
 
     async def create(self, obj: InputSchemaType) -> ModelType:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if getattr(obj, "flow_id", None):
                 obj.position = 1
                 stages = update(Stage).where(Stage.flow_id == obj.flow_id, Stage.position >= obj.position).values(position=Stage.position + 1)
@@ -275,7 +274,7 @@ class StagesService(BaseService[Stage, StageSchemaIn]):
             return await super().create(obj)
 
     async def validate_instance(self, instance: ModelType, input_obj: InputSchemaType) -> tuple[ModelType, InputSchemaType]:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if getattr(input_obj, "position", None) and instance.flow_id:
                 if instance.position < input_obj.position:
                     stages = update(Stage).where(
@@ -306,7 +305,7 @@ class CommentsService(BaseService[Comment, CommentSchemaIn]):
         super().__init__(model=model, list_filter=list_filter)
 
     async def create(self, obj: CommentSchemaIn) -> ModelType:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             obj_data = obj.model_dump(exclude_none=True, exclude_unset=True)
             origin_item = await self.validate_autoid(obj.item_id, Arinvdet)
 
@@ -354,7 +353,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         return await self.add_used_stages(instance)
 
     async def validate_instance(self, instance: Item, input_obj: ItemSchemaIn) -> tuple[Item, ItemSchemaIn]:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if stage_id := getattr(input_obj, "stage_id", None):
                 stmt = select(Stage).where(Stage.id == stage_id, Stage.flow_id == instance.flow_id)
                 stage = await session.scalar(stmt)
@@ -393,7 +392,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         object_data = obj.model_dump(exclude_unset=True)
         if production_date := object_data.get("production_date"):
             await self.validate_production_date(production_date)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             origin_items = set(object_data.pop("origin_items", []))
             category = None
             if flow_id := object_data.get("flow_id"):
@@ -459,7 +458,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         return obj
 
     async def get_autoid_by_production_date(self, production_date: date | None):
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             stmt = select(self.model.origin_item).where(and_(func.date(self.model.production_date) == production_date))
             objs = await session.scalars(stmt)
             return objs.all()
@@ -474,7 +473,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
                 func.date(self.model.production_date) <= datetime.strptime(max_date, "%Y-%m-%d")
             )
         )
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs = await session.scalars(stmt)
             result = objs.all()
             return result
@@ -491,7 +490,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             self.model.origin_item,
             subq,
         ).where(self.model.origin_item.in_(autoids)).join(Stage).group_by(self.model.origin_item, self.model.production_date, Stage.name)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs = await session.execute(stmt)
             return objs.all()
 
@@ -523,12 +522,12 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
         #     self.model.order,
         #     subq,
         # ).where(self.model.order.in_(autoids)).join(Stage).group_by(self.model.order, self.model.production_date, Stage.name)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs = await session.execute(stmt)
             return objs.all()
 
     async def get_orders_autoids_by_origin_items(self, autoids: list[str]):
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             stmt = select(self.model.order).where(self.model.origin_item.in_(autoids))
             objs = await session.scalars(stmt)
             return objs.all()
@@ -539,7 +538,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             selectinload(self.model.comments),
             selectinload(self.model.flow).selectinload(Flow.stages).selectinload(Stage.used_stages),
         )
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs = await session.scalars(stmt)
             return objs.all()
 
@@ -549,18 +548,18 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             selectinload(self.model.comments),
             selectinload(self.model.flow).selectinload(Flow.stages).selectinload(Stage.used_stages),
         )
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs = await session.scalars(stmt)
             return objs.all()
 
     async def list(self, **kwargs: Optional[dict]) -> Sequence[ModelType]:
         stmt = self.get_query(**kwargs)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             objs: ScalarResult[ModelType] = await session.scalars(stmt)
             return objs.all()
 
     async def get_filtering_origin_items_autoids(self, do_ordering: bool = False, **kwargs) -> Sequence[str] | None:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if self.filter and self.filter.is_filtering_values:
                 query = self.filter.filter(select(self.model.origin_item).where(self.model.origin_item != None), **kwargs)
                 query = self.filter.sort(query, **kwargs)
@@ -573,7 +572,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
             return None
 
     async def get_filtering_origin_orders_autoids(self, do_ordering: bool = False) -> Sequence[str] | None:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if self.filter and self.filter.is_filtering_values:
                 query = self.filter.filter(select(self.model.order).where(self.model.order != None))
                 query = self.filter.sort(query)
@@ -588,7 +587,7 @@ class ItemsService(BaseService[Item, ItemSchemaIn]):
     async def delete_used_stages(self, id: int) -> dict:
         instance = await self.get(id)
         stmt = delete(UsedStage).where(UsedStage.item_id == id, UsedStage.stage_id != instance.stage_id)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             await session.execute(stmt)
             await session.commit()
         return {"message": "success"}
@@ -605,7 +604,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         object_data = objs.model_dump(exclude_unset=True)
         if production_date := object_data.get("production_date"):
             await self.validate_production_date(production_date)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             origin_orders = set(object_data.pop("origin_orders", []))
             sales_orders = await session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
             origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
@@ -623,7 +622,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         return objs
 
     async def list_by_orders(self, autoids: list[str]):
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             stmt = select(self.model).where(self.model.order.in_(autoids))
             objs = await session.scalars(stmt)
             return objs.all()
@@ -637,7 +636,7 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         #     )
         # ).join(Stage)
         query = select(self.model.order)
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             if not do_ordering and self.filter and self.filter.is_filtering_values:
                 query = self.filter.filter(query, **kwargs)
                 query = self.filter.sort(query, **kwargs)

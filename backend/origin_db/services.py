@@ -46,13 +46,19 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
             query = query.offset(offset)
         return query
 
+    def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
+        query = select(func.count('*')).select_from(self.get_query().subquery())
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+        return query
+
     async def get_object_or_404(self, autoid: str) -> OriginModelType:
         obj = await self.get(autoid)
         return obj
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
         async with AsyncSession(ebms_engine) as session:
-            count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
+            count = await session.execute(text(self.to_sql(self.get_query_for_count(**kwargs))))
             data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
         time_start = time.time()
         data_all = data.all()
@@ -142,6 +148,23 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     ):
         super().__init__(model=model, list_filter=list_filter)
 
+    def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
+        query = select(
+            func.count('*').label('count'),
+        ).where(
+            and_(
+                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+                self.model.par_time == '',
+                self.model.inven != None,
+                self.model.inven != '',
+                Arinv.status == 'U'
+            ),
+        ).join(Arinvdet.order).join(Arinvdet.rel_inventry)
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+        return query
+
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
@@ -206,6 +229,19 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, list_filter=list_filter)
+
+    def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
+        query = select(
+            func.count('*').label('count'),
+        ).where(
+            and_(
+                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
+                self.model.status == 'U',
+            )
+        )
+        if self.filter:
+            query = self.filter.filter(query, **kwargs)
+        return query
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         # stmt = select(Arinvdet).where(and_(
@@ -277,7 +313,7 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
         async with AsyncSession(get_ebms_engine()) as session:
-            count = await session.execute(text(self.to_sql(select(func.count()).select_from(self.get_query().subquery()))))
+            count = await session.execute(text(self.to_sql(select(func.count('*')).select_from(self.get_query().subquery()))))
             count = count.scalar()
             data = await session.execute(text(self.to_sql(self.get_query(limit=limit, offset=offset, **kwargs))))
             data_all = data.all()
