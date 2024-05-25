@@ -168,27 +168,25 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
-            select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer'),
-            select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('category'),
-            select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('profile'),
-            select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color'),
-            select(Arinv.status).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('order_status'),
+            Inventry.prod_type.label('category'),
+            Inventry.rol_profil.label('profile'),
+            Inventry.rol_color.label('color'),
+            Arinv.name.label('customer'),
+            Arinv.status.label('order_status'),
         ).where(
             and_(
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
                 Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 self.model.par_time == '',
-                # self.model.category != '',
-                # self.model.category != 'Vents',
                 self.model.inven != None,
                 self.model.inven != '',
                 Arinv.status == 'U'
             ),
-        ).join(Arinvdet.order).join(Arinvdet.rel_inventry).options(
+        ).join(Arinv, Arinvdet.doc_aid == Arinv.autoid).join(Inventry, Arinvdet.inven == Inventry.id).options(
             selectinload(self.model.rel_inventry),
             selectinload(self.model.order),
         ).group_by(
-            self.model,
+            self.model, Inventry.prod_type, Inventry.rol_profil, Inventry.rol_color, Arinv.name, Arinv.status
         )
         if self.filter:
             query = self.filter.filter(query, **kwargs)
@@ -244,26 +242,13 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         return query
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
-        # stmt = select(Arinvdet).where(and_(
-        #         Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-        #         # Arinvdet.category != None,
-        #         Arinvdet.category != '',
-        #         Arinvdet.category != 'Vents',
-        #         # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-        #         Arinvdet.par_time == '',
-        #         Arinvdet.inven != None,
-        #         Arinvdet.inven != '',)
-        # ).subquery('details')
         query = select(
             self.model,
             select(
                 func.count(Arinvdet.doc_aid).label('count_items'),
-            ).join(Inventry).where(
+            ).join(Inventry, Arinvdet.inven == Inventry.id).where(
                 Arinvdet.doc_aid == self.model.autoid,
                 Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                # Arinvdet.category != None,
-                # Arinvdet.category != '',
-                # Arinvdet.category != 'Vents',
                 Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
                 Arinvdet.par_time == '',
                 Arinvdet.inven != None,
@@ -276,27 +261,9 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
                 self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
                 self.model.status == 'U',
             )
-        # ).join(
-        #     # sbq, sbq.doc_aid == self.model.autoid
-        #     Arinvdet, and_(
-        #         Arinvdet.doc_aid == self.model.autoid, Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-        #         Arinvdet.category != None,
-        #         Arinvdet.category != '',
-        #         Arinvdet.category != 'Vents',
-        #         # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-        #         Arinvdet.par_time == '',
-        #         Arinvdet.inven != None,
-        #         Arinvdet.inven != '',
-        #     )
-        # ).join(
-        #     Inventry
-        # ).options(
-            # contains_eager(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
-            # selectinload(Arinv.details).options(selectinload(Arinvdet.rel_inventry), selectinload(Arinvdet.order)),
         ).group_by(
             self.model,
         )
-        # print(query.compile(compile_kwargs={"literal_binds": True}))
         if self.filter:
             query = self.filter.filter(query, **kwargs)
             query = self.filter.sort(query, **kwargs)
