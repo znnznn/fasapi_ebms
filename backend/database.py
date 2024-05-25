@@ -33,12 +33,9 @@ ebms_engine = create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Dr
 
 default_engine = create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
         Default_DB.DB_USER, Default_DB.DB_PASS, Default_DB.DB_HOST, Default_DB.DB_PORT, Default_DB.DB_NAME),
-        pool_size=70, max_overflow=30, pool_pre_ping=True,
-        connect_args={"server_settings": {"jit": "off"}},
+        pool_size=70, max_overflow=30, pool_pre_ping=True, pool_recycle=600
     )
 
-
-default_engine.connect()
 ebms_engine.connect()
 
 ebms_session_maker = async_sessionmaker(bind=ebms_engine, expire_on_commit=False, autoflush=False, autocommit=False)

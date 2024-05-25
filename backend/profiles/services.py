@@ -3,12 +3,11 @@ from typing import Type, Sequence
 from fastapi import Depends, HTTPException
 from sqlalchemy import select, Select, ScalarResult, delete
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import JSONResponse, Response
 
 from common.constants import ModelType, InputSchemaType
-from database import get_async_session, get_default_engine
+from database import default_session_maker
 from profiles.models import CompanyProfile, UserProfile
 from profiles.schemas import CompanyProfileSchema, UserProfileSchema, UserProfileCreateSchema
 from stages.services import BaseService
@@ -19,7 +18,7 @@ class CompanyProfileService(BaseService[CompanyProfile, CompanyProfileSchema]):
         super().__init__(model=model)
 
     async def get(self, id: int = None) -> CompanyProfile:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             stmt = select(self.model)
             company_profile = await session.scalars(stmt)
             company_profile = company_profile.first()
@@ -45,7 +44,7 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         return query
 
     async def list(self, user_id: int = None, limit: int = None, offset: int = None) -> ScalarResult[ModelType]:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             query = self.get_query(limit=limit, offset=offset, user_id=user_id)
             result = await session.scalars(query)
             return result
@@ -59,7 +58,7 @@ class UserProfileService(BaseService[UserProfile, UserProfileSchema]):
         return await super().create(obj)
 
     async def delete(self, id: int) -> None | Response:
-        async with AsyncSession(get_default_engine()) as session:
+        async with default_session_maker() as session:
             stmt = delete(self.model).where(self.model.creator == id)
             await session.execute(stmt)
             await session.commit()
