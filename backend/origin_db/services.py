@@ -347,7 +347,7 @@ class InventryService(BaseService[Inventry, InventrySchema]):
             self.model.prod_type
         )
         async with AsyncSession(ebms_engine) as session:
-            return await session.execute(stmt)
+            return await session.execute(text(self.to_sql(stmt)))
 
     async def count_capacity_by_days(self, items_data: dict, list_categories = None) -> Sequence[Result]:
         """  Return total capacity for an inventory group by prod type with count arinv"""
@@ -358,7 +358,7 @@ class InventryService(BaseService[Inventry, InventrySchema]):
         list_subqueries = []
         for production_date, autoids in compair_data.items():
             stmt = select(
-                self.model.prod_type,
+                self.model.prod_type.label('prod_type'),
                 literal(production_date).label("production_date"),
                 func.count(Arinvdet.doc_aid).label("count_orders"),
                 func.sum(case(
@@ -382,6 +382,6 @@ class InventryService(BaseService[Inventry, InventrySchema]):
             list_subqueries_alias.c.count_orders,
         )
         async with AsyncSession(ebms_engine) as session:
-            objs = await session.execute(stmt)
-            result = objs.all()
-            return result
+            objs = await session.execute(text(self.to_sql(stmt)))
+            result = objs.mappings()
+            return result.all()
