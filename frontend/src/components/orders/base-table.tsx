@@ -67,9 +67,10 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
     }
 
     const category = useAppSelector(selectCategory)
+    const scheduled = useAppSelector((state) => state.orders.scheduled)
     useEffect(() => {
         table.setRowSelection({})
-    }, [category])
+    }, [category, scheduled])
 
     return (
         <div className='rounded-md'>
