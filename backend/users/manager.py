@@ -42,7 +42,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 validated_update_dict[field] = value
         return await self.user_db.update(user, validated_update_dict)
 
-
     async def get_forgot_password_token(self, user):
         token_data = {
             "sub": str(user.id),

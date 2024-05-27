@@ -68,7 +68,7 @@ async def get_default_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+async def get_user_db(session: AsyncSession = Depends(get_default_session)):
     yield UserService(session, User)
 
 

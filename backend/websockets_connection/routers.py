@@ -18,7 +18,7 @@ async def websocket_endpoint_order(websocket: WebSocket, user: User = Depends(ge
             await websocket.send_text(f"Message text was: {data}")
     except (WebSocketException, WebSocketDisconnect):
         await connection_manager.disconnect(websocket, "orders")
-        return
+        return {"message": "Connection for orders closed"}
 
 
 @router.websocket("/items/")
@@ -30,7 +30,7 @@ async def websocket_endpoint_items(websocket: WebSocket, user: User = Depends(ge
             await websocket.send_text(f"Message text was: {data}")
     except (WebSocketException, WebSocketDisconnect):
         await connection_manager.disconnect(websocket, "items")
-        return
+        return {"message": "Connection for items closed"}
 
 
 @router.websocket("/calendar/{category_name}/{year}/{month}/")
@@ -46,4 +46,4 @@ async def websocket_endpoint_calendar(
             await websocket.send_text(f"Message text was: {data}")
     except (WebSocketException, WebSocketDisconnect):
         await connection_manager.disconnect(websocket, f'calendar-{category_name}-{year}-{month}')
-        return
+        return {"message": "Connection for calendar closed"}

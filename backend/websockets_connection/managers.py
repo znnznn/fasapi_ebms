@@ -164,7 +164,7 @@ class ConnectionManager:
                     subscribe = message["channel"].decode("utf-8")
                     await self._consume_events(subscribe=subscribe, message=data)
         except Exception as exc:
-            print("error")
+            print("pubsub_data_reader error")
             print(exc)
 
     async def _subscribe_and_listen_to_channel(self, subscribe: str):
@@ -196,10 +196,11 @@ class ConnectionManager:
                     await self._send_message_to_ws_connection(
                         message=message,
                         ws_connection=connection,
+                        subscribe=subscribe,
                     )
                 except Exception as exc:
-                    print("error")
-                    print(exc)
+                    print("consume_events error")
+                    print("error", exc)
                     await self.disconnect(websocket=connection, subscribe=subscribe)
 
     async def send_message_to_room(self, subscribe: str, message: dict):
@@ -213,13 +214,13 @@ class ConnectionManager:
         await self.pubsub_client.publish(subscribe, message)
 
     async def _send_message_to_ws_connection(
-            self, message: dict, ws_connection: WebSocket
+            self, message: dict, ws_connection: WebSocket, subscribe: str
     ):
         if ws_connection.client_state == WebSocketState.CONNECTED and ws_connection.application_state == WebSocketState.CONNECTED:
             await ws_connection.send_json(data=message)
         else:
             print("Connection not available")
-            await self.disconnect(websocket=ws_connection, subscribe="orders")
+            await self.disconnect(websocket=ws_connection, subscribe=subscribe)
 
 
 connection_manager = ConnectionManager()
