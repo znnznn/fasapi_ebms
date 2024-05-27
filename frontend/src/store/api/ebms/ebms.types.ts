@@ -162,7 +162,7 @@ export interface OrdersQueryParams extends BaseQueryParams {
     invoice: number
     name: string
     date: string
-    is_scheduled: boolean
+    is_scheduled: string | undefined
     created_at: string
     categories: string
     over_due: boolean
@@ -195,7 +195,7 @@ export interface EBMSItemsQueryParams extends BaseQueryParams {
     heightd: number
     ship_date: string
     order: string
-    is_scheduled: boolean
+    is_scheduled: string | undefined
     category: string
     production_date: string
     has_comment: boolean
