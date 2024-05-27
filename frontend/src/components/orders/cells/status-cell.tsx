@@ -13,12 +13,6 @@ import {
     SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger
-} from '@/components/ui/tooltip'
 import { useLazyGetOrderQuery } from '@/store/api/ebms/ebms'
 import type { Item } from '@/store/api/ebms/ebms.types'
 import {
@@ -29,7 +23,6 @@ import {
 import type { ItemsPatchData } from '@/store/api/items/items.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
-import { trunc } from '@/utils/trunc'
 
 interface Props {
     item: Item | null
@@ -218,11 +211,11 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             onValueChange={onValueChange}
             defaultValue={defaultStatus}
             value={defaultStatus}
-            disabled={isDisabled}
-            // key={flowId}
-        >
-            <SelectTrigger className='!w-40 [&>span]:block [&>span]:w-full [&>span]:pr-2.5'>
-                <SelectValue placeholder='Select status' />
+            disabled={isDisabled}>
+            <SelectTrigger className='!w-48'>
+                <span className='truncate block w-full text-left'>
+                    <SelectValue placeholder='Select status' />
+                </span>
             </SelectTrigger>
             <SelectContent>
                 {statuses?.map((status) => {
@@ -231,33 +224,20 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                         <SelectItem
                             style={{
                                 backgroundColor: wasSelected
-                                    ? hexToRGBA(status.color, 10)
+                                    ? hexToRGBA(status.color, 20)
                                     : ''
                             }}
                             className='first:mt-0 !block mt-1 hover:!bg-accent transition-all duration-150 ease-in-out'
                             key={status.id}
                             value={String(status.id)}>
-                            <div className='flex items-center justify-between gap-x-1.5'>
+                            <div className='flex items-center justify-between gap-x-1.5 -mt-0.5'>
                                 <div className='flex items-center justify-between gap-x-1.5'>
                                     <div
                                         className='w-3 h-3 rounded-sm'
                                         style={{
                                             backgroundColor: status.color
                                         }}></div>
-                                    {status.name.length > 11 ? (
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <span> {trunc(status.name, 11)}</span>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{status.name}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    ) : (
-                                        <span>{status.name}</span>
-                                    )}
+                                    {status.name}
                                 </div>
                                 {wasSelected ? (
                                     <div className='w-1 h-1 rounded-full bg-foreground pl-1'></div>
@@ -266,6 +246,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                         </SelectItem>
                     )
                 })}
+
                 <Separator className='my-1' />
 
                 <Button

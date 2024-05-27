@@ -55,7 +55,7 @@ export const subColumns: ColumnDef<OriginItems>[] = [
     {
         accessorKey: 'status',
         sortingFn: statusFn,
-        header: ({ column }) => createHeader('Status', column, '!w-40'),
+        header: ({ column }) => createHeader('Status', column, '!w-48'),
         cell: ({ row }) => (
             <StatusCell
                 key={row?.original?.id}

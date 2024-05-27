@@ -1,5 +1,6 @@
 import { Skeleton } from '@radix-ui/themes'
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
+import { useEffect } from 'react'
 
 import {
     Table,
@@ -19,6 +20,7 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { useColumnDragDrop } from '@/hooks/use-column-controls'
 import type { OrdersData } from '@/store/api/ebms/ebms.types'
 import { useAddUsersProfilesMutation } from '@/store/api/profiles/profiles'
+import { useAppSelector } from '@/store/hooks/hooks'
 import { stopEvent } from '@/utils/stop-events'
 
 interface Props {
@@ -33,6 +35,12 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
     const { onDragStart, onDrop } = useColumnDragDrop(table, 'orders', addUsersProfiles)
 
     const colSpan = columns.length + 1
+
+    const scheduled = useAppSelector((state) => state.orders.scheduled)
+
+    useEffect(() => {
+        table.setRowSelection({})
+    }, [scheduled])
 
     return (
         <div className='rounded-md'>

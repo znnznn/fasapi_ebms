@@ -2,6 +2,8 @@ import type { Table } from '@tanstack/react-table'
 import { ArrowLeft, ArrowRight, SkipBack, SkipForward } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { Toggle } from '../ui/toggle'
+
 import { selectCategory, setGroupedView } from './store/orders'
 import { Button } from '@/components/ui/button'
 import {
@@ -66,22 +68,27 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
     const isPageCount = !table.getPageCount()
 
     const [grouped, setGrouped] = useState(true)
-    const [ungrouped, setUngrouped] = useState(false)
+    // const [ungrouped, setUngrouped] = useState(false)
 
     const category = useAppSelector(selectCategory)
 
+    // const handleSetGrouped = (value: boolean) => {
+    //     setGrouped(value)
+    //     setUngrouped(!value)
+
+    //     dispatch(setGroupedView(value))
+    // }
+
+    // const handleSetUngrouped = (value: boolean) => {
+    //     setUngrouped(value)
+    //     setGrouped(!value)
+
+    //     dispatch(setGroupedView(!value))
+    // }
+
     const handleSetGrouped = (value: boolean) => {
         setGrouped(value)
-        setUngrouped(!value)
-
         dispatch(setGroupedView(value))
-    }
-
-    const handleSetUngrouped = (value: boolean) => {
-        setUngrouped(value)
-        setGrouped(!value)
-
-        dispatch(setGroupedView(!value))
     }
 
     return (
@@ -182,29 +189,37 @@ export function Pagination<TData>({ table, page }: Props<TData>) {
             </DropdownMenu>
 
             {category ? (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant='outline'
-                            className='ml-auto'>
-                            View
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                        <DropdownMenuCheckboxItem
-                            className='capitalize'
-                            checked={grouped}
-                            onCheckedChange={handleSetGrouped}>
-                            Grouped
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                            className='capitalize'
-                            checked={ungrouped}
-                            onCheckedChange={handleSetUngrouped}>
-                            Ungrouped
-                        </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                // <DropdownMenu>
+                //     <DropdownMenuTrigger asChild>
+                //         <Button
+                //             variant='outline'
+                //             className='ml-auto'>
+                //             View
+                //         </Button>
+                //     </DropdownMenuTrigger>
+                //     <DropdownMenuContent align='end'>
+                //         <DropdownMenuCheckboxItem
+                //             className='capitalize'
+                //             checked={grouped}
+                //             onCheckedChange={handleSetGrouped}>
+                //             Grouped
+                //         </DropdownMenuCheckboxItem>
+                //         <DropdownMenuCheckboxItem
+                //             className='capitalize'
+                //             checked={ungrouped}
+                //             onCheckedChange={handleSetUngrouped}>
+                //             Ungrouped
+                //         </DropdownMenuCheckboxItem>
+                //     </DropdownMenuContent>
+                // </DropdownMenu>
+                <Toggle
+                    pressed={grouped}
+                    onPressedChange={handleSetGrouped}
+                    className='data-[state=on]:bg-background data-[state=on]:border-primary data-[state=on]:text-primary data=[state=on]:border'
+                    variant='outline'
+                    aria-label='Toggle grouped'>
+                    Grouped
+                </Toggle>
             ) : (
                 ''
             )}

@@ -71,7 +71,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'status',
-        header: ({ column }) => createHeader('Status', column, '!w-40'),
+        header: ({ column }) => createHeader('Status', column, '!w-48'),
         cell: ({ row }) => {
             return (
                 <StatusCell
