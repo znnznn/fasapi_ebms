@@ -132,12 +132,16 @@ async def get_categories(
         item_filter: ItemFilter = FilterDepends(ItemFilter),
         user: User = Depends(active_user_with_permission),
 ):
+    start_time = time.time()
     result = await CategoryService(list_filter=category_filter).paginated_list(limit=limit, offset=offset)
+    print('connected to ebms', time.time() - start_time)
     flows_data = await FlowsService().group_by_category()
     item_ids = await ItemsService().get_autoid_by_production_date(production_date=item_filter.production_date)
     item_ids = item_ids if item_ids else ["-1"]
     capacities = await CapacitiesService().list()
+    print('connected to postgres', time.time() - start_time)
     total_capacity = await InventryService().count_capacity(autoids=item_ids)
+    print('connected to inventry', time.time() - start_time)
     total_capacity = {i.prod_type: i.total_capacity for i in total_capacity}
     capacities_data = {c.category_autoid: c for c in capacities}
     for category in result["results"]:
@@ -146,9 +150,10 @@ async def get_categories(
         category.capacity = capacity.per_day if capacity else None
         category.capacity_id = capacity.id if capacity else None
         if category_total_capacity := total_capacity.get(category.prod_type):
-            category.total_capacity = category_total_capacity
+            category.total_capacity = category_total_capacity if category.capacity_id else None
     category_filter.reset_constants()
     item_filter.reset_constants()
+    print('end ', time.time() - start_time)
     return result
 
 

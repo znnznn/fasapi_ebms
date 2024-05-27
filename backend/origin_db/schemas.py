@@ -23,6 +23,8 @@ class CategorySchema(BaseModel):
     @field_validator('total_capacity')
     @classmethod
     def validate_total_capacity(cls, v: Decimal):
+        if not v:
+            return v
         return round(v, 0)
 
 
