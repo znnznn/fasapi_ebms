@@ -333,7 +333,7 @@ class InventryService(BaseService[Inventry, InventrySchema]):
     async def count_capacity(self, autoids: list[str]) -> Result:
         """  Return total capacity for an inventory group by prod type """
         stmt = select(
-            self.model.prod_type,
+            self.model.prod_type.label("prod_type"),
             func.sum(case(
                 (self.model.prod_type == 'Trim', Arinvdet.demd),
                 (Arinvdet.heightd != 0, ((Arinvdet.heightd / 12) * Arinvdet.quan)),
