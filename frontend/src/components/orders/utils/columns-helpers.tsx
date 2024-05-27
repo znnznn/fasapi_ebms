@@ -20,9 +20,13 @@ export const createHeader = <T, U>(
             className={cn('w-full', className)}
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
             {title}
-            {groupedView && category ? null : (
-                <ArrowUpDown className='ml-2 h-4 w-4 flex-shrink-0' />
-            )}
+
+            <ArrowUpDown
+                className={cn(
+                    'ml-2 h-4 w-4 flex-shrink-0',
+                    groupedView && category ? 'opacity-0' : ''
+                )}
+            />
         </Button>
     )
 }

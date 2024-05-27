@@ -211,11 +211,11 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
             onValueChange={onValueChange}
             defaultValue={defaultStatus}
             value={defaultStatus}
-            disabled={isDisabled}
-            // key={flowId}
-        >
-            <SelectTrigger className='!w-48 [&>span]:block [&>span]:w-full text-left  [&>span]:truncate [&>span]:pr-30'>
-                <SelectValue placeholder='Select status' />
+            disabled={isDisabled}>
+            <SelectTrigger className='!w-48'>
+                <span className='truncate block w-full text-left'>
+                    <SelectValue placeholder='Select status' />
+                </span>
             </SelectTrigger>
             <SelectContent>
                 {statuses?.map((status) => {
@@ -237,7 +237,7 @@ export const StatusCell: React.FC<Props> = ({ item, originOrderId, invoice }) =>
                                         style={{
                                             backgroundColor: status.color
                                         }}></div>
-                                    {status.name + ' ' + status.name}
+                                    {status.name}
                                 </div>
                                 {wasSelected ? (
                                     <div className='w-1 h-1 rounded-full bg-foreground pl-1'></div>
