@@ -135,23 +135,23 @@ class Arinv(Base):
     def count_items(self):
         return self._count_items
 
-    @count_items.expression
-    def count_items(self):
-        return select(
-            func.count(Arinvdet.doc_aid).label('count_items')
-        ).where(
-            Arinvdet.doc_aid == self.autoid,
-            Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
-            # Arinvdet.category != None,
-            Arinvdet.category != '',
-            Arinvdet.category != 'Vents',
-            # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-            Arinvdet.par_time == '',
-            Arinvdet.inven != None,
-            Arinvdet.inven != '',
-        ).correlate_except(
-            Arinvdet
-        ).scalar_subquery()
+    # @count_items.expression
+    # def count_items(self):
+    #     return select(
+    #         func.count(Arinvdet.doc_aid).label('count_items')
+    #     ).where(
+    #         Arinvdet.doc_aid == self.autoid,
+    #         Arinvdet.inv_date >= FILTERING_DATA_STARTING_YEAR,
+    #         # Arinvdet.category != None,
+    #         Arinvdet.category != '',
+    #         Arinvdet.category != 'Vents',
+    #         # Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
+    #         Arinvdet.par_time == '',
+    #         Arinvdet.inven != None,
+    #         Arinvdet.inven != '',
+    #     ).correlate_except(
+    #         Arinvdet
+    #     ).scalar_subquery()
 
     @count_items.setter
     def count_items(self, value):
@@ -288,9 +288,9 @@ class Arinvdet(Base):
     def category(self):
         return self._category
 
-    @category.expression
-    def category(cls):
-        return select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
+    # @category.expression
+    # def category(cls):
+    #     return select(Inventry.prod_type).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('category')
 
     @category.setter
     def category(self, value):
@@ -300,9 +300,9 @@ class Arinvdet(Base):
     def profile(self):
         return self._profile
 
-    @profile.expression
-    def profile(cls):
-        return select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
+    # @profile.expression
+    # def profile(cls):
+    #     return select(Inventry.rol_profil).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery()
 
     @profile.setter
     def profile(self, value):
@@ -316,17 +316,17 @@ class Arinvdet(Base):
     def color(self, value):
         self._color = value
 
-    @color.expression
-    def color(cls):
-        return select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
+    # @color.expression
+    # def color(cls):
+    #     return select(Inventry.rol_color).where(Inventry.id == Arinvdet.inven).correlate_except(Inventry).scalar_subquery().label('color')
 
     @hybrid_property
     def customer(self):
         return self._customer
 
-    @customer.expression
-    def customer(cls):
-        return select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer')
+    # @customer.expression
+    # def customer(cls):
+    #     return select(Arinv.name).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('customer')
 
     @customer.setter
     def customer(self, value):
@@ -336,9 +336,9 @@ class Arinvdet(Base):
     def order_status(self):
         return self._order_status
 
-    @order_status.expression
-    def order_status(cls):
-        return select(Arinv.status).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('order_status')
+    # @order_status.expression
+    # def order_status(cls):
+    #     return select(Arinv.status).where(Arinv.autoid == Arinvdet.doc_aid).correlate_except(Arinv).scalar_subquery().label('order_status')
 
     @order_status.setter
     def order_status(self, value):
