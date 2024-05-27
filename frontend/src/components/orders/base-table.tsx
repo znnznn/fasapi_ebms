@@ -1,5 +1,5 @@
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 
 import { Badge } from '../ui/badge'
 import { Checkbox } from '../ui/checkbox'
@@ -15,6 +15,7 @@ import {
 
 import { columns } from './items-table/columns'
 import { Statuses } from './statuses'
+import { selectCategory } from './store/orders'
 import { TableSkeleton } from './table-skeleton'
 import { groupBy } from './utils/group-by'
 import { useColumnDragDrop } from '@/hooks/use-column-controls'
@@ -64,6 +65,11 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
             })
         }
     }
+
+    const category = useAppSelector(selectCategory)
+    useEffect(() => {
+        table.setRowSelection({})
+    }, [category])
 
     return (
         <div className='rounded-md'>
