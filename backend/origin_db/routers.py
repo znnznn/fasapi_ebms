@@ -3,11 +3,9 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_filter import FilterDepends
 from sqlalchemy import case
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from common.utils import DateValidator
-from database import get_async_session
 from ebms_api.client import ArinvClient
 from origin_db.filters import CategoryFilter, OriginItemFilter, OrderFilter
 from origin_db.models import Arinvdet, Arinv
@@ -98,7 +96,7 @@ async def orders(
 
 @router.get("/orders/{autoid}/", response_model=ArinvRelatedArinvDetSchema)
 async def order_retrieve(
-        autoid: str, session: AsyncSession = Depends(get_async_session),
+        autoid: str,
         user: User = Depends(active_user_with_permission)
 ):
     result = await OriginOrderService().get(autoid=autoid)
