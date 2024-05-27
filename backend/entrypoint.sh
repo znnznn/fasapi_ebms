@@ -31,4 +31,4 @@ echo "Postgres is ready, running the migrations..."
 
 alembic upgrade head
 #uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-gunicorn main:app -w 3 --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker
+gunicorn main:app -w 2 --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker
