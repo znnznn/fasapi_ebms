@@ -32,5 +32,9 @@ async def get_auth_user_by_websocket(
     print(token)
     user = await strategy.read_token(token, user_manager)
     if user is None or not user.is_active:
+        await user_manager.user_db.session.rollback()
+        await user_manager.user_db.session.close()
+        print("Authentication credentials are not valid.")
         raise WebSocketException(status.WS_1002_PROTOCOL_ERROR, "Authentication credentials are not valid.")
+    await user_manager.user_db.session.close()
     return user
