@@ -1,6 +1,6 @@
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi_filter import FilterDepends
 from sqlalchemy import case
 from starlette.responses import JSONResponse
@@ -16,6 +16,7 @@ from origin_db.schemas import (
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
 from stages.filters import ItemFilter, SalesOrderFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
+from stages.utils import send_data_to_ws
 from users.mixins import active_user_with_permission
 from users.models import User
 
@@ -269,12 +270,14 @@ async def get_capacities_calendar(
 async def partial_update_item(
         autoid: str, origin_item: ChangeShipDateSchema,
         user: User = Depends(active_user_with_permission),
+        background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await OriginOrderService().get_object_or_404(autoid=autoid)
     ebms_api_client = ArinvClient()
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
+    background_tasks.add_task(send_data_to_ws, autoid=autoid, subscribe="orders")
     return {"message": response.json()}
 
 
