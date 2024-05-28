@@ -67,7 +67,8 @@ export const OrderDatePicker: React.FC<Props> = ({
                   itemId ? 'updated' : 'added'
               }. Order moved to Scheduled`
 
-        const description = isScheduled ? scheduledDescription : unscheduledDescription
+        const description =
+            isScheduled === 'true' ? scheduledDescription : unscheduledDescription
 
         toast.success(`Order ${orderId}`, { description })
     }

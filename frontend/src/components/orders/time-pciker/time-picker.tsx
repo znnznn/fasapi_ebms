@@ -82,6 +82,7 @@ const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>((props, _) => {
             onChange={onChange}
             value={time}
             granularity='minute'
+            hourCycle={12}
             {...props}
         />
     )

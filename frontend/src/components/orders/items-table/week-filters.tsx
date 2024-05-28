@@ -39,7 +39,7 @@ export const WeekFilters = () => {
     useEffect(() => {
         if (
             (category === 'Rollforming' || category === 'Trim') &&
-            scheduled &&
+            scheduled === 'true' &&
             !overdue
         ) {
             setDefaultDate(currentWeeksDates?.[0].date)
@@ -55,7 +55,7 @@ export const WeekFilters = () => {
     }, [category, scheduled])
 
     useEffect(() => {
-        if (!scheduled) {
+        if (scheduled !== 'true') {
             dispatch(setDate(''))
         } else {
             if (category === 'Rollforming' || category === 'Trim') {
@@ -64,7 +64,7 @@ export const WeekFilters = () => {
         }
     }, [scheduled, defaultDate])
 
-    return (category === 'Rollforming' || category === 'Trim') && scheduled ? (
+    return (category === 'Rollforming' || category === 'Trim') && scheduled === 'true' ? (
         <div className='flex max-[1118px]:w-full items-center gap-y-10 gap-x-1 overflow-x-scroll p-0.5'>
             <ToggleGroup
                 key={defaultDate}
