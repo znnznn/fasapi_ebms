@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi_filter import FilterDepends
@@ -277,6 +278,8 @@ async def partial_update_item(
     response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), {"SHIP_DATE": origin_item.ship_date})
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
+    date = datetime.strptime(origin_item.ship_date, "%m/%d/%Y")
+    await OriginOrderService().update_ship_date(autoid, date)
     background_tasks.add_task(send_data_to_ws, autoid=autoid, subscribe="orders")
     return {"message": response.json()}
 

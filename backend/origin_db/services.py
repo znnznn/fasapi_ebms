@@ -1,11 +1,12 @@
 import time
 from collections import defaultdict
+from datetime import datetime
 from typing import Generic, Type, Optional, List, NamedTuple
 
 import sqlalchemy
 from fastapi import HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
-from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column, Select
+from sqlalchemy import select, ScalarResult, func, and_, case, Result, Sequence, union_all, literal, text, literal_column, Select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query, contains_eager
@@ -274,6 +275,12 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         if offset:
             query = query.offset(offset)
         return query
+
+    async def update_ship_date(self, autoid: str, ship_date: datetime) -> None:
+        stmt = update(self.model).where(self.model.autoid == autoid).values(ship_date=ship_date)
+        async with AsyncSession(ebms_engine) as session:
+            await session.execute(stmt)
+            await session.commit()
 
     async def list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict]) -> dict:
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
