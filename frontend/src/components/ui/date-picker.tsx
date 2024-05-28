@@ -44,7 +44,7 @@ export const DatePicker: React.FC<Props> = ({
     const [patchItem] = usePatchItemMutation()
     const [addItem] = useAddItemMutation()
 
-    const isScheduled = useAppSelector(selectOrders).scheduled
+    const scheduled = useAppSelector(selectOrders).scheduled
     const category = useAppSelector(selectCategory)
 
     const successToast = (date: string | null) => {
@@ -63,7 +63,8 @@ export const DatePicker: React.FC<Props> = ({
             ? dateMessage
             : 'Production date has been updated. Item moved to Scheduled'
 
-        const description = isScheduled ? scheduledDescription : unscheduledDescription
+        const description =
+            scheduled === 'true' ? scheduledDescription : unscheduledDescription
 
         toast.success(`Item ${itemId}`, {
             description: category ? description : dateMessage
@@ -154,7 +155,7 @@ export const DatePicker: React.FC<Props> = ({
                     disabled={disabled}
                     variant={'outline'}
                     className={cn(
-                        'w-40 justify-start text-left font-normal',
+                        '!w-40 justify-start text-left font-normal',
                         !date && 'text-muted-foreground'
                     )}>
                     <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
