@@ -46,6 +46,7 @@ export const OrderDatePicker: React.FC<Props> = ({
     const close = () => setOpen(false)
 
     const [patchSalesOrder] = usePatchSalesOrderMutation()
+
     const [addSalesOrder] = useAddSalesOrderMutation()
 
     const isScheduled = useAppSelector(selectOrders).scheduled
@@ -163,7 +164,7 @@ export const OrderDatePicker: React.FC<Props> = ({
                     disabled={disabled}
                     variant='outline'
                     className={cn(
-                        'w-full text-left font-normal justify-start',
+                        '!w-40 text-left font-normal justify-start',
                         !date && 'text-muted-foreground'
                     )}>
                     <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />

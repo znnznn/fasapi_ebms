@@ -1,4 +1,5 @@
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Fragment, useEffect } from 'react'
 
 import { Badge } from '../ui/badge'
@@ -72,6 +73,8 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
         table.setRowSelection({})
     }, [category, scheduled])
 
+    const MotionTableRow = motion(TableRow, { forwardMotionProps: true })
+
     return (
         <div className='rounded-md'>
             <Statuses
@@ -124,108 +127,171 @@ export const BaseTable: React.FC<Props> = ({ isLoading, table, isFetching }) => 
                 </TableHeader>
 
                 <TableBody>
-                    {isLoading ? (
-                        <TableSkeleton cellCount={columns.length} />
-                    ) : table.getRowModel().rows?.length ? (
-                        groupedView ? (
-                            groupByOrder.map((group) =>
-                                group[1].map((row, index) => {
-                                    const isIndeterminate = group[1].some((row) =>
-                                        row.getIsSelected()
-                                    )
-                                        ? group[1].every((row) => row.getIsSelected())
-                                            ? true
-                                            : 'indeterminate'
-                                        : false
+                    <AnimatePresence initial={false}>
+                        {isLoading ? (
+                            <TableSkeleton cellCount={columns.length} />
+                        ) : table.getRowModel().rows?.length ? (
+                            groupedView ? (
+                                groupByOrder.map((group) =>
+                                    group[1].map((row, index) => {
+                                        const isIndeterminate = group[1].some((row) =>
+                                            row.getIsSelected()
+                                        )
+                                            ? group[1].every((row) => row.getIsSelected())
+                                                ? true
+                                                : 'indeterminate'
+                                            : false
 
+                                        return (
+                                            <Fragment key={row.original?.id}>
+                                                {index === 0 && (
+                                                    <MotionTableRow
+                                                        initial={false}
+                                                        animate={{
+                                                            opacity: 1,
+                                                            x: 0
+                                                        }}
+                                                        exit={{
+                                                            opacity:
+                                                                isFetching || isLoading
+                                                                    ? 1
+                                                                    : 0,
+                                                            x:
+                                                                isFetching || isLoading
+                                                                    ? 0
+                                                                    : -1000
+                                                        }}
+                                                        transition={{
+                                                            duration:
+                                                                isFetching || isLoading
+                                                                    ? 0
+                                                                    : 0.3
+                                                        }}
+                                                        className=' !p-0'>
+                                                        <TableCell
+                                                            className='!p-0'
+                                                            colSpan={colSpan}>
+                                                            <Badge
+                                                                variant='secondary'
+                                                                className='py-2 w-full !m-0 !rounded-none'>
+                                                                <Checkbox
+                                                                    className='mr-4'
+                                                                    checked={
+                                                                        isIndeterminate
+                                                                    }
+                                                                    value={row.id}
+                                                                    onCheckedChange={(
+                                                                        value
+                                                                    ) => {
+                                                                        onCheckedChange(
+                                                                            !!value,
+                                                                            group
+                                                                        )
+                                                                    }}
+                                                                    aria-label='Select row'
+                                                                />
+                                                                <div className='pl-4'>
+                                                                    {group[0]} |{' '}
+                                                                    {
+                                                                        group[1][0]
+                                                                            .original
+                                                                            ?.customer
+                                                                    }
+                                                                </div>
+                                                            </Badge>
+                                                        </TableCell>
+                                                    </MotionTableRow>
+                                                )}
+                                                <MotionTableRow
+                                                    initial={false}
+                                                    animate={{
+                                                        opacity: 1,
+                                                        x: 0
+                                                    }}
+                                                    exit={{
+                                                        opacity:
+                                                            isFetching || isLoading
+                                                                ? 1
+                                                                : 0,
+                                                        x:
+                                                            isFetching || isLoading
+                                                                ? 0
+                                                                : -1000
+                                                    }}
+                                                    transition={{
+                                                        duration:
+                                                            isFetching || isLoading
+                                                                ? 0
+                                                                : 0.3
+                                                    }}
+                                                    className='odd:bg-secondary/60'
+                                                    data-state={
+                                                        row.getIsSelected() && 'selected'
+                                                    }>
+                                                    {row.getVisibleCells().map((cell) => (
+                                                        <TableCell
+                                                            className='py-1.5 h-[53px] !px-0.5'
+                                                            key={cell.id}>
+                                                            {flexRender(
+                                                                cell.column.columnDef
+                                                                    .cell,
+                                                                cell.getContext()
+                                                            )}
+                                                        </TableCell>
+                                                    ))}
+                                                </MotionTableRow>
+                                            </Fragment>
+                                        )
+                                    })
+                                )
+                            ) : (
+                                table.getRowModel().rows.map((row) => {
                                     return (
-                                        <Fragment key={row.original?.id}>
-                                            {index === 0 && (
-                                                <TableRow className=' !p-0'>
-                                                    <TableCell
-                                                        className='!p-0'
-                                                        colSpan={colSpan}>
-                                                        <Badge
-                                                            variant='secondary'
-                                                            className='py-2 w-full !m-0 !rounded-none'>
-                                                            <Checkbox
-                                                                className='mr-4'
-                                                                checked={isIndeterminate}
-                                                                value={row.id}
-                                                                onCheckedChange={(
-                                                                    value
-                                                                ) => {
-                                                                    onCheckedChange(
-                                                                        !!value,
-                                                                        group
-                                                                    )
-                                                                }}
-                                                                aria-label='Select row'
-                                                            />
-                                                            <div className='pl-4'>
-                                                                {group[0]} |{' '}
-                                                                {
-                                                                    group[1][0].original
-                                                                        ?.customer
-                                                                }
-                                                            </div>
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                            <TableRow
-                                                key={row.original?.id}
-                                                className='odd:bg-secondary/60'
-                                                data-state={
-                                                    row.getIsSelected() && 'selected'
-                                                }>
-                                                {row.getVisibleCells().map((cell) => (
-                                                    <TableCell
-                                                        className='py-1.5 h-[53px] !px-0.5'
-                                                        key={cell.id}>
-                                                        {flexRender(
-                                                            cell.column.columnDef.cell,
-                                                            cell.getContext()
-                                                        )}
-                                                    </TableCell>
-                                                ))}
-                                            </TableRow>
-                                        </Fragment>
+                                        <MotionTableRow
+                                            initial={false}
+                                            animate={{
+                                                opacity: 1,
+                                                x: 0
+                                            }}
+                                            exit={{
+                                                opacity: isFetching || isLoading ? 1 : 0,
+                                                x: isFetching || isLoading ? 0 : -1000
+                                            }}
+                                            transition={{
+                                                duration:
+                                                    isFetching || isLoading ? 0 : 0.3
+                                            }}
+                                            key={row.original?.id}
+                                            className='odd:bg-secondary/60'
+                                            data-state={
+                                                row.getIsSelected() && 'selected'
+                                            }>
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell
+                                                    className='py-1.5 h-[53px] !px-0.5'
+                                                    key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </MotionTableRow>
                                     )
                                 })
                             )
+                        ) : isFetching ? (
+                            <TableSkeleton cellCount={columns.length} />
                         ) : (
-                            table.getRowModel().rows.map((row) => {
-                                return (
-                                    <TableRow
-                                        key={row.id}
-                                        className='odd:bg-secondary/60'
-                                        data-state={row.getIsSelected() && 'selected'}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell
-                                                className='py-1.5 h-[53px] !px-0.5'
-                                                key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                )
-                            })
-                        )
-                    ) : isFetching ? (
-                        <TableSkeleton cellCount={columns.length} />
-                    ) : (
-                        <TableRow>
-                            <TableCell
-                                colSpan={colSpan}
-                                className='h-24 text-left pl-4'>
-                                No results
-                            </TableCell>
-                        </TableRow>
-                    )}
+                            <TableRow>
+                                <TableCell
+                                    colSpan={colSpan}
+                                    className='h-24 text-left pl-4'>
+                                    No results
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </AnimatePresence>
                 </TableBody>
             </Table>
         </div>
