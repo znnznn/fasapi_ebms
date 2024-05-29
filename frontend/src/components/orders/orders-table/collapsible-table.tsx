@@ -1,6 +1,6 @@
 import { Skeleton } from '@radix-ui/themes'
 import { type Table as TableType, flexRender } from '@tanstack/react-table'
-import { AnimatePresence, motion } from 'framer-motion'
+// import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect } from 'react'
 
 import {
@@ -43,7 +43,7 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
         table.setRowSelection({})
     }, [scheduled])
 
-    const MotionTableRow = motion(TableRow, { forwardMotionProps: true })
+    // const MotionTableRow = motion(TableRow, { forwardMotionProps: true })
 
     return (
         <div className='rounded-md'>
@@ -93,96 +93,95 @@ export const CollapsibleTable: React.FC<Props> = ({ isLoading, table, isFetching
                 </TableHeader>
 
                 <TableBody>
-                    <AnimatePresence initial={false}>
-                        {isLoading ? (
-                            <TableSkeleton cellCount={columns.length} />
-                        ) : table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => {
-                                const originItems = (row.original as OrdersData)
-                                    .origin_items
+                    {/* <AnimatePresence initial={false}> */}
+                    {isLoading ? (
+                        <TableSkeleton cellCount={columns.length} />
+                    ) : table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => {
+                            const originItems = (row.original as OrdersData).origin_items
 
-                                return (
-                                    <Collapsible
-                                        key={row?.original?.id}
-                                        asChild>
-                                        <>
-                                            <MotionTableRow
-                                                initial={false}
-                                                animate={{
-                                                    opacity: 1,
-                                                    x: 0
-                                                }}
-                                                exit={{
-                                                    opacity:
-                                                        isFetching || isLoading ? 1 : 0,
-                                                    x: isFetching || isLoading ? 0 : -1000
-                                                }}
-                                                transition={{
-                                                    duration:
-                                                        isFetching || isLoading ? 0 : 0.3
-                                                }}
-                                                className='odd:bg-secondary/60'
-                                                data-state={
-                                                    row.getIsSelected() && 'selected'
-                                                }>
-                                                {row.getVisibleCells().map((cell) => (
-                                                    <TableCell
-                                                        className='py-1.5 px-0.5 first:w-10 [&div]:h-[53px]'
-                                                        key={cell.id}>
-                                                        {flexRender(
-                                                            cell.column.columnDef.cell,
-                                                            cell.getContext()
-                                                        )}
-                                                    </TableCell>
-                                                ))}
-                                            </MotionTableRow>
+                            return (
+                                <Collapsible
+                                    key={row?.original?.id}
+                                    asChild>
+                                    <>
+                                        <TableRow
+                                            // initial={false}
+                                            // animate={{
+                                            //     opacity: 1,
+                                            //     x: 0
+                                            // }}
+                                            // exit={{
+                                            //     opacity:
+                                            //         isFetching || isLoading ? 1 : 0,
+                                            //     x: isFetching || isLoading ? 0 : -1000
+                                            // }}
+                                            // transition={{
+                                            //     duration:
+                                            //         isFetching || isLoading ? 0 : 0.3
+                                            // }}
+                                            className='odd:bg-secondary/60'
+                                            data-state={
+                                                row.getIsSelected() && 'selected'
+                                            }>
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell
+                                                    className='py-1.5 px-0.5 first:w-10 [&div]:h-[53px]'
+                                                    key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
 
-                                            <CollapsibleContent asChild>
-                                                <tr>
-                                                    <motion.td
-                                                        initial={false}
-                                                        animate={{
-                                                            opacity: 1,
-                                                            x: 0
-                                                        }}
-                                                        exit={{
-                                                            opacity:
-                                                                isFetching || isLoading
-                                                                    ? 1
-                                                                    : 0,
-                                                            x:
-                                                                isFetching || isLoading
-                                                                    ? 0
-                                                                    : -1000
-                                                        }}
-                                                        transition={{
-                                                            duration:
-                                                                isFetching || isLoading
-                                                                    ? 0
-                                                                    : 0.3
-                                                        }}
-                                                        className='max-w-[100vw]'
-                                                        colSpan={colSpan}>
-                                                        <SubTable data={originItems} />
-                                                    </motion.td>
-                                                </tr>
-                                            </CollapsibleContent>
-                                        </>
-                                    </Collapsible>
-                                )
-                            })
-                        ) : isFetching ? (
-                            <TableSkeleton cellCount={columns.length} />
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={colSpan}
-                                    className='h-24 text-left pl-4'>
-                                    No results
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </AnimatePresence>
+                                        <CollapsibleContent asChild>
+                                            <tr>
+                                                <td
+                                                    // initial={false}
+                                                    // animate={{
+                                                    //     opacity: 1,
+                                                    //     x: 0
+                                                    // }}
+                                                    // exit={{
+                                                    //     opacity:
+                                                    //         isFetching || isLoading
+                                                    //             ? 1
+                                                    //             : 0,
+                                                    //     x:
+                                                    //         isFetching || isLoading
+                                                    //             ? 0
+                                                    //             : -1000
+                                                    // }}
+                                                    // transition={{
+                                                    //     duration:
+                                                    //         isFetching || isLoading
+                                                    //             ? 0
+                                                    //             : 0.3
+                                                    // }}
+                                                    className='max-w-[100vw]'
+                                                    colSpan={colSpan}>
+                                                    <SubTable data={originItems} />
+                                                </td>
+                                            </tr>
+                                        </CollapsibleContent>
+                                    </>
+                                </Collapsible>
+                            )
+                        })
+                    ) : isFetching ? (
+                        <TableSkeleton cellCount={columns.length} />
+                    ) : (
+                        <TableRow>
+                            <TableCell
+                                colSpan={colSpan}
+                                className='h-24 text-left pl-4'>
+                                No results
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {/* </AnimatePresence> */}
                 </TableBody>
             </Table>
         </div>

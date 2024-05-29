@@ -11,5 +11,6 @@ export interface MultiPatchOrdersData {
     location?: number
     priority?: number
     production_date?: string
+    ship_date?: string | null
     time?: string
 }

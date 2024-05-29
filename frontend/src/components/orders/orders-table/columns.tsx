@@ -114,18 +114,18 @@ export const columns: ColumnDef<OrdersData>[] = [
         accessorKey: 'production_date',
         header: ({ column }) => createHeader('Prod. date', column, 'w-40'),
         cell: ({ row }) => {
-            const shipDate = row.original.sales_order?.production_date
+            const productionDate = row.original.sales_order?.production_date
             const [date, setDate] = useState<Date | undefined>(
-                shipDate ? new Date(shipDate) : undefined
+                productionDate ? new Date(productionDate) : undefined
             )
 
             useEffect(() => {
-                setDate(shipDate ? new Date(shipDate) : undefined)
-            }, [shipDate, row.original?.id])
+                setDate(productionDate ? new Date(productionDate) : undefined)
+            }, [productionDate, row.original?.id])
 
             return (
                 <OrderDatePicker
-                    defaultDate={shipDate}
+                    defaultDate={productionDate}
                     disabled={row.original.completed}
                     key={row.original?.id}
                     date={date}

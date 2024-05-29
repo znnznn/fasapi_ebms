@@ -12,9 +12,15 @@ import { cn } from '@/utils/cn'
 interface Props {
     date: Date | undefined
     disabled?: boolean
+    placeholder?: string
     setDate: React.Dispatch<React.SetStateAction<Date | undefined>>
 }
-export const DatePicker: React.FC<Props> = ({ date, setDate, disabled = false }) => {
+export const DatePicker: React.FC<Props> = ({
+    date,
+    setDate,
+    disabled = false,
+    placeholder = 'Pick a date'
+}) => {
     const [open, setOpen] = React.useState(false)
 
     const close = () => setOpen(false)
@@ -44,7 +50,7 @@ export const DatePicker: React.FC<Props> = ({ date, setDate, disabled = false })
                     )}>
                     <CalendarIcon className='mr-2 h-3 w-3 flex-shrink-0' />
 
-                    {date ? format(date, 'dd.MM.yyyy EEE') : <span>Pick a date</span>}
+                    {date ? format(date, 'dd.MM.yyyy EEE') : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className='w-auto p-0'>
