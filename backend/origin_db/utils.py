@@ -4,8 +4,10 @@ from stages.utils import send_data_to_ws
 
 
 async def send_new_ship_date_to_ebms(model_dump: dict):
-    autoids = model_dump.get('autoids')
+    autoids = model_dump.get('origin_orders')
     ship_date = model_dump.get('ship_date')
+    if not autoids or not ship_date:
+        return
     origin_orders = await OriginOrderService().get_origin_order_by_autoids(autoids=autoids)
     await OriginOrderService().update_ship_date(autoids=autoids, ship_date=ship_date)
     await send_data_to_ws('orders', list_autoids=autoids)

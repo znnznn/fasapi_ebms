@@ -12,10 +12,9 @@ from origin_db.filters import CategoryFilter, OriginItemFilter, OrderFilter
 from origin_db.models import Arinvdet, Arinv
 from origin_db.schemas import (
     ArinvRelatedArinvDetSchema, ArinPaginateSchema, ArinvDetPaginateSchema, CategoryPaginateSchema,
-    CategorySchema, ChangeShipDateSchema, MultipleChangeShipDateSchema
+    CategorySchema, ChangeShipDateSchema
 )
 from origin_db.services import CategoryService, OriginOrderService, OriginItemService, InventryService
-from origin_db.utils import send_new_ship_date_to_ebms
 from stages.filters import ItemFilter, SalesOrderFilter
 from stages.services import FlowsService, ItemsService, CapacitiesService, SalesOrdersService
 from stages.utils import send_data_to_ws
@@ -283,16 +282,6 @@ async def partial_update_order(
     await OriginOrderService().update_ship_date([autoid], date)
     background_tasks.add_task(send_data_to_ws, autoid=autoid, subscribe="orders")
     return {"message": response.json()}
-
-
-@router.patch("/orders/multi/update/", response_model=MultipleChangeShipDateSchema)
-async def partial_multi_update_orders(
-        origin_orders: MultipleChangeShipDateSchema,
-        user: User = Depends(active_user_with_permission),
-        background_tasks: BackgroundTasks = BackgroundTasks()
-):
-    background_tasks.add_task(send_new_ship_date_to_ebms, origin_orders.model_dump())
-    return origin_orders
 
 
 @router.get("/orders-api/{autoid}/", response_model=dict)
