@@ -49,8 +49,6 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
 
     def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
         query = select(func.count('*')).select_from(self.get_query().subquery())
-        if self.filter:
-            query = self.filter.filter(query, **kwargs)
         return query
 
     async def get_object_or_404(self, autoid: str) -> OriginModelType:
@@ -149,23 +147,6 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
     ):
         super().__init__(model=model, list_filter=list_filter)
 
-    def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
-        query = select(
-            func.count('*').label('count'),
-        ).where(
-            and_(
-                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                Inventry.prod_type.notin_(LIST_EXCLUDED_PROD_TYPES),
-                self.model.par_time == '',
-                self.model.inven != None,
-                self.model.inven != '',
-                Arinv.status == 'U'
-            ),
-        ).join(Arinvdet.order).join(Arinvdet.rel_inventry)
-        if self.filter:
-            query = self.filter.filter(query, **kwargs)
-        return query
-
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(
             self.model,
@@ -228,19 +209,6 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             list_filter: Optional[Filter] = None
     ):
         super().__init__(model=model, list_filter=list_filter)
-
-    def get_query_for_count(self, **kwargs: Optional[dict]) -> Query:
-        query = select(
-            func.count('*').label('count'),
-        ).where(
-            and_(
-                self.model.inv_date >= FILTERING_DATA_STARTING_YEAR,
-                self.model.status == 'U',
-            )
-        )
-        if self.filter:
-            query = self.filter.filter(query, **kwargs)
-        return query
 
     def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]):
         query = select(

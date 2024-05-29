@@ -607,12 +607,13 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
         async with default_session_maker() as session:
             origin_orders = set(object_data.pop("origin_orders", []))
             sales_orders = await session.scalars(select(self.model).where(self.model.order.in_(origin_orders)))
+            sales_orders = sales_orders.all()
             origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
             origin_orders_data = {obj.autoid: obj for obj in origin_orders}
-        for obj in sales_orders:
-            origin_order = origin_orders_data.pop(obj.order, None)
-            for k, v in object_data.items():
-                setattr(obj, k, v)
+        for sales_order in sales_orders:
+            origin_order = origin_orders_data.pop(sales_order.order, None)
+            for key, value in object_data.items():
+                setattr(sales_order, key, value)
         await self.add_all(sales_orders)
         if origin_orders_data:
             new_sales_orders = []
