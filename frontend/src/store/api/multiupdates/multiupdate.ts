@@ -86,9 +86,15 @@ export const multiupdate = api.injectEndpoints({
                             })
 
                             items.forEach((item) => {
-                                if (item.sales_order) {
+                                if (item && data.ship_date) {
+                                    Object.assign(item, {
+                                        ship_date: data.ship_date
+                                    })
+                                }
+
+                                if (item?.sales_order && data?.production_date) {
                                     Object.assign(item.sales_order, data)
-                                } else {
+                                } else if (data?.production_date) {
                                     const salesOrder = {
                                         id: Math.random(),
                                         ...data

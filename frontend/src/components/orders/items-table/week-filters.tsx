@@ -119,7 +119,7 @@ const WeekFilter: React.FC<FormattedDate> = ({ date, dateToDisplay }) => {
     return (
         <ToggleGroupItem
             value={date}
-            className='data-[state=on]:shadow-custom shadow-foreground text-[13px] data-[state=on]: -outline-offset-1 max-[1118px]:flex-1 data-[state=on]:outline-1 data-[state=on]:outline-foreground data-[state=on]:outline text-secondary-foreground bg-secondary flex flex-col gap-0.5 h-[41px] py-2 px-1 w-[172px]'>
+            className='data-[state=on]:shadow-custom shadow-foreground text-[13px] data-[state=on]: -outline-offset-1 max-[1118px]:flex-1 data-[state=on]:outline-1 data-[state=on]:outline-foreground data-[state=on]:outline text-secondary-foreground bg-secondary flex flex-col gap-0.5 h-[41px] py-2 px-1 w-[176px]'>
             {isLoading ? (
                 <Skeleton className='w-full h-5' />
             ) : (

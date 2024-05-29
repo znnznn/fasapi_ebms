@@ -16,7 +16,10 @@ import {
     useMultiPatchItemsMutation,
     useMultiPatchOrdersMutation
 } from '@/store/api/multiupdates/multiupdate'
-import type { MultiPatchItemsData } from '@/store/api/multiupdates/multiupdate.types'
+import type {
+    MultiPatchItemsData,
+    MultiPatchOrdersData
+} from '@/store/api/multiupdates/multiupdate.types'
 import { useAppSelector } from '@/store/hooks/hooks'
 import { isErrorWithMessage } from '@/utils/is-error-with-message'
 
@@ -67,6 +70,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
 
     const [open, setOpen] = useState(false)
     const [date, setDate] = useState<Date | undefined>(undefined)
+    const [shipDate, setShipDate] = useState<Date | undefined>(undefined)
 
     const [flow, setFlow] = useState(-1)
 
@@ -131,12 +135,18 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
         }
     }
 
-    const handlePatchOrder = async (date: string | null) => {
+    const handlePatchOrder = async (date: string | null, shipDate: string | null) => {
+        const dataToPatch: MultiPatchOrdersData = {
+            origin_orders: originOrdersIds,
+            production_date: date!
+        }
+
+        if (shipDate) {
+            dataToPatch.ship_date = shipDate
+        }
+
         try {
-            await patchOrders({
-                origin_orders: originOrdersIds,
-                production_date: date!
-            })
+            await patchOrders(dataToPatch)
                 .unwrap()
                 .then((response) =>
                     successToast(
@@ -155,11 +165,13 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
 
     const onSave = () => {
         const dateToPatch = date ? format(date!, datesFormat.dashes) : null
+        const shipDateToPatch = shipDate ? format(shipDate!, datesFormat.dashes) : null
 
-        if (originItemsIds.length > 0) {
+        if (originItemsIds.length > 0 && dateToPatch) {
             handlePatchItem(dateToPatch)
         }
-        handlePatchOrder(dateToPatch)
+
+        handlePatchOrder(dateToPatch, shipDateToPatch)
         close()
         setFlow(-1)
         setDate(undefined)
@@ -168,7 +180,7 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
 
     useEffect(() => setOpen(originOrdersIds.length > 0), [originOrdersIds.length])
 
-    const isSaveDisabled = flow === -1 && !date
+    const isSaveDisabled = flow === -1 && !date && !shipDate
 
     return (
         <Popover
@@ -206,11 +218,17 @@ export const MultipatchPopover: React.FC<Props> = ({ table }) => {
                             You can't update date for completed orders
                         </p>
                     ) : null}
-                    <div className='[&>*]:w-full'>
+                    <div className='flex items-center gap-x-3'>
                         <DatePicker
                             date={date}
                             setDate={setDate}
                             disabled={completed}
+                        />
+                        <DatePicker
+                            date={shipDate}
+                            setDate={setShipDate}
+                            disabled={completed}
+                            placeholder='Pick a ship date'
                         />
                     </div>
                     <div className='flex items-center gap-x-2 justify-between'>

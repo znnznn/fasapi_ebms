@@ -117,7 +117,7 @@ export const columns: ColumnDef<EBMSItemsData>[] = [
     },
     {
         accessorKey: 'time',
-        header: ({ column }) => createHeader('Time', column, '!w-20'),
+        header: ({ column }) => createHeader('Time', column, '!w-[90px]'),
         cell: ({ row }) => {
             return (
                 <TimePicker
