@@ -610,10 +610,10 @@ class SalesOrdersService(BaseService[SalesOrder, SalesOrderSchemaIn]):
             sales_orders = sales_orders.all()
             origin_orders = await OriginOrderService().get_origin_order_by_autoids(origin_orders)
             origin_orders_data = {obj.autoid: obj for obj in origin_orders}
-            for sales_order in sales_orders:
-                origin_order = origin_orders_data.pop(sales_order.order, None)
-                for key, value in object_data.items():
-                    setattr(sales_order, key, value)
+        for sales_order in sales_orders:
+            origin_order = origin_orders_data.pop(sales_order.order, None)
+            for key, value in object_data.items():
+                setattr(sales_order, key, value)
         await self.add_all(sales_orders)
         if origin_orders_data:
             new_sales_orders = []
