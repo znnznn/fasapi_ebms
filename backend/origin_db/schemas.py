@@ -132,3 +132,7 @@ class ChangeShipDateSchema(BaseModel):
     @classmethod
     def validate_ship_date(cls, v: date):
         return v.strftime("%m/%d/%Y")
+
+
+class MultipleChangeShipDateSchema(ChangeShipDateSchema):
+    autoids: List[str]
