@@ -276,8 +276,8 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             query = query.offset(offset)
         return query
 
-    async def update_ship_date(self, autoid: str, ship_date: datetime) -> None:
-        stmt = update(self.model).where(self.model.autoid == autoid).values(ship_date=ship_date)
+    async def update_ship_date(self, autoids: List[str], ship_date: datetime) -> None:
+        stmt = update(self.model).where(self.model.autoid.in_(autoids)).values(ship_date=ship_date)
         async with AsyncSession(ebms_engine) as session:
             await session.execute(stmt)
             await session.commit()
