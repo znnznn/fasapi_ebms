@@ -294,3 +294,9 @@ class MultiUpdateSalesOrderSchema(BaseModel):
     location: Optional[int] = Field(default=None)
     priority: Optional[int] = Field(default=None)
     production_date: Optional[date] = Field(default=None)
+    ship_date: Optional[date] = Field(default=None)  # field rom origin db
+
+    @field_validator('ship_date')
+    @classmethod
+    def validate_ship_date(cls, v: date):
+        return v.strftime("%m/%d/%Y")

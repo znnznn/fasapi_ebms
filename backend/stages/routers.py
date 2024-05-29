@@ -5,6 +5,7 @@ from fastapi_filter import FilterDepends
 
 from common.constants import Role
 from origin_db.services import CategoryService
+from origin_db.utils import send_new_ship_date_to_ebms
 from stages.filters import ItemFilter, StageFilter, FlowFilter, SalesOrderFilter
 from stages.services import CapacitiesService, StagesService, FlowsService, CommentsService, ItemsService, SalesOrdersService
 from stages.schemas import (
@@ -408,6 +409,9 @@ async def multiupdate_salesorders(
         user: User = Depends(IsAuthenticatedAs(Role.ADMIN, Role.MANAGER)),
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
+    if salesorders.ship_date:
+        background_tasks.add_task(send_new_ship_date_to_ebms, salesorders.model_dump(exclude_unset=True))
+        return salesorders
     response = await SalesOrdersService().multiupdate(salesorders)
     background_tasks.add_task(send_data_to_ws, subscribe="orders", list_autoids=salesorders.origin_orders)
     return response
