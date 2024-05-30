@@ -2,6 +2,8 @@ import time
 from contextlib import asynccontextmanager
 from typing import Optional, List
 
+from anyio import CapacityLimiter
+from anyio.lowlevel import RunVar
 from fastapi import FastAPI
 from fastapi_pagination.utils import disable_installed_extensions_check
 from mangum import Mangum
@@ -53,7 +55,8 @@ async def startup():
     print("Conneting to redis")
     await connection_manager.connect_broadcaster()
     print("Connected to redis")
-    print("Connecting to EBMS")
+    print("Set default thread limiter with capacity 2")
+    RunVar("_default_thread_limiter").set(CapacityLimiter(2))
 
 
 @app.on_event("shutdown")
