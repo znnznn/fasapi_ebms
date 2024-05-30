@@ -4,6 +4,7 @@ from typing import Optional, List
 
 from fastapi import FastAPI
 from fastapi_pagination.utils import disable_installed_extensions_check
+from mangum import Mangum
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -43,6 +44,8 @@ app = FastAPI(
     swagger_ui_parameters={"deepLinking": False},
     # lifespan=websocketlifespan
 )
+
+handler = Mangum(app, lifespan="off")
 
 
 @app.on_event("startup")
