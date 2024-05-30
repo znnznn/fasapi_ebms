@@ -164,10 +164,7 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
                 self.model.inven != '',
                 Arinv.status == 'U'
             ),
-        ).join(Arinv, Arinvdet.doc_aid == Arinv.autoid).join(Inventry, Arinvdet.inven == Inventry.id).options(
-            selectinload(self.model.rel_inventry),
-            selectinload(self.model.order),
-        ).group_by(
+        ).join(Arinv, Arinvdet.doc_aid == Arinv.autoid).join(Inventry, Arinvdet.inven == Inventry.id).group_by(
             self.model, Inventry.prod_type, Inventry.rol_profil, Inventry.rol_color, Arinv.name, Arinv.status
         )
         if self.filter:
