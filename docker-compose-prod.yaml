@@ -52,6 +52,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: db
   backend:
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.0'
     build:
       context: ./backend
       dockerfile: Dockerfile
