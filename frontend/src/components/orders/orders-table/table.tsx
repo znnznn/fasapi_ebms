@@ -5,11 +5,15 @@ import {
     getSortedRowModel,
     useReactTable
 } from '@tanstack/react-table'
+import { useEffect } from 'react'
+
+import { selectOrders } from '../store/orders'
 
 import { CollapsibleTable } from './collapsible-table'
 import { useColumnOrder, useColumnVisibility } from '@/hooks/use-column-controls'
 import type { OrdersData } from '@/store/api/ebms/ebms.types'
 import { useGetUsersProfilesQuery } from '@/store/api/profiles/profiles'
+import { useAppSelector } from '@/store/hooks/hooks'
 import type { TableProps } from '@/types/table'
 
 export const OrdersTable = <TData, TValue>({
@@ -60,6 +64,13 @@ export const OrdersTable = <TData, TValue>({
             }
         }
     })
+
+    const overdue = useAppSelector(selectOrders).overdue
+    const completed = useAppSelector(selectOrders).isOrderCompleted
+
+    useEffect(() => {
+        table.setPageIndex(0)
+    }, [overdue, completed])
 
     return (
         <CollapsibleTable

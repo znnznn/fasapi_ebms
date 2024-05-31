@@ -69,6 +69,13 @@ export function ItemsTable<TData, TValue>({
         dispatch(setFlowsData(flowsData?.results!))
     }, [flowsData])
 
+    const overdue = useAppSelector(selectOrders).overdue
+    const completed = useAppSelector(selectOrders).isOrderCompleted
+
+    useEffect(() => {
+        table.setPageIndex(0)
+    }, [overdue, completed])
+
     return (
         <BaseTable
             isFetching={isFetching || isFlowsFetching}
