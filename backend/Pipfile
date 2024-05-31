@@ -21,13 +21,11 @@ passlib = {extras = ["bcrypt"], version = "*"}
 sqlalchemy-utils = "*"
 aioodbc = "*"
 pymssql = "*"
-fastapi-debug-toolbar = "*"
 jinja2 = "*"
 fastapi-restful = {extras = ["all"], version = "*"}
 asyncpg = "*"
 sqlalchemy = {extras = ["asyncio"], version = "*"}
 psycopg2 = "*"
-fastapi-pagination = "*"
 fastapi-filter = {extras = ["all"], version = "*"}
 resend = "*"
 setuptools = "*"
