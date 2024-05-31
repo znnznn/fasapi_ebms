@@ -5,7 +5,6 @@ from typing import Optional, List
 from anyio import CapacityLimiter
 from anyio.lowlevel import RunVar
 from fastapi import FastAPI
-from fastapi_pagination.utils import disable_installed_extensions_check
 from mangum import Mangum
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,9 +89,6 @@ async def add_process_time_header(request, call_next):
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(f'{process_time:0.4f} sec')
     return response
-
-
-disable_installed_extensions_check()
 
 
 app.include_router(origin_router)
