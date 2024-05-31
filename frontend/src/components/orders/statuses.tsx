@@ -1,4 +1,5 @@
 import type { Table } from '@tanstack/react-table'
+import { useEffect } from 'react'
 
 import { Pagination } from './pagination'
 import { Search } from './search'
@@ -27,6 +28,10 @@ export function Statuses<TData>({ table, page }: Props<TData>) {
                 return 'all'
         }
     }
+
+    useEffect(() => {
+        table.setPageIndex(0)
+    }, [scheduled])
 
     return (
         <div className='flex items-start justify-between flex-wrap gap-5 w-full py-2 border-t border-t-input'>
