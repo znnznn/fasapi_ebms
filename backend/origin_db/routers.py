@@ -274,8 +274,9 @@ async def partial_update_order(
         background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     instance = await OriginOrderService().get_object_or_404(autoid=autoid)
+    data_to_send = {key.upper(): value for key, value in origin_order.model_dump().items()}
     ebms_api_client = ArinvClient()
-    response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid))
+    response = ebms_api_client.patch(ebms_api_client.retrieve_url(instance.autoid), data=data_to_send)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
     date = datetime.strptime(origin_order.ship_date, "%m/%d/%Y")
