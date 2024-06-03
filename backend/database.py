@@ -37,7 +37,7 @@ from users.services import UserService
 
 ebms_engine = create_async_engine('mssql+aioodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(
         EBMS_DB.DB_USER, EBMS_DB.DB_PASS, EBMS_DB.DB_HOST, EBMS_DB.DB_PORT, EBMS_DB.DB_NAME),
-        pool_size=70, max_overflow=30, pool_pre_ping=True, isolation_level="SERIALIZABLE", pool_recycle=3600,
+        pool_size=70,
     )
 
 default_engine = create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.format(
@@ -45,7 +45,7 @@ default_engine = create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.forma
         pool_size=70, max_overflow=30, pool_pre_ping=True, pool_recycle=600
     )
 
-# ebms_engine.connect()
+ebms_engine.connect()
 
 ebms_session_maker = async_sessionmaker(bind=ebms_engine, expire_on_commit=False, autoflush=False, autocommit=False)
 
