@@ -63,7 +63,7 @@ def get_default_engine():
 
 
 async def get_ebms_session() -> AsyncGenerator[AsyncSession, None]:
-    async with ebms_session_maker() as session:
+    async with ebms_session_maker.begin() as session:
         yield session
 
 
