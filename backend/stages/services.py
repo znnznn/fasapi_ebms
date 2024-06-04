@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi_filter.contrib.sqlalchemy import Filter
 from sqlalchemy import select, ScalarResult, func, Integer, case, and_, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, Query
 from starlette import status
 from starlette.exceptions import HTTPException
@@ -14,6 +15,7 @@ from starlette.responses import JSONResponse, Response
 from common.constants import ModelType, InputSchemaType, OriginModelType
 from common.filters import RenameFieldFilter
 from database import default_session_maker
+from mssqqlserver_database import get_cursor
 from origin_db.models import Inprodtype, Arinv, Arinvdet
 from origin_db.services import OriginItemService, BaseService as BaseEbmsBaseService, OriginOrderService, CategoryService
 from profiles.models import CompanyProfile
@@ -29,7 +31,7 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     def __init__(
             self, model: Type[ModelType],
-            list_filter: Optional[RenameFieldFilter] = None
+            list_filter: Optional[RenameFieldFilter] = None,
     ):
         self.model = model
         self.filter = list_filter
@@ -80,12 +82,12 @@ class BaseService(Generic[ModelType, InputSchemaType]):
 
     async def validate_autoid(self, autoid: str, model):
         if issubclass(model, Inprodtype):
-            return await CategoryService().get(autoid)
+            return await CategoryService().check_autoids_exist(autoid)
         if issubclass(model, Arinvdet):
-            return await OriginItemService().get(autoid)
+            return await OriginItemService().check_autoids_exist(autoid)
         if issubclass(model, Arinv):
-            return await OriginOrderService().get(autoid)
-        result = await BaseEbmsBaseService(model=model).get(autoid)
+            return await OriginOrderService().check_autoids_exist(autoid)
+        result = await BaseEbmsBaseService(model=model).check_autoids_exist(autoid)
         return result
 
     async def count_query_objs(self, query) -> int:

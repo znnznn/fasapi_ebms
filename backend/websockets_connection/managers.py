@@ -86,22 +86,10 @@ class ConnectionManager:
 
         return True
 
-    # def add_connection_count(self, channel_id: str):
-    #     count = ws_redis.get_cenus_websocket(channel_id=channel_id)
-    #     if count is None:
-    #         ws_redis.manage_cenus_websocket(channel_id=channel_id, value=1)
-    #     else:
-    #         count = int(count) + 1
-    #         ws_redis.manage_cenus_websocket(channel_id=channel_id, value=count)
 
     async def connect(self, websocket: WebSocket, subscribe: str):
         print("connect")
         await websocket.accept(subprotocol=websocket.headers.get("sec-websocket-protocol"))
-        # is_connection_active = await self._check_if_ws_connection_is_still_active(websocket, subscribe)
-        #
-        # if not is_connection_active:
-        #     await websocket.close()
-        #     return
         if self.active_connections.get(subscribe):
             print("active_connections")
             self.active_connections[subscribe].append(websocket)
