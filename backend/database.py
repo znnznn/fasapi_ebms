@@ -47,9 +47,9 @@ default_engine = create_async_engine('postgresql+asyncpg://{}:{}@{}:{}/{}'.forma
 
 ebms_engine.connect()
 
-ebms_session_maker = async_sessionmaker(bind=ebms_engine, expire_on_commit=False, autoflush=False, autocommit=False)
+ebms_session_maker = async_sessionmaker(bind=ebms_engine, autoflush=False, autocommit=False)
 
-default_session_maker = async_sessionmaker(bind=default_engine, expire_on_commit=False, autoflush=False, autocommit=False)
+default_session_maker = async_sessionmaker(bind=default_engine, autoflush=False, autocommit=False)
 
 
 @lru_cache(maxsize=None)
