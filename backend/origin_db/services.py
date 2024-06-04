@@ -210,11 +210,9 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
     def __init__(
             self, model: Type[Arinv] = Arinv,
             list_filter: Optional[Filter] = None,
-            db_session: Optional[AsyncSession] = None
 
     ):
         super().__init__(model=model, list_filter=list_filter)
-        self.db_session = db_session
 
     async def get_query(self, limit: int = None, offset: int = None, **kwargs: Optional[dict]) -> Query:
         query = select(
@@ -263,17 +261,13 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         return await self.paginated_list(limit=limit, offset=offset, **kwargs)
 
     async def paginated_list(self, limit: int = 10, offset: int = 0, **kwargs: Optional[dict],) -> dict:
-        # async with ebms_session_maker.begin() as session:
-        count = await self.db_session.execute(await self.to_sql(await self.get_query_for_count(**kwargs)))
-        count = count.fetchone()
-        data = await self.db_session.execute(await self.to_sql(await self.get_query(limit=limit, offset=offset, **kwargs)))
-        data_all = await data.fetchall()
-        for i in data_all:
-            print(dir(i))
-            print(i)
-            break
-        list_objs = [self.dict_keys_to_lowercase(data._asdict()) for data in data_all]
-        orders_details = await OriginItemService().list_by_orders(autoids=[data['autoid'] for data in list_objs])
+        async with ebms_session_maker.begin() as session:
+            count = await session.execute(text(await self.to_sql(await self.get_query_for_count(**kwargs))))
+            count = count.scalar()
+            data = await session.execute(text(await self.to_sql(await self.get_query(limit=limit, offset=offset, **kwargs))))
+            data_all = data.all()
+            list_objs = [self.dict_keys_to_lowercase(data._asdict()) for data in data_all]
+            orders_details = await OriginItemService().list_by_orders(autoids=[data['autoid'] for data in list_objs])
         time_start = time.time()
         details = defaultdict(list)
         for order_detail in orders_details:
