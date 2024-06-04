@@ -32,7 +32,6 @@ async def orders(
         origin_order_filter: OrderFilter = FilterDepends(OrderFilter),
         sales_order_filter: SalesOrderFilter = FilterDepends(SalesOrderFilter),
         user: User = Depends(active_user_with_permission),
-        session=Depends(get_cursor),
 
 ):
     print('orders')
@@ -67,7 +66,7 @@ async def orders(
             default_position = len(ordering_orders) + 2
         data_for_ordering = {v: i for i, v in enumerate(ordering_orders, 1)}
         extra_ordering = case(data_for_ordering, value=Arinv.autoid, else_=default_position)
-    result = await OriginOrderService(list_filter=origin_order_filter, db_session=session).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
+    result = await OriginOrderService(list_filter=origin_order_filter).list(limit=limit, offset=offset, extra_ordering=extra_ordering)
     print('connected to ebms', time.time() - time_start)
     autoids = [i.autoid for i in result["results"]]
     items_dates = await ItemsService().group_by_order_annotated_statistics(autoids=autoids)
