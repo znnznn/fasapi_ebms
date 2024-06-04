@@ -5,7 +5,7 @@
 | **Provider**                    | **Service Name** | **URL** |
 |:--------------------------------|:-----------------|:--------|
 | Hosting provider                | AWS              | -       |
-| CI/CD provider                  | Jenkins          | jenkins |
+| CI/CD provider                  | github actionc   |         |
 | Logs provider                   | AWS              | -       |
 
 ## Tech details
