@@ -10,21 +10,22 @@
 
 ## Tech details
 
-|         **Resource**          | **Resource Name** | **Version** | **Comment** |
-|:-----------------------------:|:-----------------:|:-----------:|:-----------:|
-| Back-end programming language |      python       |    3.11     |             |
-|    Back-end web framework     |      FastApi      |             |             |
-|       Default Database        |     Postgres      |             |     AWS     |
-|         EBMS Database         |   MS SQL Server   |             |    Azure    |
-|          Web server           |      uvicorn      |             |  gunicorn   |
-|             REDIS             |       REDIS       |             |             |
+|               **Resource**                | **Resource Name** | **Version** | **Comment**  |
+|:-----------------------------------------:|:-----------------:|:-----------:|:------------:|
+|       Back-end programming language       |      python       |    3.11     |              |
+|          Back-end web framework           |      FastApi      |             |              |
+|             Default Database              |     Postgres      |             |     AWS      |
+|               EBMS Database               |   MS SQL Server   |             |    Azure     |
+|                Web server                 |      uvicorn      |             |   gunicorn   |
+|                   REDIS                   |       REDIS       |             |              |
+|            Front-end language             |       React       |    Vite     | + TypeScript |
 
 ## Application URL’s
 
-| **Environment** | **Service Name** | **URL**                            |
-|:----------------|:-----------------|:-----------------------------------|
-| Production      | Website          | <https://dev-ebms.fun/>            |
-|                 | Swagger          | <https://dev-ebms.fun/docs/>       |
+| **Environment** | **Service Name** | **URL**                          |
+|:----------------|:-----------------|:---------------------------------|
+| Production      | Website          | <https://dev-ebms.fun/>          |
+|                 | Swagger          | <https://api.dev-ebms.fun/docs/> |
 
 ## Installation & Launch
 
@@ -113,4 +114,11 @@ user@host$ cd wiseline-fastapi/
 user@host$ pip install pipenv
 user@host$ pipenv install
 user@host$ gunicorn main:app -w 2 --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornH11Worker
+```
+
+# FRONTEND
+
+```bash
+user@host$ npm install
+user@host$ npm run dev
 ```
