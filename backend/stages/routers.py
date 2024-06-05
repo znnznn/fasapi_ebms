@@ -2,8 +2,10 @@ from typing import List
 
 from fastapi import Depends, APIRouter, BackgroundTasks
 from fastapi_filter import FilterDepends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.constants import Role
+from mssqqlserver_database import get_cursor
 from origin_db.services import CategoryService
 from origin_db.utils import send_new_ship_date_to_ebms
 from stages.filters import ItemFilter, StageFilter, FlowFilter, SalesOrderFilter
@@ -328,9 +330,10 @@ async def delete_salesorder(
 async def get_all_flows(
         user: User = Depends(active_user_with_permission),
         flow_filter: FlowFilter = FilterDepends(FlowFilter),
+        ebms_session: AsyncSession = Depends(get_cursor)
 ):
     if flow_filter.category__prod_type:
-        category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
+        category = await CategoryService(db_session=ebms_session).get_category_autoid_by_name(flow_filter.category__prod_type)
         flow_filter.category__prod_type = category.autoid or ''
     result = await FlowsService(list_filter=flow_filter).list()
     return result
@@ -341,9 +344,10 @@ async def get_flows(
         limit: int = 10, offset: int = 0,
         user: User = Depends(active_user_with_permission),
         flow_filter: FlowFilter = FilterDepends(FlowFilter),
+        ebms_session: AsyncSession = Depends(get_cursor)
 ):
     if flow_filter.category__prod_type:
-        category = await CategoryService().get_category_autoid_by_name(flow_filter.category__prod_type)
+        category = await CategoryService(db_session=ebms_session).get_category_autoid_by_name(flow_filter.category__prod_type)
         flow_filter.category__prod_type = category.autoid or ''
     result = await FlowsService(list_filter=flow_filter).paginated_list(limit=limit, offset=offset)
     return result

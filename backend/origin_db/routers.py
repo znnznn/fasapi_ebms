@@ -139,7 +139,6 @@ async def get_categories(
         session=Depends(get_cursor),
 ):
     start_time = time.time()
-    print("++++++++++++++++")
     result = await CategoryService(list_filter=category_filter, db_session=session).paginated_list(limit=limit, offset=offset)
     print('connected to ebms', time.time() - start_time)
     flows_data = await FlowsService().group_by_category()

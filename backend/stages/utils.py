@@ -1,5 +1,3 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from common.utils import DateValidator
 from origin_db.filters import CategoryFilter
 from origin_db.schemas import ArinvDetSchema, ArinvRelatedArinvDetSchema, ArinvDetPaginateSchema
@@ -24,7 +22,7 @@ class GetDataForSending:
         return data
 
     async def one_origin_order_object(self, autoid: str) -> dict:
-        result = await OriginOrderService().get(autoid=autoid)
+        result = await OriginOrderService().get_with_sqlalchemy(autoid=autoid)
         autoids = [result.autoid]
         items = await ItemsService().group_by_order_annotated_statistics(autoids=autoids)
         sales_order = await SalesOrdersService().list_by_orders(autoids=autoids)
@@ -50,7 +48,7 @@ class GetDataForSending:
         return ArinvRelatedArinvDetSchema.from_orm(result).model_dump()
 
     async def get_items_by_autoids(self, autoids: list) -> list[dict]:
-        origin_items = await OriginItemService().get_listy_by_autoids(autoids=autoids)
+        origin_items = await OriginItemService().get_list_by_autoids_with_sqlalchemy(autoids=autoids)
         autoids = [i.autoid for i in origin_items]
         items_statistic = await ItemsService().group_by_item_statistics(autoids=autoids)
         related_items = await ItemsService().get_related_items_by_origin_items(autoids=autoids)
@@ -64,7 +62,7 @@ class GetDataForSending:
         return [ArinvDetSchema.from_orm(i).model_dump() for i in origin_items]
 
     async def get_orders_by_autoids(self, autoids: list) -> list[dict]:
-        origin_orders = await OriginOrderService().get_origin_order_by_autoids(autoids=autoids)
+        origin_orders = await OriginOrderService().get_origin_order_by_autoids_with_sqlalchemy(autoids=autoids)
         autoids = [i.autoid for i in origin_orders]
         items = await ItemsService().group_by_order_annotated_statistics(autoids=autoids)
         sales_order = await SalesOrdersService().list_by_orders(autoids=autoids)

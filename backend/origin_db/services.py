@@ -76,7 +76,6 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
         count = await self.db_session.execute(await self.to_sql(await self.get_query_for_count(**kwargs)))
         count = await count.fetchone()
         query = await self.to_sql(await self.get_query(limit=limit, offset=offset, **kwargs))
-        print(query)
         data = await self.db_session.execute(await self.to_sql(await self.get_query(limit=limit, offset=offset, **kwargs)))
         time_start = time.time()
         data_all = await data.fetchall()
@@ -91,7 +90,21 @@ class BaseService(Generic[OriginModelType, InputSchemaType]):
             "results": list_objs_as_model,
         }
 
+    async def get_with_sqlalchemy(self, autoid: str) -> Optional[OriginModelType]:
+        query = await self.get_query()
+        query = query.where(self.model.autoid == autoid)
+        sql_text = await self.to_sql(query)
+        async with ebms_session_maker() as session:
+            result = await session.execute(text(sql_text))
+        try:
+            result = result.one()
+            return self.model(**self.dict_keys_to_lowercase(result._asdict()))
+        except NoResultFound:
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
+
     async def get(self, autoid: str) -> Optional[OriginModelType]:
+        if not self.db_session:
+            return await self.get_with_sqlalchemy(autoid)
         query = await self.get_query()
         query = query.where(self.model.autoid == autoid)
         sql_text = await self.to_sql(query)
@@ -221,10 +234,29 @@ class OriginItemService(BaseService[Arinvdet, ArinvDetSchema]):
         list_objs = [self.model(**dict(zip(columns, data))) for data in objs]
         return list_objs
 
+    async def list_by_orders_with_sqlalchemy(self, autoids: List[str]):
+        stmt = await self.get_query()
+        stmt = stmt.where(self.model.doc_aid.in_(autoids))
+        sql_text = await self.to_sql(stmt)
+        async with ebms_session_maker() as session:
+            objs = await session.execute(text(sql_text))
+        return objs.all()
+
     async def get_origin_item_with_item(self, autoid: str):
-        return await self.get(autoid)
+        return await self.get_with_sqlalchemy(autoid)
+
+    async def get_list_by_autoids_with_sqlalchemy(self, autoids: List[str] | set) -> Sequence[OriginModelType]:
+        stmt = await self.get_query()
+        stmt = stmt.where(self.model.autoid.in_(autoids))
+        sql_text = await self.to_sql(stmt)
+        async with ebms_session_maker() as session:
+            result = await session.execute(text(sql_text))
+        list_objs = [self.model(**self.dict_keys_to_lowercase(data._asdict())) for data in result.all()]
+        return list_objs
 
     async def get_listy_by_autoids(self, autoids: List[str] | set) -> Sequence[OriginModelType]:
+        if not self.db_session:
+            return await self.get_list_by_autoids_with_sqlalchemy(autoids)
         stmt = await self.get_query()
         stmt = stmt.where(self.model.autoid.in_(autoids))
         result = await self.db_session.execute(await self.to_sql(stmt))
@@ -292,7 +324,6 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
         count = await self.db_session.execute(await self.to_sql(await self.get_query_for_count(**kwargs)))
         count = await count.fetchone()
         query = await self.to_sql(await self.get_query(limit=limit, offset=offset, **kwargs))
-        print(query)
         data = await self.db_session.execute(query)
         data_all = await data.fetchall()
 
@@ -314,8 +345,38 @@ class OriginOrderService(BaseService[Arinv, ArinvRelatedArinvDetSchema]):
             "results": list_objs_as_model,
         }
 
+    async def get_with_sqlalchemy(self, autoid: str) -> Optional[OriginModelType]:
+        print(f"get_by_sqlalchemy {autoid}")
+        query = await self.get_query()
+        query = query.where(self.model.autoid == autoid)
+        sql_text = await self.to_sql(query)
+        async with ebms_session_maker() as session:
+            result = await session.execute(text(sql_text))
+            print(result)
+            details = await OriginItemService().list_by_orders_with_sqlalchemy(autoids=[autoid])
+        try:
+            result = result.one()
+            data_details = [Arinvdet(**self.dict_keys_to_lowercase(detail._asdict())) for detail in details]
+            print(data_details)
+            order = self.model(**self.dict_keys_to_lowercase(result._asdict()))
+            order.details_data = data_details
+            return self.model(**self.dict_keys_to_lowercase(result._asdict()), details=data_details)
+        except NoResultFound:
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} with id {autoid} not found")
+
+    async def get_origin_order_by_autoids_with_sqlalchemy(self, autoids: List[str] | set) -> Sequence[str] | None:
+        query = await self.get_query()
+        query = query.where(self.model.autoid.in_(autoids))
+        sql_text = await self.to_sql(query)
+        async with ebms_session_maker() as session:
+            result = await session.execute(text(sql_text))
+            list_objs = [self.model(**self.dict_keys_to_lowercase(data._asdict())) for data in result.all()]
+        return list_objs
+
     async def get(self, autoid: str) -> Optional[OriginModelType]:
-        print("get")
+        if self.db_session is None:
+            return await self.get_with_sqlalchemy(autoid)
+        print(self.db_session)
         query = await self.get_query()
         query = query.where(self.model.autoid == autoid)
         sql_text = await self.to_sql(query)
