@@ -22,19 +22,5 @@ async def get_cursor() -> Cursor:
             async with conn.cursor() as cur:
                 yield cur
     except OperationalError:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,
-                            detail="DB connectivity failed")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="DB connectivity failed")
 
-
-def get_quoted(value):
-    return f"'{value}'"
-
-
-# @router.get('/get_fallout_details', status_code=status.HTTP_200_OK)
-# async def get_fallout_details(start_interface_load_date: str,
-#                               end_interface_load_date: str,
-#                               record_status=False, db: Cursor = Depends(get_cursor),
-#                               country: List[str] = Query(...)):
-#     return await get_fallout_details_db(country=country, start_interface_load_date=start_interface_load_date,
-#                                         end_interface_load_date=end_interface_load_date, record_status=record_status,
-#                                         db=db)
